@@ -2,6 +2,15 @@
 
 namespace Silent::Utils
 {
+    /** @brief Font chain metadata. */
+    struct FontMetadata
+    {
+        std::string              Name               = {};
+        std::vector<std::string> Filenames          = {};
+        int                      PointSize          = 0;
+        bool                     EnableAntialiasing = false;
+    };
+
     /** @brief Rasterized glyph metadata. */
     struct GlyphMetadata
     {
@@ -19,7 +28,7 @@ namespace Silent::Utils
         Vector2i             Offset  = Vector2i::Zero;
     };
 
-    /** @brief Shaped text line data. */
+    /** @brief Shaped text data. */
     struct ShapedText
     {
         std::vector<ShapedGlyph> Glyphs = {};
@@ -42,14 +51,15 @@ namespace Silent::Utils
         // Fields
         // =======
 
-        std::string                               _name        = {};
-        int                                       _pointSize   = 0;
-        float                                     _scaleFactor = 0.0f;
-        std::unordered_map<char32, GlyphMetadata> _glyphs      = {}; /** Key = code point, value = rasterized glyph metadata. */
-        
-        std::vector<smol_atlas_t*>     _rectAtlases    = {};
-        std::vector<std::vector<byte>> _textureAtlases = {};
-        int                            _activeAtlasIdx = 0;
+        std::string _name               = {};
+        int         _pointSize          = 0;
+        bool        _enableAntialiasing = false;
+        float       _scaleFactor        = 0.0f;
+
+        std::unordered_map<char32, GlyphMetadata> _glyphs         = {}; /** Key = code point, value = rasterized glyph metadata. */
+        std::vector<smol_atlas_t*>                _rectAtlases    = {};
+        std::vector<std::vector<byte>>            _textureAtlases = {};
+        int                                       _activeAtlasIdx = 0;
         
         int                     _fontCount = 0;
         std::vector<FT_Face>    _ftFonts   = {};
@@ -66,14 +76,11 @@ namespace Silent::Utils
         /** @brief Constructs a `Font` from a chain of font file and adds it to a library, precaching a set of glyphs in its texture atlas.
          *
          * @param fontLib Library to load the font into.
-         * @param name Font name to use for retrieval.
-         * @param filenames Font chain filenames.
+         * @param metadata Font chain metadata.
          * @param path Path containing font files.
-         * @param pointSize Point size at which to load the font.
          * @param precacheGlyphs Glyphs to precache.
          */
-        Font(FT_Library& fontLib, const std::string& name, const std::vector<std::string>& filenames, const std::filesystem::path& path, int pointSize,
-             const std::string& precacheGlyphs);
+        Font(FT_Library& fontLib, const FontMetadata& metadata, const std::filesystem::path& path, const std::string& precacheGlyphs);
 
         /** @brief Gracefully destroys the `Font`, freeing resources. */
         ~Font();
@@ -169,13 +176,10 @@ namespace Silent::Utils
 
         /** @brief Loads and registers a font chain.
          *
-         * @param name Font name to use for retrieval.
-         * @param filenames Font chain filenames.
+         * @param metadata Font chain metadata.
          * @param path Path containing font files.
-         * @param pointSize Vertical rasterization point size.
          * @param precacheGlyphs Glyphs to precache in the atlas upon font initialization.
          */
-        void LoadFont(const std::string& name, const std::vector<std::string>& filenames, const std::filesystem::path& path, int pointSize,
-                      const std::string& precacheGlyphs = {});
+        void LoadFont(const FontMetadata& metadata, const std::filesystem::path& path, const std::string& precacheGlyphs = {});
     };
 }

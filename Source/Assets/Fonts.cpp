@@ -1,6 +1,10 @@
 #include "Framework.h"
 #include "Assets/Fonts.h"
 
+#include "Utils/Font.h"
+
+using namespace Silent::Utils;
+
 namespace Silent::Assets
 {
     /** @brief String color IDs for strings displayed in screen space.
@@ -41,7 +45,8 @@ namespace Silent::Assets
                 "NotoSerifJP-Medium.ttf",
                 "NotoSerifKR-Medium.ttf"
             },
-            .PointSize = 48
+            .PointSize          = 48,
+            .EnableAntialiasing = true
         },
         FontMetadata
         {
@@ -52,7 +57,8 @@ namespace Silent::Assets
                 "PsxBios.ttf",
                 "UnifontExMono.ttf"
             },
-            .PointSize = 32
+            .PointSize          = 16,
+            .EnableAntialiasing = false
         },
         FontMetadata
         {
@@ -61,7 +67,8 @@ namespace Silent::Assets
             {
                 "UnifontExMono.ttf"
             },
-            .PointSize = 32
+            .PointSize          = 16,
+            .EnableAntialiasing = false
         }
     };
 }
