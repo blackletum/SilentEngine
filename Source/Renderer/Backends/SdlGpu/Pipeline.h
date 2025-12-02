@@ -7,7 +7,7 @@ namespace Silent::Renderer
     enum class BlendMode;
     struct     PipelineConfig;
 
-    /** @brief Pipeline manager. */
+    /** @brief GPU pipeline manager. */
     class PipelineManager
     {
     private:
@@ -26,9 +26,6 @@ namespace Silent::Renderer
         /** @brief Constructs an uninitialized default `PipelineManager`. */
         PipelineManager() = default;
 
-        /** @brief Gracefull destroys the `PipelineManager` and releases GPU resources. */
-        ~PipelineManager();
-
         // ==========
         // Utilities
         // ==========
@@ -40,10 +37,14 @@ namespace Silent::Renderer
          */
         void Initialize(SDL_Window& window, SDL_GPUDevice& device);
 
+        /** @brief Deinitializes all pipelines and frees GPU resources. */
+        void Deinitialize();
+
         /** @brief Binds the graphics pipeline render stage for use in rendering.
          *
          * @param renderPass Render pass to bind the pipeline to.
          * @param renderStage Pipeline render stage to bind.
+         * @throws `std::runtime_error` if the pipeline is invalid.
          */
         void Bind(SDL_GPURenderPass& renderPass, RenderStage renderStage, BlendMode blendMode);
 

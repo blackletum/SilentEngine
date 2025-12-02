@@ -4,6 +4,13 @@ namespace Silent::Renderer
 {
     enum class ScaleMode;
 
+    /** @brief Computes the screen aspect ratio correction scale according to a provided scale mode.
+     *
+     * @param scaleMode Renderer scale mode.
+     * @return Screen aspect correction.
+     */
+    Vector2 GetScreenAspectCorrection(ScaleMode scaleMode);
+
     /** @brief Computes a screen position in percent corrected according to the aspect ratio of the screen and a scale mode.
      *
      * @param pos Screen position in percent.
@@ -11,6 +18,20 @@ namespace Silent::Renderer
      * @return Screen position in percent corrected for the screen aspect ratio and scale mode.
      */
     Vector2 GetAspectCorrectScreenPosition(const Vector2 pos, ScaleMode scaleMode);
+
+    /** @brief Converts a screen position in percent to retro screen coodinates.
+     *
+     * @param pos Screen position in percent.
+     * @return Retro screen coordinates (320x240).
+     */
+    Vector2 ConvertRetroScreenCoordsToScreenPosition(const Vector2i& pos);
+
+    /** @brief Converts a position in screen percent to retro screen coodinates.
+     *
+     * @param pos Retro screen coordinates (320x240).
+     * @return Screen position in percent.
+     */
+    Vector2i ConvertScreenPositionToRetroScreenCoords(const Vector2& pos);
 
     /** @brief Converts a screen position in percent to normalized device coordinates.
      *

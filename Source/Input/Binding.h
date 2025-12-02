@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Input/Action.h"
-#include "Input/Event.h"
-
 namespace Silent::Input
 {
+    enum class ActionId;
+    enum class EventId;
+
     using BindingProfile = std::unordered_map<ActionId, std::vector<EventId>>; /** Key = action ID, value = event IDs. */
 
     extern const BindingProfile USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_1;
@@ -22,19 +22,19 @@ namespace Silent::Input
     /** @brief Input binding profile IDs. */
     enum class BindingProfileId
     {
-        /** Keyboard/mouse */
+        /* Custom */
 
-        KeyboardMouseType1,
-        KeyboardMouseType2,
-        KeyboardMouseType3,
-        KeyboardMouseCustom,
+        CustomKeyboardMouse,
+        CustomGamepad,
 
-        /** Gamepad */
+        /** Default */
 
-        GamepadType1,
-        GamepadType2,
-        GamepadType3,
-        GamepadCustom,
+        DefaultKeyboardMouseType1,
+        DefaultKeyboardMouseType2,
+        DefaultKeyboardMouseType3,
+        DefaultGamepadType1,
+        DefaultGamepadType2,
+        DefaultGamepadType3,
 
         /** Raw */
 
@@ -84,6 +84,8 @@ namespace Silent::Input
          * @return Input binding profile reference.
          */
         const BindingProfile& GetBindingProfile(BindingProfileId profileId) const;
+
+        // @todo Set bindings.
 
         // ==========
         // Utilities

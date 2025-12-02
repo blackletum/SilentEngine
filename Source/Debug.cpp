@@ -19,7 +19,10 @@ using namespace Silent::Utils;
 
 // Includes and namespace usings required for `Scratchpad` function go here.
 #ifdef _DEBUG
+#include "Gui/Button.h"
+#include "Renderer/Common/Enums.h"
 
+using namespace Silent::Gui;
 #endif
 
 namespace Silent::Debug
@@ -48,6 +51,67 @@ namespace Silent::Debug
             // ====================================
 
             auto& renderer = g_App.GetRenderer();
+
+            // GUI button test.
+            static auto but = Button(Vector2(25.0f, 75.0f), Vector2(25.0f, 25.0f), ScaleMode::Fit,
+                                     []() { Debug::Log("Entering!"); },
+                                     [&]()
+                                     {
+                                        auto& renderer2 = g_App.GetRenderer();
+                                        auto  res    = renderer.GetScreenResolution().ToVector2();
+                                        float aspect = res.x / res.y;
+                                        auto aspectCorrection = Vector2::One;
+                                        if (aspect >= 1.0f)
+                                        {
+                                            aspectCorrection.x = 1.0f / aspect;
+                                        }
+                                        else
+                                        {
+                                            aspectCorrection.y = 1.0f / (1.0f / aspect);
+                                        }
+                                     
+                                        auto quad = Primitive2d::CreateQuad(Vector2(0.0f,  00.0f),
+                                                                            Vector2(0.0f,  50.0f),
+                                                                            Vector2(50.0f, 50.0f) * aspectCorrection,
+                                                                            Vector2(50.0f, 0.0f) * aspectCorrection,
+                                                                            Color(0.0f, 1.0f, 0.2f, 0.4f),
+                                                                            Color(0.0f, 1.0f, 0.2f, 0.4f),
+                                                                            Color(0.0f, 1.0f, 0.2f, 0.4f),
+                                                                            Color(0.0f, 1.0f, 0.2f, 0.4f),
+                                                                            0, ScaleMode::Fit, BlendMode::Alpha);
+                                        renderer.Submit2dPrimitive(quad);
+                                     },
+                                     []() { Debug::Log("Leaving!"); },
+                                     [&]()
+                                     {
+                                        auto& renderer2 = g_App.GetRenderer();
+                                        auto  res    = renderer.GetScreenResolution().ToVector2();
+                                        float aspect = res.x / res.y;
+                                        auto aspectCorrection = Vector2::One;
+                                        if (aspect >= 1.0f)
+                                        {
+                                            aspectCorrection.x = 1.0f / aspect;
+                                        }
+                                        else
+                                        {
+                                            aspectCorrection.y = 1.0f / (1.0f / aspect);
+                                        }
+                                     
+                                        auto quad = Primitive2d::CreateQuad(Vector2(0.0f,  00.0f),
+                                                                            Vector2(0.0f,  50.0f),
+                                                                            Vector2(50.0f, 50.0f) * aspectCorrection,
+                                                                            Vector2(50.0f, 0.0f) * aspectCorrection,
+                                                                            Color(1.0f, 0.0f, 0.4f, 0.4f),
+                                                                            Color(1.0f, 0.0f, 0.4f, 0.4f),
+                                                                            Color(1.0f, 0.0f, 0.4f, 0.4f),
+                                                                            Color(1.0f, 0.0f, 0.4f, 0.4f),
+                                                                            0, ScaleMode::Fit, BlendMode::Alpha);
+                                        renderer.Submit2dPrimitive(quad);
+                                     },
+                                     []() { Debug::Log("Clicking!"); },
+                                     []() { Debug::Log("Holding!"); },
+                                     []() { Debug::Log("Releasing!"); });
+            but.Update(input.GetCursorPosition());
 
             // @temp
             auto tri0 = Primitive2d::CreateTriangle(Vector2(0.0f + 0.2f, 0.5f + 0.2f),
@@ -338,7 +402,7 @@ namespace Silent::Debug
                     }
 
                     // `Actions` section.
-                    ImGui::SeparatorText("Actions");
+                    /*ImGui::SeparatorText("Actions");
                     {
                         const auto& input = g_App.GetInput();
 
@@ -388,7 +452,7 @@ namespace Silent::Debug
                         ImGui::Text("Released:", 2, 0);
                         ImGui::TableSetColumnIndex(1);
                         ImGui::Text(releasedActionFlags.ToString().c_str(), 2, 1);*/
-                    }
+                    //}*/
 
                     // `Analog Axes` section.
                     ImGui::SeparatorText("Analog Axes");
@@ -789,7 +853,7 @@ namespace Silent::Debug
             return;
         }
 
-        // Check if `Messages` is full.
+        // Check if `g_Work.Messages` is full.
         if (g_Work.Messages.size() >= MESSAGE_COUNT_MAX)
         {
             Log("Attempted to create too many debug messages.", LogLevel::Warning, LogMode::Debug);

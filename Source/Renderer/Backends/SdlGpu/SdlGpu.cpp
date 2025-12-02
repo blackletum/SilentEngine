@@ -5,6 +5,7 @@
 #include "Renderer/Backends/SdlGpu/Buffer.h"
 #include "Renderer/Backends/SdlGpu/Pipeline.h"
 #include "Renderer/Backends/SdlGpu/Texture.h"
+#include "Renderer/Common/Texture.h"
 #include "Renderer/Common/Utils.h"
 #include "Renderer/Common/View.h" // @todo Not used yet.
 #include "Renderer/Renderer.h"
@@ -25,9 +26,7 @@ namespace Silent::Renderer
     static auto UniformBuffer = TestUniform{};
 
     // Texture test.
-    //static SDL_GPUBuffer* VertexBuffer = nullptr;
-    //static SDL_GPUBuffer* IndexBuffer  = nullptr;
-    static Texture TestTexture = Texture();
+    static SdlGpuTexture TestTexture = SdlGpuTexture();
 
     void SdlGpuRenderer::Initialize(SDL_Window& window)
     {
@@ -73,8 +72,11 @@ namespace Silent::Renderer
         // Claim window.
         if (!SDL_ClaimWindowForGPUDevice(_device, _window))
         {
-            throw std::runtime_error("Failed to claim window for GPU device: " + std::string(SDL_GetError()));
+            throw std::runtime_error(Fmt("Failed to claim window for GPU device: {}", std::string(SDL_GetError())));
         }
+
+        // Initialize texture manager.
+        _textures = std::make_unique<SdlGpuTextureManager>(*_device);
 
         // Initialize pipelines.
         _pipelines.Initialize(*_window, *_device);
@@ -133,7 +135,7 @@ namespace Silent::Renderer
         TestTexture.Initialize(*_device, *copyPass, 1);
 
         _buffers.TestTextureVerts = Buffer<PositionTextureVertex>(*_device, SDL_GPU_BUFFERUSAGE_VERTEX, 4, "Derg Vertex Buffer");
-        _buffers.TestTextureIdxs = Buffer<uint16>(*_device, SDL_GPU_BUFFERUSAGE_INDEX, 6, "Derg Index Buffer");
+        _buffers.TestTextureIdxs  = Buffer<uint16>(*_device, SDL_GPU_BUFFERUSAGE_INDEX, 6, "Derg Index Buffer");
 
         auto vertMap = std::vector<PositionTextureVertex>
         {
@@ -161,15 +163,17 @@ namespace Silent::Renderer
 
     void SdlGpuRenderer::Deinitialize()
     {
+        // @todo Errors.
+
         SDL_WaitForGPUIdle(_device);
 
         ImGui_ImplSDL3_Shutdown();
         ImGui_ImplSDLGPU3_Shutdown();
         ImGui::DestroyContext();
 
-        // @todo Has errors. Do buffers etc. need to deinit first?
-        //_buffers = {};
-        //_pipelines.~PipelineManager();
+        TestTexture.~SdlGpuTexture();
+        _buffers = {};
+        _pipelines.Deinitialize();
 
         SDL_ReleaseWindowFromGPUDevice(_device, _window);
         SDL_DestroyGPUDevice(_device);
@@ -268,6 +272,8 @@ namespace Silent::Renderer
         };
         auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, nullptr);
 
+        // @todo
+
         // Process render pass.
         SDL_EndGPURenderPass(&renderPass);
     }
@@ -308,7 +314,7 @@ namespace Silent::Renderer
         //===============================
 
         // Bind.
-        _pipelines.Bind(renderPass, RenderStage::Primitive2d, BlendMode::Add);
+        _pipelines.Bind(renderPass, RenderStage::Primitive2d, BlendMode::Alpha);
         _buffers.Primitives2d.Bind(renderPass, 0);
 
         // Upload uniform data.

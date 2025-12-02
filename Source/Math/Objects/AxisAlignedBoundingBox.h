@@ -8,6 +8,7 @@ namespace Silent::Math
     class      OrientedBoundingBox;
     enum class ContainmentType;
 
+    /** @brief 3D axis-aligned bounding box (AABB). */
     class AxisAlignedBoundingBox
     {
     public:
@@ -116,7 +117,7 @@ namespace Silent::Math
          */
         bool Intersects(const BoundingSphere& sphere) const;
 
-        /** @brief Checks if an AABB intersects the AABB.
+        /** @brief Checks if another AABB intersects the AABB.
          *
          * @param aabb AABB to test against.
          * @return `true` if the intersection is valid, `false` otherwise.
@@ -186,9 +187,9 @@ namespace Silent::Math
          */
         BoundingSphere ToSphere() const;
 
-        /** @brief Converts the AABB to an OBB.
+        /** @brief Converts to an OBB.
          *
-         * @return AABB converted to an OBB.
+         * @return AABB as an OBB.
          */
         OrientedBoundingBox ToObb() const;
 

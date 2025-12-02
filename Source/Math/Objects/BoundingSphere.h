@@ -8,6 +8,7 @@ namespace Silent::Math
     class      OrientedBoundingBox;
     enum class ContainmentType;
 
+    /** @brief 3D bounding sphere. */
     class BoundingSphere
     {
     public:
@@ -118,7 +119,7 @@ namespace Silent::Math
         // Converters
         // ===========
 
-        /** Converts the sphere to an AABB.
+        /** Converts to an AABB.
          *
          * @return AABB encompassing the sphere.
          */

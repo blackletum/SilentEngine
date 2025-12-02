@@ -31,7 +31,12 @@ namespace Silent::Input
 
     const Vector2& InputManager::GetCursorPosition() const
     {
-        return _states.CursorPosition;
+        return _deviceStates.CursorPosition;
+    }
+
+    float InputManager::GetRawEventState(EventId eventId) const
+    {
+        return _deviceStates.Events[(int)eventId];
     }
 
     GamepadVendorId InputManager::GetGamepadVendorId() const
@@ -70,7 +75,7 @@ namespace Silent::Input
 
     bool InputManager::IsUsingGamepad() const
     {
-        return _states.IsUsingGamepad;
+        return _deviceStates.IsUsingGamepad;
     }
 
     void InputManager::Initialize()
@@ -83,7 +88,7 @@ namespace Silent::Input
         }
 
         // Initialize event states and control axes.
-        _states.Events.resize((int)EventId::Count);
+        _deviceStates.Events.resize((int)EventId::Count);
         _analogAxes.resize((int)AnalogAxisId::Count);
 
         // Initialize actions.
@@ -117,24 +122,25 @@ namespace Silent::Input
         executor.AddTasks(tasks).wait();
 
         // Update "using gamepad" state.
-        if (_states.HasKeyboardInput || _states.HasMouseInput)
+        if (_deviceStates.HasKeyboardInput || _deviceStates.HasMouseInput)
         {
-            _states.IsUsingGamepad = false;
+            _deviceStates.IsUsingGamepad = false;
         }
-        else if (_states.HasGamepadInput)
+        else if (_deviceStates.HasGamepadInput)
         {
-            _states.IsUsingGamepad = true;
+            _deviceStates.IsUsingGamepad = true;
         }
 
         // Update components.
-        UpdateRumble();
         UpdateActions();
+        UpdateAnalogAxes();
+        UpdateRumble();
         HandleHotkeyActions();
 
         // Clear data.
-        _states.HasKeyboardInput = false;
-        _states.HasMouseInput    = false;
-        _states.HasGamepadInput  = false;
+        _deviceStates.HasKeyboardInput = false;
+        _deviceStates.HasMouseInput    = false;
+        _deviceStates.HasGamepadInput  = false;
     }
 
     void InputManager::ConnectGamepad(int deviceId)
@@ -253,9 +259,171 @@ namespace Silent::Input
         return GENERIC_VENDOR_NAME;
     }
 
+    void InputManager::UpdateActions()
+    {
+        const auto& options  = g_App.GetOptions();
+        auto&       executor = g_App.GetExecutor();
+
+        // 1) Update user action states.
+        auto updateUserActions = [&]()
+        {
+            // Get user action binding profiles.
+            const auto& kmProfile      = _bindings.GetBindingProfile(options->ActiveKeyboardMouseProfileId);
+            const auto& gamepadProfile = _bindings.GetBindingProfile(options->ActiveGamepadProfileId);
+
+            for (auto actionGroupId : USER_ACTION_GROUP_IDS)
+            {
+                const auto& actionIds = ACTION_ID_GROUPS.at(actionGroupId);
+                for (auto actionId : actionIds)
+                {
+                    auto& action = _actions[(int)actionId];
+                    float state  = 0.0f;
+
+                    // Get max gamepad event state.
+                    if (IsGamepadConnected())
+                    {
+                        const auto& gamepadEventIds = gamepadProfile.at(actionId);
+                        for (const auto& eventId : gamepadEventIds)
+                        {
+                            state = std::max(state, GetRawEventState(eventId));
+                        }
+                    }
+
+                    // If no valid gamepad event state exists, get max keyboard/mouse event state.
+                    if (state == 0.0f)
+                    {
+                        const auto& kmEventIds = kmProfile.at(actionId);
+                        for (const auto& eventId : kmEventIds)
+                        {
+                            state = std::max(state, GetRawEventState(eventId));
+                        }
+                    }
+
+                    // Use max bound event state.
+                    action.Update(state);
+                }
+            }
+        };
+
+        // 2) Update raw action states.
+        auto updateRawActions = [&]()
+        {
+            for (auto profileId : RAW_EVENT_BINDING_PROFILE_IDS)
+            {
+                const auto& profile = _bindings.GetBindingProfile(profileId);
+                for (auto& [keyActionId, eventIds] : profile)
+                {
+                    auto& action = _actions[(int)keyActionId];
+                    float state  = 0.0f;
+
+                    for (auto eventId : eventIds)
+                    {
+                        state = std::max(state, GetRawEventState(eventId));
+                    }
+
+                    // Use max bound event state.
+                    action.Update(state);
+                }
+            }
+        };
+
+        // Update action states asynchronously.
+        auto tasks = ParallelTasks
+        {
+            TASK(updateUserActions()),
+            TASK(updateRawActions())
+        };
+        executor.AddTasks(tasks).wait();
+    }
+
+    void InputManager::UpdateAnalogAxes()
+    {
+        const auto& options = g_App.GetOptions();
+
+        auto&       moveAxis       = _analogAxes[(int)AnalogAxisId::Move];
+        auto&       camAxis        = _analogAxes[(int)AnalogAxisId::Camera];
+        const auto& mouseAxis      = GetAnalogAxis(AnalogAxisId::Mouse);
+        const auto& stickLeftAxis  = GetAnalogAxis(AnalogAxisId::StickLeft);
+        const auto& stickRightAxis = GetAnalogAxis(AnalogAxisId::StickRight);
+
+        // Set move axis.
+        if (stickLeftAxis != Vector2::Zero)
+        {
+            moveAxis = stickLeftAxis;
+        }
+        else
+        {
+            if (GetAction(In::Up).IsHeld())
+            {
+                moveAxis.y = 1.0f;
+            }
+            else if (GetAction(In::Down).IsHeld())
+            {
+                moveAxis.y = -1.0f;
+            }
+            else
+            {
+                moveAxis.y = 0.0f;
+            }
+
+            if (GetAction(In::Left).IsHeld())
+            {
+                moveAxis.x = -1.0f;
+            }
+            else if (GetAction(In::Right).IsHeld())
+            {
+                moveAxis.x = -1.0f;
+            }
+            else
+            {
+                moveAxis.x = 0.0f;
+            }
+        }
+
+        // Set camera axis.
+        if (stickRightAxis != Vector2::Zero)
+        {
+            camAxis = stickRightAxis;
+        }
+        else
+        {
+            camAxis = mouseAxis;
+        }
+    }
+
+    void InputManager::UpdateRumble()
+    {
+        if (_rumble.Ticks == 0 || !IsGamepadConnected())
+        {
+            _rumble = {};
+            return;
+        }
+
+        // Compute intensity.
+        float alpha     = (float)_rumble.Ticks / (float)_rumble.DurationTicks;
+        float intensity = std::lerp(_rumble.IntensityFrom, _rumble.IntensityTo, alpha);
+
+        // Compute frequencies.
+        ushort freqLow  = (_rumble.Mode == RumbleMode::Low  || _rumble.Mode == RumbleMode::LowAndHigh) ? (ushort)(intensity * USHRT_MAX) : 0;
+        ushort freqHigh = (_rumble.Mode == RumbleMode::High || _rumble.Mode == RumbleMode::LowAndHigh) ? (ushort)(intensity * USHRT_MAX) : 0;
+
+        // Compute duration.
+        uint durationMs = (uint)round(TICK_TO_SEC(_rumble.DurationTicks) * 1000);
+
+        // Rumble gamepad.
+        if (!SDL_RumbleGamepad(_gamepad.Device, freqLow, freqHigh, durationMs))
+        {
+            Debug::Log(Fmt("Failed to rumble gamepad: {}", SDL_GetError()), Debug::LogLevel::Error);
+        }
+
+        _rumble.Ticks--;
+    }
+
     void InputManager::ReadKeyboard()
     {
-        int eventIdx = (int)START_KEYBOARD_EVENT_ID;
+        constexpr auto START_EVENT_ID = EventId::A;
+
+        int eventIdx = (int)START_EVENT_ID;
 
         // Set keyboard key event states.
         int        keyboardStateCount = 0;
@@ -267,10 +435,10 @@ namespace Silent::Input
                 bool state = keyboardState[scanCode];
                 if (state)
                 {
-                    _states.HasKeyboardInput = true;
+                    _deviceStates.HasKeyboardInput = true;
                 }
 
-                _states.Events[eventIdx] = state ? 1.0f : 0.0f;
+                _deviceStates.Events[eventIdx] = state ? 1.0f : 0.0f;
             }
 
             eventIdx++;
@@ -283,24 +451,26 @@ namespace Silent::Input
             bool state = modState & modCode;
             if (state)
             {
-                _states.HasKeyboardInput = true;
+                _deviceStates.HasKeyboardInput = true;
             }
 
-            _states.Events[eventIdx] = state ? 1.0f : 0.0f;
+            _deviceStates.Events[eventIdx] = state ? 1.0f : 0.0f;
             eventIdx++;
         }
     }
 
     void InputManager::ReadMouse(SDL_Window& window, const Vector2& wheelAxis)
     {
+        constexpr auto START_EVENT_ID = EventId::MouseClickLeft;
+
         const auto& options  = g_App.GetOptions();
         const auto& renderer = g_App.GetRenderer();
 
-        int eventIdx = (int)START_MOUSE_EVENT_ID;
+        int eventIdx = (int)START_EVENT_ID;
 
         // Compute cursor position.
         auto pos      = Vector2::Zero;
-        auto butState = SDL_GetMouseState(&pos.x, &pos.y); // @note Not a thread-safe call, but still works correctly.
+        auto butState = SDL_GetMouseState(&pos.x, &pos.y);
         pos           = (pos / renderer.GetScreenResolution().ToVector2()) * SCREEN_SPACE_RES;
         pos.y         = SCREEN_SPACE_RES.y - pos.y;
 
@@ -310,28 +480,29 @@ namespace Silent::Input
             bool state = butState & SDL_BUTTON_MASK(butCode);
             if (state)
             {
-                _states.HasMouseInput = true;
+                _deviceStates.HasMouseInput = true;
             }
 
-            _states.Events[eventIdx] = state ? 1.0f : 0.0f;
+            _deviceStates.Events[eventIdx] = state ? 1.0f : 0.0f;
             eventIdx++;
         }
 
         if (wheelAxis != Vector2::Zero)
         {
-            _states.HasMouseInput = true;
+            _deviceStates.HasMouseInput = true;
         }
 
+        // @todo Must investigate. Unclear how SDL3 mouse wheel values work.
         // Set mouse scroll event states.
-        _states.Events[eventIdx]     = (wheelAxis.x < 0.0f) ? std::clamp(abs(wheelAxis.x), 0.0f, 1.0f) : 0.0f;
-        _states.Events[eventIdx + 1] = (wheelAxis.x > 0.0f) ? std::clamp(abs(wheelAxis.x), 0.0f, 1.0f) : 0.0f;
-        _states.Events[eventIdx + 2] = (wheelAxis.y < 0.0f) ? std::clamp(abs(wheelAxis.y), 0.0f, 1.0f) : 0.0f;
-        _states.Events[eventIdx + 3] = (wheelAxis.y > 0.0f) ? std::clamp(abs(wheelAxis.y), 0.0f, 1.0f) : 0.0f;
-        eventIdx                    += SQUARE(Vector2::AXIS_COUNT);
+        _deviceStates.Events[eventIdx]     = (wheelAxis.x < 0.0f) ? std::clamp(abs(wheelAxis.x), 0.0f, 1.0f) : 0.0f;
+        _deviceStates.Events[eventIdx + 1] = (wheelAxis.x > 0.0f) ? std::clamp(abs(wheelAxis.x), 0.0f, 1.0f) : 0.0f;
+        _deviceStates.Events[eventIdx + 2] = (wheelAxis.y < 0.0f) ? std::clamp(abs(wheelAxis.y), 0.0f, 1.0f) : 0.0f;
+        _deviceStates.Events[eventIdx + 3] = (wheelAxis.y > 0.0f) ? std::clamp(abs(wheelAxis.y), 0.0f, 1.0f) : 0.0f;
+        eventIdx                          += SQUARE(Vector2::AXIS_COUNT);
 
         // Set cursor position state.
-        _states.PrevCursorPosition = _states.CursorPosition;
-        _states.CursorPosition     = pos;
+        auto prevCursorPos           = _deviceStates.CursorPosition;
+        _deviceStates.CursorPosition = pos;
 
         auto res = Vector2i::Zero;
         if (!SDL_GetWindowSize(&window, &res.x, &res.y))
@@ -340,21 +511,18 @@ namespace Silent::Input
         }
 
         float sensitivity = (options->MouseSensitivity * 0.1f) + 0.4f;
-        auto  moveAxis    = (((_states.CursorPosition - _states.PrevCursorPosition) / SCREEN_SPACE_RES) * (res.ToVector2() / SCREEN_SPACE_RES)) * sensitivity;
+        auto  moveAxis    = (((_deviceStates.CursorPosition - prevCursorPos) / SCREEN_SPACE_RES) * (res.ToVector2() / SCREEN_SPACE_RES)) * sensitivity;
         if (moveAxis != Vector2::Zero)
         {
-            _states.HasMouseInput = true;
+            _deviceStates.HasMouseInput = true;
         }
 
         // Set mouse movement event states.
-        _states.Events[eventIdx]     = (moveAxis.x < 0.0f) ? abs(moveAxis.x) : 0.0f;
-        _states.Events[eventIdx + 1] = (moveAxis.x > 0.0f) ? abs(moveAxis.x) : 0.0f;
-        _states.Events[eventIdx + 2] = (moveAxis.y < 0.0f) ? abs(moveAxis.y) : 0.0f;
-        _states.Events[eventIdx + 3] = (moveAxis.y > 0.0f) ? abs(moveAxis.y) : 0.0f;
-        eventIdx                    += SQUARE(Vector2::AXIS_COUNT);
-
-        // Set camera axis. Right gamepad stick takes priority over mouse.
-        _analogAxes[(int)AnalogAxisId::Camera] = moveAxis;
+        _deviceStates.Events[eventIdx]     = (moveAxis.x < 0.0f) ? abs(moveAxis.x) : 0.0f;
+        _deviceStates.Events[eventIdx + 1] = (moveAxis.x > 0.0f) ? abs(moveAxis.x) : 0.0f;
+        _deviceStates.Events[eventIdx + 2] = (moveAxis.y < 0.0f) ? abs(moveAxis.y) : 0.0f;
+        _deviceStates.Events[eventIdx + 3] = (moveAxis.y > 0.0f) ? abs(moveAxis.y) : 0.0f;
+        eventIdx                          += SQUARE(Vector2::AXIS_COUNT);
 
         // Set raw mouse axis.
         _analogAxes[(int)AnalogAxisId::Mouse] = moveAxis;
@@ -362,7 +530,8 @@ namespace Silent::Input
 
     void InputManager::ReadGamepad()
     {
-        constexpr float AXIS_DEADZONE = ((float)SHRT_MAX / 8.0f) / (float)SHRT_MAX;
+        constexpr auto  START_GAMEPAD_EVENT_ID = EventId::GamepadSouth;
+        constexpr float AXIS_DEADZONE          = ((float)SHRT_MAX / 8.0f) / (float)SHRT_MAX;
 
         int eventIdx = (int)START_GAMEPAD_EVENT_ID;
 
@@ -376,10 +545,10 @@ namespace Silent::Input
             }
             if (state)
             {
-                _states.HasGamepadInput = true;
+                _deviceStates.HasGamepadInput = true;
             }
 
-            _states.Events[eventIdx] = state ? 1.0f : 0.0f;
+            _deviceStates.Events[eventIdx] = state ? 1.0f : 0.0f;
             eventIdx++;
         }
 
@@ -419,32 +588,21 @@ namespace Silent::Input
             }
         }
 
-        // Set gamepad stick axis event states and control axes.
+        // Set gamepad stick axis event states.
         for (int i = 0; i < stickAxes.size(); i++)
         {
             const auto& axis = stickAxes[i];
             if (axis != Vector2::Zero)
             {
-                _states.HasGamepadInput = true;
+                _deviceStates.HasGamepadInput = true;
             }
 
-            _states.Events[eventIdx + i]       = (axis.x < 0.0f) ? abs(axis.x) : 0.0f;
-            _states.Events[eventIdx + (i + 1)] = (axis.x > 0.0f) ? abs(axis.x) : 0.0f;
-            _states.Events[eventIdx + (i + 2)] = (axis.y < 0.0f) ? abs(axis.y) : 0.0f;
-            _states.Events[eventIdx + (i + 3)] = (axis.y > 0.0f) ? abs(axis.y) : 0.0f;
-            _analogAxes[i]                     = axis;
-            eventIdx                          += Vector2::AXIS_COUNT * 2;
+            _deviceStates.Events[eventIdx + i]       = (axis.x < 0.0f) ? abs(axis.x) : 0.0f;
+            _deviceStates.Events[eventIdx + (i + 1)] = (axis.x > 0.0f) ? abs(axis.x) : 0.0f;
+            _deviceStates.Events[eventIdx + (i + 2)] = (axis.y < 0.0f) ? abs(axis.y) : 0.0f;
+            _deviceStates.Events[eventIdx + (i + 3)] = (axis.y > 0.0f) ? abs(axis.y) : 0.0f;
+            eventIdx                                += Vector2::AXIS_COUNT * 2;
         }
-
-        // Set camera axis. Right gamepad stick takes priority over mouse.
-        if (stickAxes.back() != Vector2::Zero)
-        {
-            _analogAxes[(int)AnalogAxisId::Camera] = stickAxes.back();
-        }
-
-        // Set raw gamepad stick axes.
-        _analogAxes[(int)AnalogAxisId::StickLeft]  = stickAxes.front();
-        _analogAxes[(int)AnalogAxisId::StickRight] = stickAxes.back();
 
         // Set gamepad trigger axis event states.
         for (auto axisCode : VALID_GAMEPAD_TRIGGER_AXIS_CODES)
@@ -461,148 +619,47 @@ namespace Silent::Input
             }
             if (state > 0.0f)
             {
-                _states.HasGamepadInput = true;
+                _deviceStates.HasGamepadInput = true;
             }
 
-            _states.Events[eventIdx] = state;
+            _deviceStates.Events[eventIdx] = state;
             eventIdx++;
         }
-    }
 
-    void InputManager::UpdateRumble()
-    {
-        if (_rumble.Ticks == 0 || !IsGamepadConnected())
-        {
-            _rumble = {};
-            return;
-        }
-
-        // Compute intensity.
-        float alpha     = (float)_rumble.Ticks / (float)_rumble.DurationTicks;
-        float intensity = std::lerp(_rumble.IntensityFrom, _rumble.IntensityTo, alpha);
-
-        // Compute frequencies.
-        ushort freqLow  = (_rumble.Mode == RumbleMode::Low  || _rumble.Mode == RumbleMode::LowAndHigh) ? (ushort)(intensity * USHRT_MAX) : 0;
-        ushort freqHigh = (_rumble.Mode == RumbleMode::High || _rumble.Mode == RumbleMode::LowAndHigh) ? (ushort)(intensity * USHRT_MAX) : 0;
-
-        // Compute duration.
-        uint durationMs = (uint)round(TICK_TO_SEC(_rumble.DurationTicks) * 1000);
-
-        // Rumble gamepad.
-        if (!SDL_RumbleGamepad(_gamepad.Device, freqLow, freqHigh, durationMs))
-        {
-            Debug::Log(Fmt("Failed to rumble gamepad: {}", SDL_GetError()), Debug::LogLevel::Error);
-        }
-
-        _rumble.Ticks--;
-    }
-
-    void InputManager::UpdateActions()
-    {
-        const auto& options  = g_App.GetOptions();
-        auto&       executor = g_App.GetExecutor();
-
-        // 1) Update user action states.
-        auto updateUserActions = [&]()
-        {
-            // Get user action binding profiles.
-            auto gamepadProfile = _bindings.GetBindingProfile(options->ActiveGamepadProfileId);
-            auto kmProfile      = _bindings.GetBindingProfile(options->ActiveKeyboardMouseProfileId);
-
-            for (auto actionGroupId : USER_ACTION_GROUP_IDS)
-            {
-                const auto& actionIds = ACTION_ID_GROUPS.at(actionGroupId);
-                for (auto actionId : actionIds)
-                {
-                    auto& action = _actions[(int)actionId];
-                    float state  = 0.0f;
-
-                    // Get max gamepad event state.
-                    if (IsGamepadConnected())
-                    {
-                        auto gamepadEventIds = gamepadProfile.at(actionId);
-                        for (const auto& eventId : gamepadEventIds)
-                        {
-                            state = std::max(state, _states.Events[(int)eventId]);
-                        }
-                    }
-
-                    // If no valid gamepad event state, get max keyboard/mouse event state.
-                    if (state == 0.0f)
-                    {
-                        auto kmEventIds = kmProfile.at(actionId);
-                        for (const auto& eventId : kmEventIds)
-                        {
-                            state = std::max(state, _states.Events[(int)eventId]);
-                        }
-                    }
-
-                    // Use max bound event state.
-                    action.Update(state);
-                }
-            }
-        };
-
-        // 2) Update raw action states.
-        auto updateRawActions = [&]()
-        {
-            for (auto profileId : RAW_EVENT_BINDING_PROFILE_IDS)
-            {
-                const auto& profile = _bindings.GetBindingProfile(profileId);
-                for (auto& [keyActionId, eventIds] : profile)
-                {
-                    auto& action = _actions[(int)keyActionId];
-                    float state  = 0.0f;
-
-                    for (auto eventId : eventIds)
-                    {
-                        state = std::max(state, _states.Events[(int)eventId]);
-                    }
-
-                    // Use max bound event state.
-                    action.Update(state);
-                }
-            }
-        };
-
-        // Update action states asynchronously.
-        auto tasks = ParallelTasks
-        {
-            TASK(updateUserActions()),
-            TASK(updateRawActions())
-        };
-        executor.AddTasks(tasks).wait();
+        // Set raw stick axes.
+        _analogAxes[(int)AnalogAxisId::StickLeft]  = stickAxes.front();
+        _analogAxes[(int)AnalogAxisId::StickRight] = stickAxes.back();
     }
 
     void InputManager::HandleHotkeyActions()
     {
         // Capture screenshot.
         static bool dbScreenshot = true;
-        if ((_states.Events[(int)EventId::PrintScreen] || _states.Events[(int)EventId::F12]) && dbScreenshot)
+        if ((GetRawEventState(EventId::PrintScreen) || GetRawEventState(EventId::F12)) && dbScreenshot)
         {
             const auto& renderer = g_App.GetRenderer();
             renderer.SaveScreenshot();
         }
-        dbScreenshot = !(_states.Events[(int)EventId::PrintScreen] || _states.Events[(int)EventId::F12]);
+        dbScreenshot = !(GetRawEventState(EventId::PrintScreen) || GetRawEventState(EventId::F12));
 
         // Toggle fullscreen.
         static bool dbFullscreen = true;
-        if (((_states.Events[(int)EventId::Alt] && _states.Events[(int)EventId::Return]) || _states.Events[(int)EventId::F11]) && dbFullscreen)
+        if (((GetRawEventState(EventId::Alt) && GetRawEventState(EventId::Return)) || GetRawEventState(EventId::F11)) && dbFullscreen)
         {
             g_App.ToggleFullscreen();
         }
-        dbFullscreen = !((_states.Events[(int)EventId::Alt] && _states.Events[(int)EventId::Return]) || _states.Events[(int)EventId::F11]);
+        dbFullscreen = !((GetRawEventState(EventId::Alt) && GetRawEventState(EventId::Return)) || GetRawEventState(EventId::F11));
 
         auto& options = g_App.GetOptions();
         if (options->EnableDebugMode)
         {
             // Toggle debug GUI.
             static bool dbDebugGui = true;
-            if (_states.Events[(int)EventId::Grave] && dbDebugGui)
+            if (GetRawEventState(EventId::Grave) && dbDebugGui)
             {
                 g_App.ToggleDebugGui();
             }
-            dbDebugGui = !_states.Events[(int)EventId::Grave];
+            dbDebugGui = !GetRawEventState(EventId::Grave);
         }
     }
 }

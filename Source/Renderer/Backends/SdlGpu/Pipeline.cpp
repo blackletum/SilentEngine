@@ -12,14 +12,6 @@ using namespace Silent::Utils;
 
 namespace Silent::Renderer
 {
-    PipelineManager::~PipelineManager()
-    {
-        for (auto [keyHash, pipeline] : _pipelines)
-        {
-            SDL_ReleaseGPUGraphicsPipeline(_device, pipeline);
-        }
-    }
-
     void PipelineManager::Initialize(SDL_Window& window, SDL_GPUDevice& device)
     {
         _device = &device;
@@ -30,8 +22,18 @@ namespace Silent::Renderer
         }
     }
 
+    void PipelineManager::Deinitialize()
+    {
+        for (auto [keyHash, pipeline] : _pipelines)
+        {
+            SDL_ReleaseGPUGraphicsPipeline(_device, pipeline);
+        }
+    }
+
     void PipelineManager::Bind(SDL_GPURenderPass& renderPass, RenderStage renderStage, BlendMode blendMode)
     {
+        Debug::Assert(_device != nullptr, "Attempted to bind uninitialized GPU pipeline manager.");
+
         int   pipelineHash = GetPipelineHash(renderStage, Debug::g_Work.EnableWireframeMode ? BlendMode::Wireframe : blendMode);
         auto* pipeline     = Find(_pipelines, pipelineHash);
         if (pipeline == nullptr)

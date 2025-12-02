@@ -263,18 +263,18 @@ namespace Silent::Input
 
     const std::vector<BindingProfileId> USER_KEYBOARD_MOUSE_BINDING_PROFILE_IDS
     {
-        BindingProfileId::KeyboardMouseType1,
-        BindingProfileId::KeyboardMouseType2,
-        BindingProfileId::KeyboardMouseType3,
-        BindingProfileId::KeyboardMouseCustom
+        BindingProfileId::CustomKeyboardMouse,
+        BindingProfileId::DefaultKeyboardMouseType1,
+        BindingProfileId::DefaultKeyboardMouseType2,
+        BindingProfileId::DefaultKeyboardMouseType3
     };
 
     const std::vector<BindingProfileId> USER_GAMEPAD_BINDING_PROFILE_IDS
     {
-        BindingProfileId::GamepadType1,
-        BindingProfileId::GamepadType2,
-        BindingProfileId::GamepadType3,
-        BindingProfileId::GamepadCustom
+        BindingProfileId::CustomGamepad,
+        BindingProfileId::DefaultGamepadType1,
+        BindingProfileId::DefaultGamepadType2,
+        BindingProfileId::DefaultGamepadType3
     };
 
     const std::vector<BindingProfileId> RAW_EVENT_BINDING_PROFILE_IDS
@@ -286,20 +286,20 @@ namespace Silent::Input
 
     const std::vector<EventId>& BindingManager::GetBoundEventIds(BindingProfileId profileId, ActionId actionId) const
     {
-        static const auto EMPTY = std::vector<EventId>{};
+        static const auto NO_EVENT_IDS = std::vector<EventId>{};
 
         // Find binding profile.
         const auto* profile = Find(_bindings, profileId);
         if (profile == nullptr)
         {
-            return EMPTY;
+            return NO_EVENT_IDS;
         }
 
         // Find action-event binding.
         const auto* eventIds = Find(*profile, actionId);
         if (eventIds == nullptr)
         {
-            return EMPTY;
+            return NO_EVENT_IDS;
         }
 
         // Return bound event IDs.
@@ -320,17 +320,17 @@ namespace Silent::Input
     {
         _bindings =
         {
-            { BindingProfileId::KeyboardMouseType1,  USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_1 },
-            { BindingProfileId::KeyboardMouseType2,  USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_2 },
-            { BindingProfileId::KeyboardMouseType3,  USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_3 },
-            { BindingProfileId::KeyboardMouseCustom, customKeyboardMouseBinds                   },
-            { BindingProfileId::GamepadType1,        USER_GAMEPAD_BINDING_PROFILE_TYPE_1        },
-            { BindingProfileId::GamepadType2,        USER_GAMEPAD_BINDING_PROFILE_TYPE_2        },
-            { BindingProfileId::GamepadType3,        USER_GAMEPAD_BINDING_PROFILE_TYPE_3        },
-            { BindingProfileId::GamepadCustom,       customGamepadBinds                         },
-            { BindingProfileId::RawKeyboard,         RAW_KEYBOARD_BINDING_PROFILE               },
-            { BindingProfileId::RawMouse,            RAW_MOUSE_BINDING_PROFILE                  },
-            { BindingProfileId::RawGamepad,          RAW_GAMEPAD_BINDING_PROFILE                }
+            { BindingProfileId::CustomKeyboardMouse,        customKeyboardMouseBinds                   },
+            { BindingProfileId::CustomGamepad,              customGamepadBinds                         },
+            { BindingProfileId::DefaultKeyboardMouseType1,  USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_1 },
+            { BindingProfileId::DefaultKeyboardMouseType2,  USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_2 },
+            { BindingProfileId::DefaultKeyboardMouseType3,  USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_3 },
+            { BindingProfileId::DefaultGamepadType1,        USER_GAMEPAD_BINDING_PROFILE_TYPE_1        },
+            { BindingProfileId::DefaultGamepadType2,        USER_GAMEPAD_BINDING_PROFILE_TYPE_2        },
+            { BindingProfileId::DefaultGamepadType3,        USER_GAMEPAD_BINDING_PROFILE_TYPE_3        },
+            { BindingProfileId::RawKeyboard,                RAW_KEYBOARD_BINDING_PROFILE               },
+            { BindingProfileId::RawMouse,                   RAW_MOUSE_BINDING_PROFILE                  },
+            { BindingProfileId::RawGamepad,                 RAW_GAMEPAD_BINDING_PROFILE                }
         };
     }
 
