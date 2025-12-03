@@ -35,6 +35,11 @@ namespace Silent::Math
         return Matrix(glm::scale(Matrix::Identity.ToGlmMat4(), scale.ToGlmVec3()));
     }
 
+    Matrix Matrix::CreateOrthographic(float left, float right, float bottom, float top)
+    {
+        return Matrix(glm::ortho(left, right, bottom, top));
+    }
+
     Matrix Matrix::CreateOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane)
     {
         return Matrix(glm::ortho(left, right, bottom, top, nearPlane, farPlane));

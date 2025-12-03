@@ -320,17 +320,17 @@ namespace Silent::Input
     {
         _bindings =
         {
-            { BindingProfileId::CustomKeyboardMouse,        customKeyboardMouseBinds                   },
-            { BindingProfileId::CustomGamepad,              customGamepadBinds                         },
-            { BindingProfileId::DefaultKeyboardMouseType1,  USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_1 },
-            { BindingProfileId::DefaultKeyboardMouseType2,  USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_2 },
-            { BindingProfileId::DefaultKeyboardMouseType3,  USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_3 },
-            { BindingProfileId::DefaultGamepadType1,        USER_GAMEPAD_BINDING_PROFILE_TYPE_1        },
-            { BindingProfileId::DefaultGamepadType2,        USER_GAMEPAD_BINDING_PROFILE_TYPE_2        },
-            { BindingProfileId::DefaultGamepadType3,        USER_GAMEPAD_BINDING_PROFILE_TYPE_3        },
-            { BindingProfileId::RawKeyboard,                RAW_KEYBOARD_BINDING_PROFILE               },
-            { BindingProfileId::RawMouse,                   RAW_MOUSE_BINDING_PROFILE                  },
-            { BindingProfileId::RawGamepad,                 RAW_GAMEPAD_BINDING_PROFILE                }
+            { BindingProfileId::CustomKeyboardMouse,       customKeyboardMouseBinds                   },
+            { BindingProfileId::CustomGamepad,             customGamepadBinds                         },
+            { BindingProfileId::DefaultKeyboardMouseType1, USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_1 },
+            { BindingProfileId::DefaultKeyboardMouseType2, USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_2 },
+            { BindingProfileId::DefaultKeyboardMouseType3, USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_3 },
+            { BindingProfileId::DefaultGamepadType1,       USER_GAMEPAD_BINDING_PROFILE_TYPE_1        },
+            { BindingProfileId::DefaultGamepadType2,       USER_GAMEPAD_BINDING_PROFILE_TYPE_2        },
+            { BindingProfileId::DefaultGamepadType3,       USER_GAMEPAD_BINDING_PROFILE_TYPE_3        },
+            { BindingProfileId::RawKeyboard,               RAW_KEYBOARD_BINDING_PROFILE               },
+            { BindingProfileId::RawMouse,                  RAW_MOUSE_BINDING_PROFILE                  },
+            { BindingProfileId::RawGamepad,                RAW_GAMEPAD_BINDING_PROFILE                }
         };
     }
 

@@ -492,7 +492,7 @@ namespace Silent::Input
             _deviceStates.HasMouseInput = true;
         }
 
-        // @todo Must investigate. Unclear how SDL3 mouse wheel values work.
+        // @todo Investigate. Unclear how SDL3 mouse wheel values work.
         // Set mouse scroll event states.
         _deviceStates.Events[eventIdx]     = (wheelAxis.x < 0.0f) ? std::clamp(abs(wheelAxis.x), 0.0f, 1.0f) : 0.0f;
         _deviceStates.Events[eventIdx + 1] = (wheelAxis.x > 0.0f) ? std::clamp(abs(wheelAxis.x), 0.0f, 1.0f) : 0.0f;

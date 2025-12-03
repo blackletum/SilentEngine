@@ -71,6 +71,15 @@ namespace Silent::Math
          * @param right Maximum X coordinate of the view volume.
          * @param bottom Minimum Y coordinate of the view volume.
          * @param top Maximum Y coordinate of the view volume.
+         */
+        static Matrix CreateOrthographic(float left, float right, float bottom, float top);
+
+        /** @brief Constructs an orthographic projection `Matrix`.
+         *
+         * @param left Minimum X coordinate of the view volume.
+         * @param right Maximum X coordinate of the view volume.
+         * @param bottom Minimum Y coordinate of the view volume.
+         * @param top Maximum Y coordinate of the view volume.
          * @param nearPlane Frustum near plane.
          * @param farPlane Frustum far plane.
          */

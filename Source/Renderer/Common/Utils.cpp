@@ -11,7 +11,7 @@ namespace Silent::Renderer
     Vector2 GetScreenAspectCorrection(ScaleMode scaleMode)
     {
         const auto& renderer = g_App.GetRenderer();
-        
+
         float aspect = renderer.GetScreenAspectRatio();
 
         auto aspectCorrection = Vector2::One;
