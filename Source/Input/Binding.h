@@ -3,21 +3,17 @@
 namespace Silent::Input
 {
     enum class ActionId;
+    enum class BindingProfileId;
     enum class EventId;
 
     using BindingProfile = std::unordered_map<ActionId, std::vector<EventId>>; /** Key = action ID, value = event IDs. */
 
-    extern const BindingProfile USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_1;
-    extern const BindingProfile USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_2;
-    extern const BindingProfile USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_3;
-
-    extern const BindingProfile USER_GAMEPAD_BINDING_PROFILE_TYPE_1;
-    extern const BindingProfile USER_GAMEPAD_BINDING_PROFILE_TYPE_2;
-    extern const BindingProfile USER_GAMEPAD_BINDING_PROFILE_TYPE_3;
-
-    extern const BindingProfile RAW_KEYBOARD_BINDING_PROFILE;
-    extern const BindingProfile RAW_MOUSE_BINDING_PROFILE;
-    extern const BindingProfile RAW_GAMEPAD_BINDING_PROFILE;
+    extern const BindingProfile                DEFAULT_CUSTOM_KEYBOARD_MOUSE_BINDING_PROFILE;
+    extern const BindingProfile                DEFAULT_CUSTOM_GAMEPAD_BINDING_PROFILE;
+    extern const std::vector<BindingProfileId> CUSTOM_BINDING_PROFILE_IDS;
+    extern const std::vector<BindingProfileId> DEFAULT_PROFILE_IDS;
+    extern const std::vector<BindingProfileId> CUSTOM_BINDING_PROFILE_IDS;
+    extern const std::vector<BindingProfileId> RAW_BINDING_PROFILE_IDS;
 
     /** @brief Input binding profile IDs. */
     enum class BindingProfileId
@@ -45,10 +41,6 @@ namespace Silent::Input
         Count
     };
 
-    extern const std::vector<BindingProfileId> USER_KEYBOARD_MOUSE_BINDING_PROFILE_IDS;
-    extern const std::vector<BindingProfileId> USER_GAMEPAD_BINDING_PROFILE_IDS;
-    extern const std::vector<BindingProfileId> RAW_EVENT_BINDING_PROFILE_IDS;
-
     /** @brief Input binder. */
     class BindingManager
     {
@@ -57,7 +49,7 @@ namespace Silent::Input
         // Fields
         // =======
 
-        std::unordered_map<BindingProfileId, BindingProfile> _bindings = {}; /** Key = binding profile ID, value = binding profile. */
+        std::vector<BindingProfile> _bindings = {}; /** Index = `BindingProfileId`. */
 
     public:
         // =============
@@ -70,47 +62,41 @@ namespace Silent::Input
         // Getters
         // ========
 
-        /** @brief Gets the device event IDs bound to an input action within a binding profile.
-         *
-         * @param profileID Input binding profile ID.
-         * @param actionID Input action ID.
-         * @return `std::vector` containing the device event IDs bound to the given input action.
-         */
-        const std::vector<EventId>& GetBoundEventIds(BindingProfileId profileId, ActionId actionId) const;
-
-        /** @brief Gets a reference to an input binding profile containing associations between device events and input actions.
+        /** @brief Gets an input binding profile containing associations between input events and input actions.
          *
          * @param profileId Input binding profile ID to retrieve.
-         * @return Input binding profile reference.
+         * @return Input binding profile.
          */
-        const BindingProfile& GetBindingProfile(BindingProfileId profileId) const;
+        const BindingProfile& GetProfile(BindingProfileId profileId) const;
 
-        // @todo Set bindings.
+        // ========
+        // Setters
+        // ========
+
+        /** @brief Sets all bindings in an input binding profile to a new input binding profile.
+         *
+         * @param profileId ID of the input binding profile to update.
+         * @param newProfile New input binding profile to set.
+         */
+        void SetProfile(BindingProfileId profileId, const BindingProfile& newProfile);
+
+        /** @brief Sets a custom input event binding for an input action, storing the new association in an input binding profile.
+         *
+         * @param profileId ID of the input binding profile to update.
+         * @param actionId ID of the input action to create a new binding for.
+         * @param eventId ID of the input event to bind to the input action.
+         */
+        void SetBinding(BindingProfileId profileId, ActionId actionId, EventId eventId);
 
         // ==========
         // Utilities
         // ==========
 
-        /** @brief Initializes the input binding manager, setting default bindings and active user bindings.
+        /** @brief Initializes the input binding manager with custom, default, and raw input binding profiles.
          *
-         * @param customKeyboardMouseBinds Active keyboard/mouse input bindings to set for the user.
-         * @param customGamepadBinds Active gamepoad input bindings to set for the user.
+         * @param customKeyboardMouseProfile Custom user input binding profile for keyboard/mouse.
+         * @param customGamepadProfile Custom user input binding profile for gamepad.
          */
-        void Initialize(const BindingProfile& customKeyboardMouseBinds, const BindingProfile& customGamepadBinds);
-
-        /** @brief Binds a device event to an input action, storing the new association inside an input binding profile.
-         *
-         * @param profileId Input binding profile ID to update.
-         * @param actionId Input action ID to create a new binding for.
-         * @param eventId Device event ID to bind to the input action.
-         */
-        void BindEventId(BindingProfileId profileId, ActionId actionId, EventId eventId);
-
-        /** @brief Unbinds all device event indings from an input action in an input binding profile.
-         *
-         * @param profileId Input binding profile ID to update.
-         * @param actionId Input action ID to clear all bindings for.
-         */
-        void UnbindEventIds(BindingProfileId profileId, ActionId actionId);
+        void Initialize(const BindingProfile& customKeyboardMouseProfile, const BindingProfile& customGamepadProfile);
     };
 }

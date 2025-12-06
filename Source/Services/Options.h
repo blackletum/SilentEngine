@@ -135,19 +135,14 @@ namespace Silent::Services
         BloodColorType BloodColor      = BloodColorType::Normal;
         int            BulletAdjust    = 0;
 
-        // ================================
-        // Input (keyboard/mouse bindings)
-        // ================================
+        // =================
+        // Input (bindings)
+        // =================
 
-        BindingProfile   KeyboardMouseBindings        = {};
         BindingProfileId ActiveKeyboardMouseProfileId = BindingProfileId::DefaultKeyboardMouseType1;
-
-        // =========================
-        // Input (gamepad bindings)
-        // =========================
-
-        BindingProfile   GamepadBindings        = {};
-        BindingProfileId ActiveGamepadProfileId = BindingProfileId::DefaultGamepadType1;
+        BindingProfileId ActiveGamepadProfileId       = BindingProfileId::DefaultGamepadType1;
+        BindingProfile   KeyboardMouseBindings        = {};
+        BindingProfile   GamepadBindings              = {};
 
         // =================
         // Input (controls)
@@ -211,8 +206,8 @@ namespace Silent::Services
         /** @brief Sets all gameplay options to defaults. */
         void SetDefaultGameplayOptions();
 
-        /** @brief Sets all keyboard and mouse input binding options to defaults. */
-        void SetDefaultInputKmBindingsOptions();
+        /** @brief Sets all keyboard/mouse input binding options to defaults. */
+        void SetDefaultInputCustomKmBindingsOptions();
 
         /** @brief Sets all gamepad input binding options to defaults. */
         void SetDefaultInputCustomGamepadBindingOptions();
@@ -259,12 +254,16 @@ namespace Silent::Services
 
         /** @brief Parses a JSON containing the options configuration to an internal options object.
          *
+         * @note By convention, custom input bindings contain one input event per input action.
+         *
          * @param optionsJson Options JSON to parse.
          * @return Internal `Options` object.
          */
         Options FromOptionsJson(const json& optionsJson) const;
 
         /** @brief Parses an internal options object to a JSON containing the options configuration.
+         *
+         * @note By convention, custom input bindings contain one input event per input action.
          *
          * @param options Internal `Options` object to parse.
          * @return Options JSON.

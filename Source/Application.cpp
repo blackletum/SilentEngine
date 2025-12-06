@@ -4,6 +4,7 @@
 #include "Assets/Assets.h"
 #include "Assets/Fonts.h"
 #include "Assets/Locales.h"
+#include "Assets/TranslationKeys.h"
 #include "Audio/Audio.h"
 #include "Game/Game.h"
 #include "Input/Input.h"
@@ -123,10 +124,10 @@ namespace Silent
         // Collect window flags.
         int fullscreenFlag = _work.Options->EnableFullscreen ? SDL_WINDOW_FULLSCREEN : 0;
         int maximizedFlag  = _work.Options->EnableMaximized  ? SDL_WINDOW_MAXIMIZED  : 0;
-        int flags          = SDL_WINDOW_RESIZABLE | fullscreenFlag | maximizedFlag;
+        int windowFlags    = SDL_WINDOW_RESIZABLE | fullscreenFlag | maximizedFlag;
 
         // Create window.
-        _window = SDL_CreateWindow(APP_NAME, _work.Options->WindowedSize.x, _work.Options->WindowedSize.y, flags);
+        _window = SDL_CreateWindow(APP_NAME, _work.Options->WindowedSize.x, _work.Options->WindowedSize.y, windowFlags);
         if (_window == nullptr)
         {
             throw std::runtime_error(Fmt("Failed to create window: {}", SDL_GetError()));
@@ -154,7 +155,9 @@ namespace Silent
         // Input.
         _work.Input.Initialize();
 
-        // Finish.
+        // Show fullscreen toggle toaster hint.
+        _work.Toaster.Add(_work.Translator((OS_TYPE == OsType::MacOs) ? KEY_SYS_FULLSCREEN_HINT_MAC : KEY_SYS_FULLSCREEN_HINT_GENERIC));
+
         Debug::Log("Startup complete.");
     }
 

@@ -38,7 +38,7 @@ namespace Silent::Assets
     {
         FontMetadata
         {
-            .Name      = "Smooth",
+            .Name      = "SmoothSerif",
             .Filenames =
             {
                 "FreeSerif.otf",
@@ -50,7 +50,7 @@ namespace Silent::Assets
         },
         FontMetadata
         {
-            .Name      = "Retro",
+            .Name      = "RetroSerif",
             .Filenames =
             {
                 "Times_16.ttf",
@@ -62,12 +62,26 @@ namespace Silent::Assets
         },
         FontMetadata
         {
-            .Name      = "Toast",
+            .Name      = "SmoothSans",
             .Filenames =
             {
-                "UnifontExMono.ttf"
+                "NotoSans-Bold.ttf",
+                "NotoSansJP-Bold.ttf",
+                "NotoSansKR-Bold.ttf"
             },
-            .PointSize          = 16,
+            .PointSize          = 32,
+            .EnableAntialiasing = true
+        },
+        FontMetadata
+        {
+            .Name      = "RetroSans",
+            .Filenames =
+            {
+                "den-8x10.ttf", // @todo Many required glyphs are missing and need to be drawn by hand.
+                "PixelMplus10-Regular.ttf",
+                "dalmoori.ttf" // @todo This is an 8-point font. Need to convert it to be compliant at 10-point.
+            },
+            .PointSize          = 10,
             .EnableAntialiasing = false
         }
     };

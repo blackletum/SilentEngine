@@ -3,11 +3,13 @@
 
 #include "Application.h"
 #include "Input/Input.h"
+#include "Renderer/Common/Constants.h"
 #include "Services/Filesystem.h"
 #include "Utils/Parallel.h"
 #include "Utils/Stream.h"
 
 using namespace Silent::Input;
+using namespace Silent::Renderer;
 using namespace Silent::Utils;
 
 namespace Silent::Services
@@ -59,7 +61,7 @@ namespace Silent::Services
     constexpr char KEY_ENABLE_TOASTS[]                            = "enableToasts";
     constexpr char KEY_ENABLE_PARALLELISM[]                       = "enableParallelism";
 
-    constexpr auto DEFAULT_WINDOWED_SIZE                            = Vector2i(800, 600);
+    constexpr auto DEFAULT_WINDOWED_SIZE                            = Vector2i((int)RETRO_SCREEN_SPACE_RES.x * 3, (int)RETRO_SCREEN_SPACE_RES.y * 3);
     constexpr bool DEFAULT_ENABLE_MAXIMIZED                         = false;
     constexpr bool DEFAULT_ENABLE_FULLSCREEN                        = false;
     constexpr int  DEFAULT_BRIGHTNESS_LEVEL                         = 3;
@@ -124,14 +126,14 @@ namespace Silent::Services
         _options.BulletAdjust    = DEFAULT_BULLET_ADJUST;
     }
 
-    void OptionsManager::SetDefaultInputKmBindingsOptions()
+    void OptionsManager::SetDefaultInputCustomKmBindingsOptions()
     {
-        _options.KeyboardMouseBindings = USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_1;
+        _options.KeyboardMouseBindings = DEFAULT_CUSTOM_KEYBOARD_MOUSE_BINDING_PROFILE;
     }
 
     void OptionsManager::SetDefaultInputCustomGamepadBindingOptions()
     {
-        _options.GamepadBindings = USER_GAMEPAD_BINDING_PROFILE_TYPE_1;
+        _options.GamepadBindings = DEFAULT_CUSTOM_GAMEPAD_BINDING_PROFILE;
     }
 
     void OptionsManager::SetDefaultInputControlsOptions()
@@ -201,15 +203,13 @@ namespace Silent::Services
 
     void OptionsManager::SetDefaultOptions()
     {
+        _options.ActiveKeyboardMouseProfileId = DEFAULT_ACTIVE_KEYBOARD_MOUSE_BINDING_PROFILE_ID;
+        _options.ActiveGamepadProfileId       = DEFAULT_ACTIVE_GAMEPAD_BINDING_PROFILE_ID;
+
         SetDefaultGraphicsOptions();
         SetDefaultGameplayOptions();
-
-        SetDefaultInputKmBindingsOptions();
-        _options.ActiveKeyboardMouseProfileId = DEFAULT_ACTIVE_KEYBOARD_MOUSE_BINDING_PROFILE_ID;
-
+        SetDefaultInputCustomKmBindingsOptions();
         SetDefaultInputCustomGamepadBindingOptions();
-        _options.ActiveGamepadProfileId = DEFAULT_ACTIVE_GAMEPAD_BINDING_PROFILE_ID;
-
         SetDefaultInputControlsOptions();
         SetDefaultEnhancementsOptions();
         SetDefaultSystemOptions();
@@ -261,52 +261,38 @@ namespace Silent::Services
         options.DisableAutoAiming            = inputJson.value(KEY_DISABLE_AUTO_AIMING,                      DEFAULT_DISABLE_AUTO_AIMING);
         options.ViewMode                     = inputJson.value(KEY_VIEW_MODE,                                DEFAULT_VIEW_MODE);
 
-        // Load custom action-event bindings.
+        // Load custom bindings.
         const auto& kmBindsJson      = inputJson[KEY_KEYBOARD_MOUSE_BINDINGS];
         const auto& gamepadBindsJson = inputJson[KEY_GAMEPAD_BINDINGS];
         for (auto actionGroupId : USER_ACTION_GROUP_IDS)
         {
-            const auto& actionIds = ACTION_ID_GROUPS.at(actionGroupId);
+            const auto& actionIds = ACTION_ID_GROUPS[(int)actionGroupId];
             for (auto actionId : actionIds)
             {
-                auto actionStr = std::to_string((int)actionId);
+                auto actionIdStr = std::to_string((int)actionId);
 
                 // Keyboard/mouse.
-                if (kmBindsJson.contains(actionStr))
+                if (kmBindsJson.contains(actionIdStr))
                 {
-                    const auto& eventsJson = kmBindsJson[actionStr];
-
-                    auto events = std::vector<EventId>{};
-                    events.reserve(eventsJson.size());
-                    for (const auto& eventJson : eventsJson)
-                    {
-                        events.push_back((EventId)eventJson.get<int>());
-                    }
-
-                    options.KeyboardMouseBindings[actionId] = !events.empty() ? std::move(events) : USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_1.at(actionId);
+                    const auto& eventIdJson                 = kmBindsJson[actionIdStr];
+                    auto        eventId                     = !eventIdJson.empty() ? (EventId)eventIdJson : DEFAULT_CUSTOM_KEYBOARD_MOUSE_BINDING_PROFILE.at(actionId).front();
+                    options.KeyboardMouseBindings[actionId] = { eventId };
                 }
                 else
                 {
-                    options.KeyboardMouseBindings[actionId] = USER_KEYBOARD_MOUSE_BINDING_PROFILE_TYPE_1.at(actionId);
+                    options.KeyboardMouseBindings[actionId] = DEFAULT_CUSTOM_KEYBOARD_MOUSE_BINDING_PROFILE.at(actionId);
                 }
 
                 // Gamepad.
-                if (gamepadBindsJson.contains(actionStr))
+                if (gamepadBindsJson.contains(actionIdStr))
                 {
-                    const auto& eventsJson = gamepadBindsJson[actionStr];
-
-                    auto events = std::vector<EventId>{};
-                    events.reserve(eventsJson.size());
-                    for (const auto& eventJson : eventsJson)
-                    {
-                        events.push_back((EventId)eventJson.get<int>());
-                    }
-
-                    options.GamepadBindings[actionId] = !events.empty() ? std::move(events) : USER_GAMEPAD_BINDING_PROFILE_TYPE_1.at(actionId);
+                    const auto& eventIdJson           = gamepadBindsJson[actionIdStr];
+                    auto        eventId               = !eventIdJson.empty() ? (EventId)eventIdJson : DEFAULT_CUSTOM_GAMEPAD_BINDING_PROFILE.at(actionId).front();
+                    options.GamepadBindings[actionId] = { eventId };
                 }
                 else
                 {
-                    options.GamepadBindings[actionId] = USER_GAMEPAD_BINDING_PROFILE_TYPE_1.at(actionId);
+                    options.KeyboardMouseBindings[actionId] = DEFAULT_CUSTOM_GAMEPAD_BINDING_PROFILE.at(actionId);
                 }
             }
         }
@@ -335,30 +321,18 @@ namespace Silent::Services
 
     json OptionsManager::ToOptionsJson(const Options& options) const
     {
-        // Create keyboard/mouse action-event bindings JSON.
+        // Create keyboard/mouse bindings JSON.
         auto kmBindsJson = json();
         for (const auto& [actionId, eventIds] : options.KeyboardMouseBindings)
         {
-            auto eventsJson = json::array();
-            for (const auto& eventId : eventIds)
-            {
-                eventsJson.push_back(eventId);
-            }
-
-            kmBindsJson[std::to_string((int)actionId)] = eventsJson;
+            kmBindsJson[std::to_string((int)actionId)] = eventIds.front();
         }
 
-        // Create gamepad action-event bindings JSON.
+        // Create gamepad bindings JSON.
         auto gamepadBindsJson = json();
         for (const auto& [actionId, eventIds] : options.KeyboardMouseBindings)
         {
-            auto eventsJson = json::array();
-            for (const auto& eventId : eventIds)
-            {
-                eventsJson.push_back(eventId);
-            }
-
-            gamepadBindsJson[std::to_string((int)actionId)] = eventsJson;
+            gamepadBindsJson[std::to_string((int)actionId)] = eventIds.front();
         }
 
         // Create options JSON.
@@ -400,10 +374,10 @@ namespace Silent::Services
             {
                 KEY_INPUT,
                 {
-                    { KEY_KEYBOARD_MOUSE_BINDINGS,                  kmBindsJson                          },
                     { KEY_ACTIVE_KEYBOARD_MOUSE_BINDING_PROFILE_ID, options.ActiveKeyboardMouseProfileId },
-                    { KEY_GAMEPAD_BINDINGS,                         gamepadBindsJson                     },
                     { KEY_ACTIVE_GAMEPAD_BINDING_PROFILE_ID,        options.ActiveGamepadProfileId       },
+                    { KEY_KEYBOARD_MOUSE_BINDINGS,                  kmBindsJson                          },
+                    { KEY_GAMEPAD_BINDINGS,                         gamepadBindsJson                     },
                     { KEY_ENABLE_VIBRATION,                         options.EnableVibration              },
                     { KEY_MOUSE_SENSITIVITY,                        options.MouseSensitivity             },
                     { KEY_WEAPON_CONTROL,                           options.WeaponControl                },
