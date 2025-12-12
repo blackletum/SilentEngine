@@ -34,6 +34,7 @@ namespace Silent::Assets
         Color::From8Bit(128, 128, 128)
     };
 
+    // @todo Could be defined in a Lua script instead.
     const std::vector<FontMetadata> FONTS_METADATA
     {
         FontMetadata
@@ -77,9 +78,9 @@ namespace Silent::Assets
             .Name      = "RetroSans",
             .Filenames =
             {
-                "den-8x10.ttf", // @todo Many required glyphs are missing and need to be drawn by hand.
+                "SilentControl10.ttf",
                 "PixelMplus10-Regular.ttf",
-                "dalmoori.ttf" // @todo This is an 8-point font. Need to convert it to be compliant at 10-point.
+                "dalmoori10.ttf"
             },
             .PointSize          = 10,
             .EnableAntialiasing = false

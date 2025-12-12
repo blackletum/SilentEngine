@@ -6,6 +6,7 @@
 #include "Renderer/Common/Objects/Primitive/Vertex3d.h"
 #include "Renderer/Common/Objects/Primitive2d.h"
 #include "Renderer/Common/Objects/Primitive3d.h"
+#include "Renderer/Common/Objects/Scene/Glyph.h"
 #include "Renderer/Common/Objects/Scene/Sprite2d.h"
 #include "Renderer/Common/Objects/Scene/Text.h"
 #include "Renderer/Backends/OpenGl/OpenGl.h"
@@ -92,7 +93,13 @@ namespace Silent::Renderer
             return;
         }
 
-        // @todo
+        auto sprite = Sprite2d
+        {
+            .UvMin    = uvMin,
+            .UvMax    = uvMax,
+            .Position = pos
+        };
+        _sprites2d.push_back(sprite);
     }
 
     void RendererBase::SubmitDebugText(const std::string& msg, const Vector2& pos, const Color& color, TextAlignMode alignMode)

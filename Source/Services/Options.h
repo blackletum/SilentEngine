@@ -53,8 +53,9 @@ namespace Silent::Services
 
     enum class LanguageType
     {
-        EnglishOriginal,
-        EnglishRevised
+        EnglishRevised,
+        EnglishOriginalUs,
+        EnglishOriginalEu
     };
 
     enum class SoundType
@@ -87,6 +88,12 @@ namespace Silent::Services
     {
         Normal,
         SelfView
+    };
+
+    enum class PaperMapQuality
+    {
+        Hd,
+        Retro
     };
 
     enum class DialogPauseType
@@ -128,7 +135,7 @@ namespace Silent::Services
 
         bool           EnableAutoLoad  = false;
         bool           EnableSubtitles = false;
-        LanguageType   Language        = LanguageType::EnglishOriginal;
+        LanguageType   Language        = LanguageType::EnglishOriginalUs;
         SoundType      Sound           = SoundType::Stereo;
         int            BgmVolume       = 0;
         int            SeVolume        = 0;
@@ -161,6 +168,7 @@ namespace Silent::Services
         // Enhancements
         // =============
 
+        PaperMapQuality PaperMap    = PaperMapQuality::Hd;
         DialogPauseType DialogPause = DialogPauseType::Retro;
 
         // ==================

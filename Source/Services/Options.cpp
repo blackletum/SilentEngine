@@ -45,10 +45,10 @@ namespace Silent::Services
     constexpr char KEY_SE_VOLUME[]                                = "seVolume";
     constexpr char KEY_BLOOD_COLOR[]                              = "bloodColor";
     constexpr char KEY_BULLET_ADJUST[]                            = "bulletAdjust";
-    constexpr char KEY_KEYBOARD_MOUSE_BINDINGS[]                  = "keyboardMouseBindings";
     constexpr char KEY_ACTIVE_KEYBOARD_MOUSE_BINDING_PROFILE_ID[] = "activeKeyboardMouseBindingProfileId";
-    constexpr char KEY_GAMEPAD_BINDINGS[]                         = "gamepadBindings";
     constexpr char KEY_ACTIVE_GAMEPAD_BINDING_PROFILE_ID[]        = "activeGamepadBindingProfileId";
+    constexpr char KEY_KEYBOARD_MOUSE_BINDINGS[]                  = "keyboardMouseBindings";
+    constexpr char KEY_GAMEPAD_BINDINGS[]                         = "gamepadBindings";
     constexpr char KEY_ENABLE_VIBRATION[]                         = "enableVibration";
     constexpr char KEY_MOUSE_SENSITIVITY[]                        = "mouseSensitivity";
     constexpr char KEY_WEAPON_CONTROL[]                           = "weaponControl";
@@ -57,6 +57,7 @@ namespace Silent::Services
     constexpr char KEY_WALK_RUN_CONTROL[]                         = "walkRunControl";
     constexpr char KEY_DISABLE_AUTO_AIMING[]                      = "disableAutoAiming";
     constexpr char KEY_VIEW_MODE[]                                = "viewMode";
+    constexpr char KEY_PAPER_MAP[]                                = "paperMap";
     constexpr char KEY_DIALOG_PAUSE[]                             = "dialogPause";
     constexpr char KEY_ENABLE_TOASTS[]                            = "enableToasts";
     constexpr char KEY_ENABLE_PARALLELISM[]                       = "enableParallelism";
@@ -77,7 +78,7 @@ namespace Silent::Services
     constexpr bool DEFAULT_ENABLE_VERTEX_JITTER                     = false;
     constexpr bool DEFAULT_ENABLE_AUTO_LOAD                         = false;
     constexpr bool DEFAULT_ENABLE_SUBTITLES                         = true;
-    constexpr auto DEFAULT_LANGUAGE                                 = LanguageType::EnglishOriginal;
+    constexpr auto DEFAULT_LANGUAGE                                 = LanguageType::EnglishOriginalUs;
     constexpr auto DEFAULT_SOUND                                    = SoundType::Stereo;
     constexpr int  DEFAULT_BGM_VOLUME                               = 16;
     constexpr int  DEFAULT_SE_VOLUME                                = 16;
@@ -92,6 +93,7 @@ namespace Silent::Services
     constexpr auto DEFAULT_RETREAT_TURN_CONTROL                     = ControlInversionType::Normal;
     constexpr auto DEFAULT_WALK_RUN_CONTROL                         = ControlInversionType::Normal;
     constexpr bool DEFAULT_DISABLE_AUTO_AIMING                      = false;
+    constexpr auto DEFAULT_PAPER_MAP                                = PaperMapQuality::Hd;
     constexpr auto DEFAULT_DIALOG_PAUSE                             = DialogPauseType::Retro;
     constexpr auto DEFAULT_VIEW_MODE                                = ViewMode::Normal;
     constexpr bool DEFAULT_ENABLE_TOASTS                            = true;
@@ -150,6 +152,7 @@ namespace Silent::Services
 
     void OptionsManager::SetDefaultEnhancementsOptions()
     {
+        _options.PaperMap    = DEFAULT_PAPER_MAP;
         _options.DialogPause = DEFAULT_DIALOG_PAUSE;
     }
 
@@ -299,6 +302,7 @@ namespace Silent::Services
 
         // Load enhancements options.
         const auto& enhancementsJson = optionsJson[KEY_ENHANCEMENTS];
+        options.PaperMap             = enhancementsJson.value(KEY_PAPER_MAP,    DEFAULT_PAPER_MAP);
         options.DialogPause          = enhancementsJson.value(KEY_DIALOG_PAUSE, DEFAULT_DIALOG_PAUSE);
 
         // Load system options.
@@ -391,6 +395,7 @@ namespace Silent::Services
             {
                 KEY_ENHANCEMENTS,
                 {
+                    { KEY_PAPER_MAP,    options.PaperMap    },
                     { KEY_DIALOG_PAUSE, options.DialogPause }
                 }
             },

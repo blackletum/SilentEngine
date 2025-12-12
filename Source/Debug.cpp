@@ -52,6 +52,10 @@ namespace Silent::Debug
 
             auto& renderer = g_App.GetRenderer();
 
+            // Sprite test.
+            renderer.SubmitScreenSprite(0, Vector2::Zero, Vector2::Zero, Vector2::Zero, 0, Vector2::Zero, Color::Clear, 0,
+                                        AlignMode::Center, ScaleMode::Fill, BlendMode::Opaque);
+
             // GUI button test.
             static auto but = Button(Vector2(25.0f, 75.0f), Vector2(25.0f, 25.0f), ScaleMode::Fit,
                                      []() { Debug::Log("Entering!"); },
@@ -276,12 +280,13 @@ namespace Silent::Debug
             constexpr const char* TEX_FILTER_ITEMS[]        = { "Nearest", "Linear" };
             constexpr const char* TEXT_QUALITY_ITEMS[]      = { "Smooth", "Retro" };
             constexpr const char* LIGHTING_ITEMS[]          = { "Per vertex", "Per pixel" };
-            constexpr const char* LANG_ITEMS[]              = { "English" };
+            constexpr const char* LANG_ITEMS[]              = { "English (Revised)", "English (Original US)", "English (Original EU)" };
             constexpr const char* SOUND_ITEMS[]             = { "Stereo", "Monaural" };
             constexpr const char* BLOOD_COLOR_ITEMS[]       = { "Normal", "Green", "Violet", "Black" };
             constexpr const char* CONTROL_INVERSION_ITEMS[] = { "Normal", "Reverse" };
             constexpr const char* WEAPON_CONTROL_ITEMS[]    = { "Switch", "Press" };
             constexpr const char* VIEW_MODE_ITEMS[]         = { "Normal", "Self view" };
+            constexpr const char* PAPER_MAP_ITEMS[]         = { "Hd", "Retro" };
             constexpr const char* DIALOG_PAUSE_ITEMS[]      = { "Condensed", "Retro" };
 
             const auto& assets     = g_App.GetAssets();
@@ -770,6 +775,14 @@ namespace Silent::Debug
                         {
                             options->DialogPause = (DialogPauseType)dialogPause;
                             isOptChanged         = true;
+                        }
+
+                        // `Paper map` combo.
+                        int paperMap = (int)options->PaperMap;
+                        if (ImGui::Combo("Paper map", &paperMap, PAPER_MAP_ITEMS, IM_ARRAYSIZE(PAPER_MAP_ITEMS)))
+                        {
+                            options->PaperMap = (PaperMapQuality)paperMap;
+                            isOptChanged      = true;
                         }
                     }
 
