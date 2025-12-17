@@ -126,40 +126,45 @@ namespace Silent::Input
     {
         return _id;
     }
-    
+
     float Action::GetState() const
     {
         return _state;
     }
-    
-    uint Action::GetTicksActive() const
+
+    int Action::GetTicksActive() const
     {
         return _ticksActive;
     }
-    
-    uint Action::GetTicksInactive() const
+
+    int Action::GetTicksInactive() const
     {
         return _ticksInactive;
     }
-    
+
     bool Action::IsClicked(float stateMin) const
     {
+        stateMin = std::clamp(stateMin, 0.0f, 1.0f);
         return _state > stateMin && _prevState <= stateMin;
     }
 
     bool Action::IsHeld(float delaySec, float stateMin) const
     {
+        stateMin = std::clamp(stateMin, 0.0f, 1.0f);
         if (_state <= stateMin)
         {
             return false;
         }
 
-        uint delayTicks = (delaySec == 0.0f) ? 0 : SEC_TO_TICK(delaySec);
+        delaySec = std::max(stateMin, 0.0f);
+
+        int delayTicks = SEC_TO_TICK(delaySec);
         return _ticksActive >= delayTicks;
     }
 
     bool Action::IsPulsed(float delaySec, float initialDelaySec, float stateMin) const
     {
+        stateMin = std::clamp(stateMin, 0.0f, 1.0f);
         if (IsClicked(stateMin))
         {
             return true;
@@ -170,17 +175,23 @@ namespace Silent::Input
             return false;
         }
 
+        delaySec        = std::max(delaySec, 0.0f);
+        initialDelaySec = std::max(initialDelaySec, 0.0f);
+        
         float activeDelaySec   = (_ticksActive > SEC_TO_TICK(initialDelaySec)) ? delaySec : initialDelaySec;
-        uint  activeDelayTicks = SEC_TO_TICK(activeDelaySec);
+        int   activeDelayTicks = SEC_TO_TICK(activeDelaySec);
 
-        uint delayTicks     = (uint)floor(_ticksActive     / activeDelayTicks) * activeDelayTicks;
-        uint prevDelayTicks = (uint)floor(_prevTicksActive / activeDelayTicks) * activeDelayTicks;
+        int delayTicks     = (int)floor(_ticksActive     / activeDelayTicks) * activeDelayTicks;
+        int prevDelayTicks = (int)floor(_prevTicksActive / activeDelayTicks) * activeDelayTicks;
         return delayTicks > prevDelayTicks;
     }
 
     bool Action::IsReleased(float delaySecMax, float stateMin) const
     {
-        uint delayTicksMax = (delaySecMax == FLT_MAX) ? UINT_MAX : SEC_TO_TICK(delaySecMax);
+        delaySecMax = std::max(delaySecMax, 0.0f);
+        stateMin    = std::clamp(stateMin, 0.0f, 1.0f);
+
+        int delayTicksMax = (delaySecMax == FLT_MAX) ? UINT_MAX : SEC_TO_TICK(delaySecMax);
         return _state <= stateMin && _prevState > stateMin && _ticksActive <= delayTicksMax;
     }
 

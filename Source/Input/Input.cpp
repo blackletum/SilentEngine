@@ -54,12 +54,12 @@ namespace Silent::Input
         return _text.GetText(textId);
     }
 
-    std::vector<std::string> InputManager::GetTextLines(const std::string& bufferId, uint low, uint high) const
+    std::vector<std::string> InputManager::GetTextLines(const std::string& bufferId, int low, int high) const
     {
         return _text.GetTextLines(bufferId, low, high);
     }
 
-    uint InputManager::GetTextCursorPosition(const std::string& textId) const
+    int InputManager::GetTextCursorPosition(const std::string& textId) const
     {
         return _text.GetCursorPosition(textId);
     }
@@ -219,7 +219,7 @@ namespace Silent::Input
         Debug::Log("Gamepad disconnected.");
     }
 
-    void InputManager::InsertText(const std::string& textId, uint lineWidthMax, uint charCountMax)
+    void InputManager::InsertText(const std::string& textId, int lineWidthMax, int charCountMax)
     {
         _text.InsertBuffer(textId, lineWidthMax, charCountMax);
     }
@@ -413,7 +413,7 @@ namespace Silent::Input
         ushort freqHigh = (_rumble.Mode == RumbleMode::High || _rumble.Mode == RumbleMode::LowAndHigh) ? (ushort)(intensity * USHRT_MAX) : 0;
 
         // Compute duration.
-        uint durationMs = (uint)round(TICK_TO_SEC(_rumble.DurationTicks) * 1000);
+        int durationMs = (int)round(TICK_TO_SEC(_rumble.DurationTicks) * 1000);
 
         // Rumble gamepad.
         if (!SDL_RumbleGamepad(_gamepad.Device, freqLow, freqHigh, durationMs))
@@ -656,13 +656,13 @@ namespace Silent::Input
         dbFullscreen = !((GetRawEventState(EventId::Alt) && GetRawEventState(EventId::Return)) || GetRawEventState(EventId::F11));
 
         auto& options = g_App.GetOptions();
-        if (options->EnableDebugMode)
+        if (options->EnablePowerMode)
         {
-            // Toggle debug GUI.
+            // Toggle power menu.
             static bool dbDebugGui = true;
             if (GetRawEventState(EventId::Grave) && dbDebugGui)
             {
-                g_App.ToggleDebugGui();
+                g_App.TogglePowerMenu();
             }
             dbDebugGui = !GetRawEventState(EventId::Grave);
         }

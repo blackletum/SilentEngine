@@ -11,12 +11,12 @@ namespace Silent::Assets
     constexpr char KEY_SYS_GAMEPAD_CONNECTED[]       = "sys_GamepadConnected";
     constexpr char KEY_SYS_GAMEPAD_DISCONNECTED[]    = "sys_GamepadDisconnected";
 
-    // ========================
-    // Splash Screen and Intro
-    // ========================
+    // ======
+    // Intro
+    // ======
 
-    constexpr char KEY_SPLASH_SCREEN_WARNING[] = "splashScreen_Warning";
-    constexpr char KEY_INTRO_FEAR_OF_BLOOD[]   = "intro_FearOfBlood";
+    constexpr char KEY_INTRO_WARNING[]       = "intro_Warning";
+    constexpr char KEY_INTRO_FEAR_OF_BLOOD[] = "intro_FearOfBlood";
 
     // ======
     // Menus
@@ -181,7 +181,6 @@ namespace Silent::Assets
     constexpr char KEY_PAPER_MAP_SUNDRIES_SHOP[]        = "paperMap_SundriesShop";
     constexpr char KEY_PAPER_MAP_MARKET[]               = "paperMap_Market";
     constexpr char KEY_PAPER_MAP_TOP_SALES[]            = "paperMap_TopSales";
-    constexpr char KEY_PAPER_MAP_BOOK_AND_GIFT_SHOP[]   = "paperMap_BookAndGiftShop";
 
     //constexpr char KEY_PAPER_MAP_SCHOOL[]      = "paperMap_School";
     constexpr char KEY_PAPER_MAP_HOSPITAL[]    = "paperMap_Hospital";

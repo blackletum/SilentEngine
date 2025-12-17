@@ -1,5 +1,7 @@
 #pragma once
 
+namespace Silent::Renderer{ enum class ScaleMode; }
+
 namespace Silent::Debug
 {
 #ifdef _DEBUG
@@ -40,40 +42,31 @@ namespace Silent::Debug
     {
         using TimeType = std::chrono::steady_clock::time_point;
 
-        /** Temp */
-
-        float BlendAlpha = 0.0f;
-
-        /** System (internal) */
+        float BlendAlpha = 0.0f; // @temp
 
         std::vector<std::string> Messages  = {};
         TimeType                 StartTime = {};
 
-        /** System (user) */
-
-        Page Page = Page::Renderer;
-
-        /** Renderer (internal) */
-
         float    Fps        = 0.0f;
-        uint     FrameTime  = 0;
-        uint     FrameCount = 0;
+        int      FrameTime  = 0;
+        int      FrameCount = 0;
         TimeType PrevTime   = {};
 
-        /** Renderer (user) */
 
+        Page Page                = Page::Renderer;
+        bool EnablePowerMenu     = false;
         bool EnableWireframeMode = false;
-
-        /** Cheats */
-
-        bool EnableFreezeMode = false;
+        bool EnableFreezeMode    = false;
     };
 
     /** @brief Global debug workspace data. */
     extern DebugWork g_Work;
 
-    /** @brief Executes scratch code. This is a dedicated space which can be used to test anything. */
-    void Scratchpad();
+    /** @brief Checks if a debug page is currently open in the debug menu.
+     *
+     * @return `true` if the debug page is open, `false` otherwise.
+     */
+    bool CheckPage(Debug::Page page);
 
     /** @brief Initializes the debug logger, log file for flushing, and GUI. */
     void Initialize();
@@ -81,10 +74,10 @@ namespace Silent::Debug
     /** @brief Gracefully shuts down the logger. */
     void Deinitialize();
 
-    /** @brief Updates the debug GUI. */
+    /** @brief Updates the power menu. */
     void Update();
 
-    /** @brief Displays a message in the debug GUI.
+    /** @brief Displays a message in the power menu.
      *
      * @param msg Message to display.
      */
@@ -113,11 +106,22 @@ namespace Silent::Debug
     /** @brief Stops the debug timer and prints the execution time in microseconds via a `Message` call. Placed after the relevant code block. */
     void EndTimer();
 
-    /** @brief Creates a debug GUI and submits it to the renderer for drawing.
+    /** @brief Creates a power menu and submits it to the renderer for drawing.
      *
      * @param drawFunc Function defining the GUI to construct.
      */
     void CreateGui(std::function<void()> drawFunc);
+
+    /** @brief Creates a 2D line with additive blending and submits it to the renderer for drawing.
+     * Used to construct more complex geometry.
+     *
+     * @param from Start point.
+     * @param to End point.
+     * @param color Line color.
+     * @param scaleMode Screen space scale mode.
+     * @param page Debug page in which the line will be visible.
+     */
+    void CreateLine(const Vector2& from, const Vector2& to, const Color& color, Renderer::ScaleMode scaleMode, Debug::Page page = Page::None);
 
     /** @brief Creates a 3D line with additive blending and submits it to the renderer for drawing.
      * Used to construct more complex geometry.
@@ -128,6 +132,18 @@ namespace Silent::Debug
      * @param page Debug page in which the line will be visible.
      */
     void CreateLine(const Vector3& from, const Vector3& to, const Color& color, Page page = Page::None);
+
+    /** @brief Submits a 2D triangle polygon with additive blending for drawing.
+     * Used to construct more complex geometry.
+     *
+     * @param vert0 First vertex.
+     * @param vert1 Second vertex.
+     * @param vert2 Third vertex.
+     * @param color Triangle color.
+     * @param scaleMode Screen space scale mode.
+     * @param page Debug page in which the triangle will be visible.
+     */
+    void SubmitDebugTriangle(const Vector2& vert0, const Vector2& vert1, const Vector2& vert2, const Color& color, Renderer::ScaleMode scaleMode, Debug::Page page = Page::None);
 
     /** @brief Creates a 3D triangle polygon with additive blending and submits it to the renderer for drawing.
      * Used to construct more complex geometry.

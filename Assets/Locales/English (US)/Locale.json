@@ -4,7 +4,7 @@
     "sys_GamepadConnected": "Gamepad connected.",
     "sys_GamepadDisonnected": "Gamepad disconnected.",
     
-    "splashScreen_Warning": "There are violent and disturbing{N}images in this game.",
+    "intro_Warning": "There are violent and disturbing{N}images in this game.",
     "intro_FearOfBlood": "The fear of blood tends to create fear for the flesh.",
 
     "mainMenu_Start": "START",
@@ -142,7 +142,6 @@
     "paperMap_SundriesShop": "SUNDRIES SHOP",
     "paperMap_Market": "MARKET",
     "paperMap_TopSales": "TOP SALES",
-    "paperMap_BookAndGiftShop": "BOOK AND GIFT SHOP",
 
     "gameOver_TipsHeading": "GAME OVER",
     "gameOver_Tip1": "When you press the L2 button, the camera{N}angle shifts behind Harry,making it easier{N}to see what is directly in front of him.",

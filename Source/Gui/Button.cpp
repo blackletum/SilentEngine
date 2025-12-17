@@ -76,9 +76,16 @@ namespace Silent::Gui
             In::MouseClickLeft
         };
 
+
         auto correctedExtents = Extents * GetScreenAspectCorrection(_scaleMode);
         auto bounds           = AxisAlignedBoundingRect(Center, correctedExtents);
         Update(bounds.Intersects(pos), SELECT_ACTION_IDS); 
+    }
+
+    void Button::Debug() const
+    {
+        // @todo
+        //Debug::CreateRectangle();
     }
 
     bool Button::IsActionClicked(const std::vector<ActionId>& actionIds) const
