@@ -35,26 +35,6 @@ namespace Silent::Services
         return _shadersDir;
     }
 
-    std::string GetHomeDirectory()
-    {
-    #ifdef _WIN32
-        char*  buffer = nullptr;
-        size_t length = 0;
-
-        if (_dupenv_s(&buffer, &length, "USERPROFILE") == 0 && buffer != nullptr)
-        {
-            std::string home(buffer);
-            free(buffer);
-            return home;
-        }
-
-        return {};
-    #else
-        const char* home = getenv("HOME");
-        return home ? std::string(home) : "";
-    #endif
-    }
-
     void FilesystemManager::Initialize()
     {
         constexpr char ASSETS_DIR_NAME[]      = "Assets";
@@ -78,8 +58,7 @@ namespace Silent::Services
                 auto homeDir = GetHomeDirectory();
                 if (!homeDir.empty())
                 {
-                    auto path       = std::filesystem::path(homeDir);
-                    _screenshotsDir = path / "Pictures" / SCREENSHOTS_DIR_NAME;
+                    _screenshotsDir = std::filesystem::path(homeDir) / "Pictures" / SCREENSHOTS_DIR_NAME;
                 }
                 break;
             }
@@ -110,5 +89,24 @@ namespace Silent::Services
         // Create workspace directories.
         std::filesystem::create_directories(_workDir);
         std::filesystem::create_directories(_savegameDir);
+    }
+
+    std::string FilesystemManager::GetHomeDirectory() const
+    {
+#ifdef _WIN32
+        char*  buffer = nullptr;
+        size_t length = 0;
+
+        if (_dupenv_s(&buffer, &length, "USERPROFILE") == 0 && buffer != nullptr)
+        {
+            auto home = std::string(buffer);
+            free(buffer);
+            return home;
+        }
+
+        return {};
+#else
+        return std::string(getenv("HOME"));
+#endif
     }
 }

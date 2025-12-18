@@ -29,7 +29,7 @@ namespace Silent::Services
         // =============
 
         FilesystemManager() = default;
-        
+
         // ========
         // Getters
         // ========
@@ -47,5 +47,12 @@ namespace Silent::Services
 
         /** @brief Initializes the filesystem. */
         void Initialize();
+
+    private:
+        // ========
+        // Helpers
+        // ========
+
+        std::string GetHomeDirectory() const;
     };
 }
