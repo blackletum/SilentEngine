@@ -2,7 +2,7 @@
 
 #include "Renderer/Common/Objects/Primitive2d.h"
 #include "Renderer/Backends/OpenGl/ElementBuffer.h"
-#include "Renderer/Backends/OpenGl/Framebuffer.h"
+#include "Renderer/Backends/OpenGl/FrameBuffer.h"
 #include "Renderer/Backends/OpenGl/ShaderProgram.h"
 #include "Renderer/Backends/OpenGl/Texture.h"
 #include "Renderer/Backends/OpenGl/VertexArray.h"

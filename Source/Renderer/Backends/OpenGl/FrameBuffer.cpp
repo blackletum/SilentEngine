@@ -1,5 +1,5 @@
 #include "Framework.h"
-#include "Renderer/Backends/OpenGl/Framebuffer.h"
+#include "Renderer/Backends/OpenGl/FrameBuffer.h"
 
 #include "Application.h"
 #include "Renderer/Renderer.h"

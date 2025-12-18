@@ -40,7 +40,7 @@ namespace Silent::Debug
     /** @brief Debug workspace. */
     struct DebugWork
     {
-        using TimeType = std::chrono::steady_clock::time_point;
+        using TimeType = std::chrono::system_clock::time_point;
 
         float BlendAlpha = 0.0f; // @temp
 

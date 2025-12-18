@@ -51,7 +51,7 @@ namespace Silent::Assets
     {
         // Run through registered assets.
         auto names = std::vector<std::string>{};
-        for (const auto asset : _assets)
+        for (const auto& asset : _assets)
         {
             if (asset->State == AssetState::Loaded)
             {

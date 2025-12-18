@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.31.6)
 
 # @todo
-# - Switch to GCC.
 # - Modules don't work.
 # - Assimp doesn't work.
 
@@ -12,10 +11,6 @@ project(SilentEngine)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 23)
 
-# Specify C and C++ compilers. @todo Not working for some reason.
-#set(CMAKE_C_COMPILER gcc)
-#set(CMAKE_CXX_COMPILER g++)
-
 # Set compiler options.
 if(MSVC)
     add_compile_options(/std:c++20) # Enable modules.
@@ -23,9 +18,11 @@ if(MSVC)
     add_compile_options(/wd4244)    # Suppress type conversion warnings.
     add_compile_options(/wd4267)    # Suppress type conversion warnings.
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-    add_compile_options(-fmodules-ts)      # Enable modules.
-    add_compile_options(-Wno-sign-compare) # Suppress sign comparison warnings.
-    add_compile_options(-Wno-conversion)   # Suppress type conversion warnings.
+    add_compile_options(-Mmodules)            # Enable modules.
+    add_compile_options(-Wno-changes-meaning) # Suppress name shadowing errors.
+    add_compile_options(-Wformat-extra-args)  # Suppress format string errors.
+    add_compile_options(-Wno-sign-compare)    # Suppress sign comparison warnings.
+    add_compile_options(-Wno-conversion)      # Suppress type conversion warnings.
 endif()
 
 # Add executable.

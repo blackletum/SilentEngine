@@ -35,15 +35,32 @@ namespace Silent::Services
         return _shadersDir;
     }
 
+    std::string GetHomeDirectory()
+    {
+    #ifdef _WIN32
+        char*  buffer = nullptr;
+        size_t length = 0;
+
+        if (_dupenv_s(&buffer, &length, "USERPROFILE") == 0 && buffer != nullptr)
+        {
+            std::string home(buffer);
+            free(buffer);
+            return home;
+        }
+
+        return {};
+    #else
+        const char* home = getenv("HOME");
+        return home ? std::string(home) : "";
+    #endif
+    }
+
     void FilesystemManager::Initialize()
     {
         constexpr char ASSETS_DIR_NAME[]      = "Assets";
         constexpr char SAVEGAME_DIR_NAME[]    = "Savegame";
         constexpr char SCREENSHOTS_DIR_NAME[] = "Screenshots";
         constexpr char SHADERS_DIR_NAME[]     = "Shaders";
-
-        char*  buffer = nullptr;
-        size_t length = 0;
 
         // Set workspace path.
         _workDir = SDL_GetPrefPath(APP_NAME, APP_NAME);
@@ -55,28 +72,13 @@ namespace Silent::Services
         switch (OS_TYPE)
         {
             case OsType::Windows:
-            {
-                if (_dupenv_s(&buffer, &length, "USERPROFILE") == 0 && buffer != nullptr)
-                {
-                    auto path       = std::filesystem::path(buffer);
-                    _screenshotsDir = path / "Pictures" / SCREENSHOTS_DIR_NAME;
-                }
-                break;
-            }
             case OsType::MacOs:
-            {
-                if (_dupenv_s(&buffer, &length, "HOME") == 0 && buffer != nullptr)
-                {
-                    auto path       = std::filesystem::path(buffer);
-                    _screenshotsDir = path / "Pictures" / SCREENSHOTS_DIR_NAME;
-                }
-                break;
-            }
             case OsType::Linux:
             {
-                if (_dupenv_s(&buffer, &length, "HOME") == 0 && buffer != nullptr)
+                auto homeDir = GetHomeDirectory();
+                if (!homeDir.empty())
                 {
-                    auto path       = std::filesystem::path(buffer);
+                    auto path       = std::filesystem::path(homeDir);
                     _screenshotsDir = path / "Pictures" / SCREENSHOTS_DIR_NAME;
                 }
                 break;

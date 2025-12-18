@@ -3,7 +3,7 @@
 namespace Silent::Renderer
 {
     /** @brief GPU texture interface. */
-    class ITexture abstract
+    class ITexture
     {
     public:
         // =============
@@ -14,7 +14,7 @@ namespace Silent::Renderer
     };
 
     /** @brief GPU texture cache manager base. */
-    class TextureManagerBase abstract
+    class TextureManagerBase
     {
     protected:
         // =======

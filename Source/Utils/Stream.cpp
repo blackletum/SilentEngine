@@ -13,16 +13,16 @@ namespace Silent::Utils
     {
         if (read)
         {
-            _flags |= std::fstream::in;
+            _flags |= (int)std::fstream::in;
         }
 
         if (write)
         {
-            _flags |= std::fstream::out | std::fstream::trunc;
+            _flags |= (int)std::fstream::out | (int)std::fstream::trunc;
             std::filesystem::create_directories(filename.parent_path());
         }
 
-        _stream.open(filename, _flags);
+        _stream.open(filename, (std::ios_base::openmode)_flags);
     }
 
     Stream::~Stream()
