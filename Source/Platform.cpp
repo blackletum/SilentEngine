@@ -3,6 +3,25 @@
 
 namespace Silent
 {
+    std::filesystem::path GetHomeDirectory()
+    {
+#if defined(_WIN32) || defined(_WIN64)
+        char*  buffer = nullptr;
+        size_t length = 0;
+
+        if (_dupenv_s(&buffer, &length, "USERPROFILE") == 0 && buffer != nullptr)
+        {
+            auto home = std::string(buffer);
+            free(buffer);
+            return std::filesystem::path(home);
+        }
+
+        return {};
+#else
+        return std::filesystem::path(getenv("HOME"));
+#endif
+    }
+
     /** @brief Handles a termination exception. */
     static void TerminateHandler()
     {

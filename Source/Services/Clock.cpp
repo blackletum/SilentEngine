@@ -9,7 +9,7 @@ namespace Silent::Services
 {
     float ClockManager::GetDeltaTime() const
     {
-        uint64 uptimeDur  = GetUptimeDuration();
+        uint64 uptimeDur  = SDL_GetPerformanceCounter();
         uint64 elapsedDur = uptimeDur - _prevUptimeDuration;
         return std::min((float)elapsedDur / 1000000.0f, ((float)TICKS_PER_SECOND / 6.0f) / (float)TICKS_PER_SECOND);
     }
@@ -30,7 +30,7 @@ namespace Silent::Services
             Debug::Log("Attempted to test time interval with offset greater than or equal to interval.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
         }
         
-        uint64 ticks = GetUptimeDuration() / TICK_INTERVAL_DURATION;
+        uint64 ticks = SDL_GetPerformanceCounter() / TICK_INTERVAL_DURATION;
         return (ticks % intervalTicks) == offsetTicks;
     }
 
@@ -38,12 +38,11 @@ namespace Silent::Services
     {
         _ticks              = 0;
         _prevUptimeDuration = 0;
-        _startDuration      = GetEpochDuration();
     }
 
     void ClockManager::Update()
     {
-        uint64 uptimeDur  = GetUptimeDuration();
+        uint64 uptimeDur  = SDL_GetPerformanceCounter();
         uint64 elapsedDur = uptimeDur - _prevUptimeDuration;
 
         // Calculate ticks for elapsed period.
@@ -58,7 +57,7 @@ namespace Silent::Services
 
     void ClockManager::WaitForNextTick() const
     {
-        uint64 uptimeDur  = GetUptimeDuration();
+        uint64 uptimeDur  = SDL_GetPerformanceCounter();
         uint64 elapsedDur = uptimeDur - _prevUptimeDuration;
 
         // Sleep current thread for remaining time before next tick.
@@ -67,16 +66,6 @@ namespace Silent::Services
         {
             std::this_thread::sleep_for(std::chrono::microseconds(remainingDur));
         }
-    }
-
-    uint64 ClockManager::GetUptimeDuration() const
-    {
-        return GetEpochDuration() - _startDuration;
-    }
-
-    uint64 ClockManager::GetEpochDuration() const
-    {
-        return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     }
 
     std::string GetCurrentDateString()

@@ -20,7 +20,6 @@ namespace Silent::Services
 
         int    _ticks              = 0;
         uint64 _prevUptimeDuration = 0;
-        uint64 _startDuration      = 0;
 
     public:
         // =============
@@ -73,23 +72,6 @@ namespace Silent::Services
          * Used to avoid busy-waiting in the main loop if a logic iteration has finished early.
          */
         void WaitForNextTick() const;
-
-    private:
-        // ========
-        // Helpers
-        // ========
-
-        /** @brief Gets the clock uptime duration in microseconds.
-         *
-         * @return Uptime in microseconds.
-         */
-        uint64 GetUptimeDuration() const;
-
-        /** @brief Gets the elapsed duration in microseconds since the epoch (January 1st, 1970).
-         *
-         * @return Elapsed microseconds since the epoch.
-         */
-        uint64 GetEpochDuration() const;
     };
 
     /** @brief Converts seconds to ticks.

@@ -5,6 +5,7 @@ namespace Silent
     /** @brief Supported operating systems. */
     enum class OsType
     {
+        Unknown,
         Windows,
         MacOs,
         Linux
@@ -16,7 +17,15 @@ namespace Silent
     constexpr auto OS_TYPE = OsType::MacOs;
 #elif defined(__linux__)
     constexpr auto OS_TYPE = OsType::Linux;
+#else
+    constexpr auto OS_TYPE = OsType::Unknown;
 #endif
+
+    /** @brief Gets the platform's home directory.
+     *
+     * @return Home directory.
+     */
+    std::filesystem::path GetHomeDirectory();
 
     /** @brief Initializes low-level termination and signal handling. */
     void InitializeSignals();

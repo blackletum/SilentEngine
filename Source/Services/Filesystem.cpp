@@ -48,24 +48,17 @@ namespace Silent::Services
         // Set app path.
         _appDir = std::filesystem::current_path();
 
-        // Set screenshots paths.
-        switch (OS_TYPE)
+        // Set screenshots path.
+        if (OS_TYPE == OsType::Unknown)
         {
-            case OsType::Windows:
-            case OsType::MacOs:
-            case OsType::Linux:
+            _screenshotsDir = _workDir / SCREENSHOTS_DIR_NAME;
+        }
+        else
+        {
+            auto homeDir = GetHomeDirectory();
+            if (!homeDir.empty())
             {
-                auto homeDir = GetHomeDirectory();
-                if (!homeDir.empty())
-                {
-                    _screenshotsDir = std::filesystem::path(homeDir) / "Pictures" / SCREENSHOTS_DIR_NAME;
-                }
-                break;
-            }
-            default:
-            {
-                _screenshotsDir = _workDir / SCREENSHOTS_DIR_NAME;
-                break;
+                _screenshotsDir = homeDir / "Pictures" / SCREENSHOTS_DIR_NAME;
             }
         }
 
@@ -89,24 +82,5 @@ namespace Silent::Services
         // Create workspace directories.
         std::filesystem::create_directories(_workDir);
         std::filesystem::create_directories(_savegameDir);
-    }
-
-    std::string FilesystemManager::GetHomeDirectory() const
-    {
-#ifdef _WIN32
-        char*  buffer = nullptr;
-        size_t length = 0;
-
-        if (_dupenv_s(&buffer, &length, "USERPROFILE") == 0 && buffer != nullptr)
-        {
-            auto home = std::string(buffer);
-            free(buffer);
-            return home;
-        }
-
-        return {};
-#else
-        return std::string(getenv("HOME"));
-#endif
     }
 }

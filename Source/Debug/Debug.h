@@ -40,17 +40,15 @@ namespace Silent::Debug
     /** @brief Debug workspace. */
     struct DebugWork
     {
-        using TimeType = std::chrono::system_clock::time_point;
-
         float BlendAlpha = 0.0f; // @temp
 
         std::vector<std::string> Messages  = {};
-        TimeType                 StartTime = {};
+        uint64                   StartTime = 0;
 
-        float    Fps        = 0.0f;
-        int      FrameTime  = 0;
-        int      FrameCount = 0;
-        TimeType PrevTime   = {};
+        float  Fps        = 0.0f;
+        int    FrameTime  = 0;
+        int    FrameCount = 0;
+        uint64 PrevTime   = 0;
 
 
         Page Page                = Page::Renderer;

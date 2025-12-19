@@ -74,12 +74,12 @@ namespace Silent::Debug
 
         // Update render stats. @todo Move this elsewhere. Maybe time class could handle it?
         g_Work.FrameCount++;
-        auto now      = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(now - g_Work.PrevTime);
-        if (duration.count() >= (1000000 / 60))
+        uint64 now      = SDL_GetPerformanceCounter();
+        uint64 duration = ((now - g_Work.PrevTime) * 1000000) / SDL_GetPerformanceFrequency();
+        if (duration >= (1000000 / 60))
         {
-            g_Work.Fps        = (float)g_Work.FrameCount / (float)(duration.count() / 1000000.0f);
-            g_Work.FrameTime  = duration.count();
+            g_Work.Fps        = (float)g_Work.FrameCount / (float)(duration / 1000000.0f);
+            g_Work.FrameTime  = duration;
             g_Work.FrameCount = 0;
             g_Work.PrevTime   = now;
         }
@@ -201,7 +201,7 @@ namespace Silent::Debug
     {
         if constexpr (IS_DEBUG_BUILD)
         {
-            g_Work.StartTime = std::chrono::high_resolution_clock::now();
+            g_Work.StartTime = SDL_GetPerformanceCounter();
         }
     }
 
@@ -209,9 +209,9 @@ namespace Silent::Debug
     {
         if constexpr (IS_DEBUG_BUILD)
         {
-            auto endTime  = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - g_Work.StartTime);
-            Message("Execution (μs): %d", duration.count());
+            uint64 endTime  = SDL_GetPerformanceCounter();
+            uint64 duration = endTime - g_Work.StartTime;
+            Message("Execution (μs): %d", duration);
         }
     }
 
