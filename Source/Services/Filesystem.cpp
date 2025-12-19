@@ -38,11 +38,6 @@ namespace Silent::Services
 
     void FilesystemManager::Initialize()
     {
-        constexpr char ASSETS_DIR_NAME[]      = "Assets";
-        constexpr char SAVEGAME_DIR_NAME[]    = "Savegame";
-        constexpr char SCREENSHOTS_DIR_NAME[] = "Screenshots";
-        constexpr char SHADERS_DIR_NAME[]     = "Shaders";
-
         // Set workspace path.
         _workDir = SDL_GetPrefPath(APP_NAME, APP_NAME);
 

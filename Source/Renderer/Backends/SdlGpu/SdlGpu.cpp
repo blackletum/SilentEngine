@@ -12,6 +12,7 @@
 #include "Renderer/Renderer.h"
 #include "Services/Filesystem.h"
 #include "Services/Options.h"
+#include "Services/Platform.h"
 #include "Utils/Utils.h"
 
 using namespace Silent::Services;

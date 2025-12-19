@@ -14,8 +14,6 @@ using namespace Silent::Utils;
 
 namespace Silent::Services
 {
-    constexpr char OPTIONS_FILENAME[] = "Options";
-
     constexpr char KEY_GRAPHICS[]     = "graphics";
     constexpr char KEY_GAMEPLAY[]     = "gameplay";
     constexpr char KEY_INPUT[]        = "input";
