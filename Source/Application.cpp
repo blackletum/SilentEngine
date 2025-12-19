@@ -13,6 +13,7 @@
 #include "Services/Clock.h"
 #include "Services/Filesystem.h"
 #include "Services/Options.h"
+#include "Services/Platform.h"
 #include "Services/Toasts.h"
 #include "Utils/Font.h"
 #include "Utils/Parallel.h"

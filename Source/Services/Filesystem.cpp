@@ -2,6 +2,7 @@
 #include "Services/Filesystem.h"
 
 #include "Application.h"
+#include "Services/Platform.h"
 
 namespace Silent::Services
 {

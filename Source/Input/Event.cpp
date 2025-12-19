@@ -3,8 +3,10 @@
 
 #include "Application.h"
 #include "Input/Input.h"
+#include "Services/Platform.h"
 #include "Utils/Utils.h"
 
+using namespace Silent::Services;
 using namespace Silent::Utils;
 
 namespace Silent::Input

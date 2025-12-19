@@ -1,7 +1,7 @@
 #include "Framework.h"
-#include "Platform.h"
+#include "Services/Platform.h"
 
-namespace Silent
+namespace Silent::Services
 {
     std::filesystem::path GetHomeDirectory()
     {

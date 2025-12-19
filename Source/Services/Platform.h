@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Silent
+namespace Silent::Services
 {
     /** @brief Supported operating systems. */
     enum class OsType

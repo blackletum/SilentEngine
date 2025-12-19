@@ -121,7 +121,6 @@ using json = nlohmann::json;
 // Resources
 // ==========
 
-#include "Platform.h"
 #include "Types.h"
 #include "Math/Math.h"
 
