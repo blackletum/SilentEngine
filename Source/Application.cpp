@@ -111,6 +111,10 @@ namespace Silent
         // Debug.
         Debug::Initialize();
         Debug::Log(Fmt("Starting {} {}...", APP_NAME, APP_VERSION));
+        if (OS_TYPE == OsType::Unknown)
+        {
+            Debug::Log("The executable build is for an unknown OS type.", Debug::LogLevel::Warning);
+        }
 
         // Options.
         _work.Options.Initialize();

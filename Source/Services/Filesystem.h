@@ -3,6 +3,8 @@
 namespace Silent::Services
 {
     constexpr char ASSETS_DIR_NAME[]             = "Assets";
+    constexpr char ASSETS_FONTS_DIR_NAME[]       = "Fonts";
+    constexpr char ASSETS_PSX_DIR_NAME[]         = "Stream/Psx"; // @todo Make this simply refer to "Stream" to allow addition of new streamable assets. Requires index -> name refactor.
     constexpr char SAVEGAME_DIR_NAME[]           = "Savegame";
     constexpr char SAVEGAME_FILE_DIR_NAME_BASE[] = "File ";
     constexpr char SCREENSHOTS_DIR_NAME[]        = "Screenshots";

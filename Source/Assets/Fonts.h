@@ -6,14 +6,13 @@ using namespace Silent::Utils;
 
 namespace Silent::Assets
 {
-    constexpr char ASSETS_FONTS_DIR_NAME[] = "Fonts";
-    constexpr char GLYPH_PRECACHE[]        = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-                                             "ÁÀÂĄÄÆĆÇÉÈÊËĘÍÌÎÏŁŃÑÓÔÖØŒŚÚÙÛÜŸŹŻáàâąäæćçéèêëęíìîïłńñóôöøœßśúùûüÿźż"
-                                             "“”¿¡★"
-                                             "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん"
-                                             "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン"
-                                             "０１２３４５６７８９ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ"
-                                             "。！？、";
+    constexpr char GLYPH_PRECACHE[] = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+                                      "ÁÀÂĄÄÆĆÇÉÈÊËĘÍÌÎÏŁŃÑÓÔÖØŒŚÚÙÛÜŸŹŻáàâąäæćçéèêëęíìîïłńñóôöøœßśúùûüÿźż"
+                                      "“”¿¡★"
+                                      "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん"
+                                      "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン"
+                                      "０１２３４５６７８９ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ"
+                                      "。！？、";
 
     extern const std::vector<FontMetadata> FONTS_METADATA;
 }

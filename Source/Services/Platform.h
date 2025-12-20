@@ -11,17 +11,18 @@ namespace Silent::Services
         Linux
     };
 
+    constexpr auto OS_TYPE = 
 #if defined(_WIN32) || defined(_WIN64)
-    constexpr auto OS_TYPE = OsType::Windows;
+    OsType::Windows;
 #elif defined(__APPLE__)
-    constexpr auto OS_TYPE = OsType::MacOs;
+    OsType::MacOs;
 #elif defined(__linux__)
-    constexpr auto OS_TYPE = OsType::Linux;
+    OsType::Linux;
 #else
-    constexpr auto OS_TYPE = OsType::Unknown;
+    OsType::Unknown;
 #endif
 
-    /** @brief Gets the platform's home directory.
+    /** @brief Gets the platform-specific home directory.
      *
      * @return Home directory.
      */

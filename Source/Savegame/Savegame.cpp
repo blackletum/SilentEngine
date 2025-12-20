@@ -11,7 +11,7 @@ using namespace Silent::Utils;
 
 namespace Silent::Savegame
 {
-    static const std::vector<std::string> SAVE_LOCATION_NAME_KEYS =
+    static const auto SAVE_LOCATION_NAME_KEYS = std::vector<std::string>
     {
         KEY_SAVE_LOC_ANYWHERE,
         KEY_SAVE_LOC_CAFE,

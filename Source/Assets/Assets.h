@@ -5,14 +5,12 @@
 
 namespace Silent::Assets
 {
-    constexpr char ASSETS_PSX_DIR_NAME[] = "Psx";
-
-    /** @brief Loaded asset types. Used in `Asset`. */
+    /** @brief Streamable asset types. Used in `Asset`. */
     enum class AssetType
     {
         Tim, /** "Texture IMage"                | PsyQ SDK texture data. */
         Vab, /** "Voice Audio Bank"             | PsyQ SDK audio container data. */
-        Bin, /** "BINary"                       | Original compiled logic overlay data. */
+        Bin, /** "BINary"                       | Original compiled logic overlay data. */ // @todo Only tracked for 1:1 legacy index registration. All instances of asset access should be refactored to use names instead of indices.
         Dms, /** "Demo Motion Sequence"?        | Cutscene keyframe data. */
         Anm, /** "ANiMation"                    | Animation data. */
         Plm, /** "Polygon List Model"?          | Global static model data. */
@@ -22,12 +20,10 @@ namespace Silent::Assets
         Dat, /** "Demo dATa"?                   | Demo playback data. */
         Kdt, /** "Key Data Tracker"?            | Konami MIDI tracker data. */
         Cmp, /** "CoMPressed" or "CoMPiled"?    | Unknown. */
-        Xa,  /** "eXtended Audio"               | PSX XA audio stream. */
-
-        Count
+        Xa   /** "eXtended Audio"               | PSX XA audio stream. */
     };
 
-    /** @brief Loaded asset states. Used in `Asset`. */
+    /** @brief Streamable asset states. Used in `Asset`. */
     enum class AssetState
     {
         Unloaded,
@@ -36,7 +32,7 @@ namespace Silent::Assets
         Error
     };
 
-    /** @brief Loaded asset data and metadata. */
+    /** @brief Streamable asset data and metadata. */
     struct Asset
     {
         std::string             Name = {};                    /** Filename relative to assets folder. */

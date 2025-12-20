@@ -6,7 +6,7 @@ namespace Silent::Savegame
 {
     constexpr uint SAVEGAME_COUNT_MAX = 165; // Max savegames per file.
 
-    // @brief Savegame info.
+    /** @brief Savegame info. */
     struct Savegame
     {
         int Dummy = 0;
