@@ -86,7 +86,7 @@ namespace Silent::Renderer
     {
         auto& assets = g_App.GetAssets();
 
-        const auto asset = assets.GetAsset(assetIdx);
+        const auto asset = assets.GetAsset(assets.GetName(assetIdx));
         if (asset->Type != AssetType::Tim)
         {
             Debug::Log("Attempted to submit non-image asset as screen sprite.", Debug::LogLevel::Warning, Debug::LogMode::Debug);

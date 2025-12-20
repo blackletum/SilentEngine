@@ -69,11 +69,10 @@ namespace Silent::Assets
         // Fields
         // =======
 
-        std::vector<std::shared_ptr<Asset>>        _assets       = {}; /** Registered assets. */
-        std::unordered_map<std::string, int>       _idxs         = {}; /** Key = asset name, value = asset index. */
-        std::unordered_map<int, std::string>       _names        = {}; /** Key = asset index, value = asset name. */
-        std::unordered_map<int, std::future<void>> _loadFutures  = {}; /** Key = asset index, value = load future. */
-        std::atomic<int>                           _loadingCount = 0;  /** Number of currently loading assets. */
+        std::unordered_map<std::string, std::shared_ptr<Asset>> _assets       = {}; /** Registered assets. */
+        std::unordered_map<int, std::string>                    _names        = {}; /** Key = asset index, value = asset name. */
+        std::unordered_map<std::string, std::future<void>>      _loadFutures  = {}; /** Key = asset name, value = load future. */
+        std::atomic<int>                                        _loadingCount = 0;  /** Number of currently loading assets. */
 
     public:
         // =============
@@ -86,25 +85,18 @@ namespace Silent::Assets
         // Getters
         // ========
 
-        /** Gets an asset's name by index.
+        /** @brief Gets an asset's name by its legacy index.
          *
-         * @param assetIdx Asset file index.
+         * @param assetIdx Legacy asset file index.
          * @return Asset name.
          */
-        const std::string& GetAssetName(int assetIdx) const;
+        const std::string& GetName(int assetIdx) const;
 
         /** @brief Gets a vector containing the names of all loaded assets.
          *
          * @return Vector of all loaded asset names.
          */
-        std::vector<std::string> GetLoadedAssetNames() const;
-
-        /** @brief Gets a loaded asset via a file index.
-         *
-         * @param assetIdx Asset file index.
-         * @return Pointer to an `Asset` object if the asset is loaded, `nullptr` otherwise.
-         */
-        const std::shared_ptr<Asset> GetAsset(int assetIdx);
+        std::vector<std::string> GetLoadedNames() const;
 
         /** @brief Gets a loaded asset via a filename.
          *
@@ -133,31 +125,18 @@ namespace Silent::Assets
          */
         void Initialize(const std::filesystem::path& assetsPath);
 
-        /** @brief Loads an asset by index.
-         *
-         * @param assetIdx Index of the asset to load.
-         * @return `std::future` of the asset's load status.
-         */
-        const std::future<void>& LoadAsset(int assetIdx);
-
         /** @brief Loads an asset by name.
          *
          * @param assetName Name of the asset to load.
          * @return `std::future` of the asset's load status.
          */
-        const std::future<void>& LoadAsset(const std::string& assetName);
-
-        /** @brief Unloads an asset by index.
-         *
-         * @param assetIdx Index of the asset to unload.
-         */
-        void UnloadAsset(int assetIdx);
+        const std::future<void>& Load(const std::string& assetName);
 
         /** @brief Unloads an asset by name.
          *
          * @param assetName Name of the asset to unload.
          */
-        void UnloadAsset(const std::string& assetName);
+        void Unload(const std::string& assetName);
 
         /** @brief Unloads all currently loaded assets. */
         void UnloadAllAssets();

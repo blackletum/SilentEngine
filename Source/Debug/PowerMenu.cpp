@@ -66,7 +66,7 @@ namespace Silent::Debug
                                               ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 8),
                                               ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeY))
                         {
-                            auto assetNames = assets.GetLoadedAssetNames();
+                            auto assetNames = assets.GetLoadedNames();
                             for (const auto& assetName : assetNames)
                             {
                                 ImGui::Bullet();

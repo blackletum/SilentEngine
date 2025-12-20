@@ -53,12 +53,12 @@ namespace Silent::Renderer
             if (filename == "Psx/TIM/BG_ETC.TIM")
             {
                 name = "TIM\\" + filename.filename().string();
-                assets.LoadAsset(name).wait();
+                assets.Load(name).wait();
             }
             else
             {
                 name = "1ST\\" + filename.filename().string();
-                assets.LoadAsset(name).wait();
+                assets.Load(name).wait();
             }
 
             // Get asset data.

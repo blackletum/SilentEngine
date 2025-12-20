@@ -34,24 +34,24 @@ namespace Silent::Assets
         { AssetType::Tmd, ParseTmd }
     };
 
-    const std::string& AssetManager::GetAssetName(int assetIdx) const
+    const std::string& AssetManager::GetName(int assetIdx) const
     {
-        // Get asset.
-        if (assetIdx < 0 || assetIdx >= _assets.size())
+        // Find name.
+        const auto* name = Find(_names, assetIdx);
+        if (name == nullptr)
         {
             Debug::Log(Fmt("Attempted to get name of invalid streamable asset {}.", assetIdx), Debug::LogLevel::Warning, Debug::LogMode::Debug);
             return EMPTY_STRING;
         }
-        const auto asset = _assets[assetIdx];
 
-        return asset->Name;
+        return *name;
     }
 
-    std::vector<std::string> AssetManager::GetLoadedAssetNames() const
+    std::vector<std::string> AssetManager::GetLoadedNames() const
     {
         // Run through registered assets.
         auto names = std::vector<std::string>{};
-        for (const auto& asset : _assets)
+        for (const auto& [keyName, asset] : _assets)
         {
             if (asset->State == AssetState::Loaded)
             {
@@ -59,49 +59,39 @@ namespace Silent::Assets
             }
         }
 
+        // Sort names.
+        Sort(names);
         return names;
     }
 
-    const std::shared_ptr<Asset> AssetManager::GetAsset(int assetIdx)
+    const std::shared_ptr<Asset> AssetManager::GetAsset(const std::string& assetName)
     {
-        // Get asset.
-        if (assetIdx < 0 || assetIdx >= _assets.size())
+        // Find asset.
+        const auto* assetPtr = Find(_assets, assetName);
+        if (assetPtr == nullptr)
         {
-            Debug::Log(Fmt("Attempted to get invalid streamable asset {}.", assetIdx), Debug::LogLevel::Warning, Debug::LogMode::Debug);
+            Debug::Log(Fmt("Attempted to get invalid streamable asset `{}`.", assetName), Debug::LogLevel::Warning, Debug::LogMode::Debug);
             return nullptr;
         }
-        const auto asset = _assets[assetIdx];
+        auto asset = *assetPtr;
 
         // Load if not preloaded.
         if (asset->State != AssetState::Loaded)
         {
-            Debug::Log(Fmt("Getting non-preloaded streamable asset `{}`. Loading in place.", GetAssetName(assetIdx)),
+            Debug::Log(Fmt("Streamable asset `{}` was not preloaded.", assetName),
                        Debug::LogLevel::Warning, Debug::LogMode::Debug);
 
-            LoadAsset(assetIdx).wait();
+            Load(assetName).wait();
         }
 
         // Check if loading failed.
         if (asset->State == AssetState::Error)
         {
-            Debug::Log(Fmt("Failed to get streamable asset `{}`.", GetAssetName(assetIdx)), Debug::LogLevel::Error, Debug::LogMode::Debug);
+            Debug::Log(Fmt("Failed to get streamable asset `{}`.", assetName), Debug::LogLevel::Error, Debug::LogMode::Debug);
             return nullptr;
         }
+
         return asset;
-    }
-
-    const std::shared_ptr<Asset> AssetManager::GetAsset(const std::string& assetName)
-    {
-        // Check if asset exists.
-        const int* assetIdx = Find(_idxs, assetName);
-        if (assetIdx == nullptr)
-        {
-            Debug::Log(Fmt("Attempted to get invalid streamable asset `{}`.", assetName), Debug::LogLevel::Warning, Debug::LogMode::Debug);
-            return nullptr;
-        }
-
-        // Get asset by index.
-        return GetAsset(*assetIdx);
     }
 
     bool AssetManager::IsBusy() const
@@ -137,44 +127,45 @@ namespace Silent::Assets
             }
 
             // @heapalloc Create asset entry.
-            _assets.emplace_back(std::make_shared<Asset>());
+            auto name = std::filesystem::relative(file, assetsPath).string();
+            _assets.emplace(name, std::make_shared<Asset>());
 
             // Define asset entry.
-            auto asset   = _assets.back();
-            asset->Name  = std::filesystem::relative(file, assetsPath).string();
+            auto asset   = _assets[name];
+            asset->Name  = name;
             asset->Type  = ASSET_TYPES.at(ext);
             asset->File  = file;
             asset->Size  = std::filesystem::file_size(file);
             asset->State = AssetState::Unloaded;
             asset->Data  = nullptr;
 
-            // Add asset index and name to maps.
-            _idxs[asset->Name] = i;
-            _names[i]          = asset->Name;
+            // Add asset name to maps.
+            _names[i] = asset->Name;
         }
 
         // Create fallback ready future.
-        _loadFutures[NO_VALUE] = GenerateReadyFuture();
+        _loadFutures[{}] = GenerateReadyFuture();
 
         Debug::Log(Fmt("Registered {} streamable assets.", _assets.size()), Debug::LogLevel::Info, Debug::LogMode::Debug);
     }
 
-    const std::future<void>& AssetManager::LoadAsset(int assetIdx)
+    const std::future<void>& AssetManager::Load(const std::string& assetName)
     {
         auto& executor = g_App.GetExecutor();
 
-        // Get asset.
-        if (assetIdx < 0 || assetIdx >= _assets.size())
+        // Find asset.
+        const auto* assetPtr = Find(_assets, assetName);
+        if (assetPtr == nullptr)
         {
-            Debug::Log(Fmt("Attempted to load invalid streamable asset {}.", assetIdx), Debug::LogLevel::Warning, Debug::LogMode::Debug);
-            return _loadFutures[NO_VALUE];
+            Debug::Log(Fmt("Attempted to load unregistered streamable asset `{}`.", assetName), Debug::LogLevel::Warning, Debug::LogMode::Debug);
+            return _loadFutures[{}];
         }
-        auto& asset = _assets[assetIdx];
+        auto asset = *assetPtr;
 
         // Check if loading or loaded.
         if (asset->State == AssetState::Loading || asset->State == AssetState::Loaded)
         {
-            return _loadFutures[assetIdx];
+            return _loadFutures[assetName];
         }
 
         // Check if file is valid.
@@ -184,7 +175,7 @@ namespace Silent::Assets
                        Debug::LogLevel::Error, Debug::LogMode::Debug);
 
             asset->State = AssetState::Error;
-            return _loadFutures[assetIdx];
+            return _loadFutures[assetName];
         }
 
         // Set loading state.
@@ -192,7 +183,7 @@ namespace Silent::Assets
         _loadingCount++;
 
         // Load asynchronously.
-        _loadFutures[assetIdx] = executor.AddTask([&]()
+        _loadFutures[assetName] = executor.AddTask([&]()
         {
             // Get parser function.
             const auto* parserFunc = Find(PARSER_FUNCS, asset->Type);
@@ -224,32 +215,19 @@ namespace Silent::Assets
             _loadingCount--;
         });
 
-        return _loadFutures[assetIdx];
+        return _loadFutures[assetName];
     }
 
-    const std::future<void>& AssetManager::LoadAsset(const std::string& assetName)
+    void AssetManager::Unload(const std::string& assetName)
     {
-        // Check if asset exists.
-        const int* assetIdx = Find(_idxs, assetName);
-        if (assetIdx == nullptr)
+        // Find asset.
+        const auto* assetPtr = Find(_assets, assetName);
+        if (assetPtr == nullptr)
         {
-            Debug::Log(Fmt("Attempted to load unregistered streamable asset `{}`.", assetName), Debug::LogLevel::Warning, Debug::LogMode::Debug);
-            return _loadFutures[NO_VALUE];
-        }
-
-        // Load asset by index.
-        return LoadAsset(*assetIdx);
-    }
-
-    void AssetManager::UnloadAsset(int assetIdx)
-    {
-        // Get asset.
-        if (assetIdx < 0 || assetIdx >= _assets.size())
-        {
-            Debug::Log(Fmt("Attempted to unload invalid streamable asset {}.", assetIdx), Debug::LogLevel::Warning, Debug::LogMode::Debug);
+            Debug::Log(Fmt("Attempted to unload unregistered streamable asset `{}`.", assetName), Debug::LogLevel::Warning, Debug::LogMode::Debug);
             return;
         }
-        auto& asset = _assets[assetIdx];
+        auto asset = *assetPtr;
 
         // Check if already unloaded.
         if (asset->State == AssetState::Unloaded)
@@ -262,29 +240,15 @@ namespace Silent::Assets
         asset->Data  = nullptr;
 
         // Remove load future.
-        _loadFutures.erase(assetIdx);
+        _loadFutures.erase(assetName);
 
-        Debug::Log(Fmt("Unloaded streamable asset `{}`.", GetAssetName(assetIdx)), Debug::LogLevel::Info, Debug::LogMode::Debug);
-    }
-
-    void AssetManager::UnloadAsset(const std::string& assetName)
-    {
-        // Check if asset exists.
-        const int* assetIdx = Find(_idxs, assetName);
-        if (assetIdx == nullptr)
-        {
-            Debug::Log(Fmt("Attempted to unload unregistered streamable asset `{}`.", assetName), Debug::LogLevel::Warning, Debug::LogMode::Debug);
-            return;
-        }
-
-        // Unload asset by index.
-        UnloadAsset(*assetIdx);
+        Debug::Log(Fmt("Unloaded streamable asset `{}`.", assetName), Debug::LogLevel::Info, Debug::LogMode::Debug);
     }
 
     void AssetManager::UnloadAllAssets()
     {
         // Run through registered assets.
-        for (auto& asset : _assets)
+        for (auto& [keyName, asset] : _assets)
         {
             if (asset->State == AssetState::Unloaded)
             {
@@ -296,7 +260,7 @@ namespace Silent::Assets
             asset->Data  = nullptr;
 
             // Remove load future.
-            _loadFutures.erase(_idxs[asset->Name]);
+            _loadFutures.erase(asset->Name);
         }
     }
 }

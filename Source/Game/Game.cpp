@@ -199,7 +199,7 @@ namespace Silent
             renderer.SetClearColor(Color::Clear);
 
             // Load `1ST/2ZANKO_E.TIM` ("There are violent and disturbing images...").
-            assets.LoadAsset(e_FsFile::FILE_1ST_2ZANKO_E_TIM).wait();
+            assets.Load(assets.GetName(e_FsFile::FILE_1ST_2ZANKO_E_TIM)).wait();
 
             // Fade in `1ST/2ZANKO_E.TIM` with luma-multiply blending.
             static int fade = 0;
@@ -220,7 +220,7 @@ namespace Silent
             }
 
             // Load `1ST/FONT8NOC.TIM` (8x8 font).
-            assets.LoadAsset(e_FsFile::FILE_1ST_FONT8NOC_TIM).wait();
+            assets.Load(assets.GetName(e_FsFile::FILE_1ST_FONT8NOC_TIM)).wait();
         }
     }
 }

@@ -130,7 +130,7 @@ namespace Silent::Renderer
         auto* uploadCmdBuffer = SDL_AcquireGPUCommandBuffer(_device);
         auto* copyPass        = SDL_BeginGPUCopyPass(uploadCmdBuffer);
 
-        (*(SdlGpuTextureManager*)_textures.get()).Load(*copyPass, g_App.GetAssets().GetAssetName(1854));
+        (*(SdlGpuTextureManager*)_textures.get()).Load(*copyPass, g_App.GetAssets().GetName(1854));
 
         SDL_EndGPUCopyPass(copyPass);
         SDL_SubmitGPUCommandBuffer(uploadCmdBuffer);
@@ -281,7 +281,7 @@ namespace Silent::Renderer
         // 2D textures.
         _pipelines.Bind(renderPass, RenderStage::Primitive2dTextured, BlendMode::Opaque);
         _buffers.Sprites2d.Bind(renderPass, 0, 0);
-        (*(SdlGpuTextureManager*)_textures.get()).Get(g_App.GetAssets().GetAssetName(1854))->Bind(renderPass, *_samplers[(int)options->TextureFilter]);
+        (*(SdlGpuTextureManager*)_textures.get()).Get(g_App.GetAssets().GetName(1854))->Bind(renderPass, *_samplers[(int)options->TextureFilter]);
         SDL_DrawGPUIndexedPrimitives(&renderPass, 6, sizeof(spriteBufferVerts) / sizeof(BufferTexVertex2d), 0, 0, 0);
 
         // 2D primitives.
