@@ -112,7 +112,8 @@ namespace Silent
         Debug::Initialize();
         Debug::Log(Fmt("Starting {} {}...", APP_NAME, APP_VERSION));
         Debug::Log(Fmt("OS: {}", GetOsName()));
-        Debug::Log(Fmt("Branch: `{}` ", GIT_BRANCH));
+        Debug::Log(Fmt("Repository: {}", GIT_REPO));
+        Debug::Log(Fmt("Branch: {}", GIT_BRANCH));
         Debug::Log(Fmt("Commit: {}", GIT_COMMIT));
 
         // Options.
