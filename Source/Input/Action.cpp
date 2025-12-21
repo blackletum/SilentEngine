@@ -156,7 +156,7 @@ namespace Silent::Input
             return false;
         }
 
-        delaySec = std::max(stateMin, 0.0f);
+        delaySec = std::max(delaySec, 0.0f);
 
         int delayTicks = SEC_TO_TICK(delaySec);
         return _ticksActive >= delayTicks;
@@ -191,7 +191,7 @@ namespace Silent::Input
         delaySecMax = std::max(delaySecMax, 0.0f);
         stateMin    = std::clamp(stateMin, 0.0f, 1.0f);
 
-        int delayTicksMax = (delaySecMax == FLT_MAX) ? UINT_MAX : SEC_TO_TICK(delaySecMax);
+        int delayTicksMax = (delaySecMax == FLT_MAX) ? INT_MAX : SEC_TO_TICK(delaySecMax);
         return _state <= stateMin && _prevState > stateMin && _ticksActive <= delayTicksMax;
     }
 

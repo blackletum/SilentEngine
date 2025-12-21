@@ -82,7 +82,7 @@ namespace Silent::Services
     constexpr int SEC_TO_TICK(float sec)
     {
         sec = std::max(sec, 0.0f);
-        return std::max((int)ROUND(sec * (float)TICKS_PER_SECOND), 1);
+        return (sec == 0.0f) ? 0 : std::max((int)ROUND(sec * (float)TICKS_PER_SECOND), 1);
     }
 
     /** @brief Converts ticks to seconds.
