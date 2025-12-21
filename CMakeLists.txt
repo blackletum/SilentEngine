@@ -11,6 +11,22 @@ project(SilentEngine)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 23)
 
+# Set `GIT_BRANCH` definition.
+execute_process(
+    COMMAND git rev-parse --abbrev-ref HEAD
+    OUTPUT_VARIABLE GIT_BRANCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
+
+# Set `GIT_COMMIT` definition.
+execute_process(
+    COMMAND git rev-parse HEAD
+    OUTPUT_VARIABLE GIT_COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+add_definitions(-DGIT_COMMIT="${GIT_COMMIT}")
+
 # Set compiler options.
 if(MSVC)
     add_compile_options(/std:c++20) # Enable modules.

@@ -144,7 +144,7 @@ namespace Silent::Assets
         }
 
         // Create fallback ready future.
-        _loadFutures[{}] = GenerateReadyFuture();
+        _loadFutures[EMPTY_STRING] = GenerateReadyFuture();
 
         Debug::Log(Fmt("Registered {} streamable assets.", _assets.size()), Debug::LogLevel::Info, Debug::LogMode::Debug);
     }
@@ -158,7 +158,7 @@ namespace Silent::Assets
         if (assetPtr == nullptr)
         {
             Debug::Log(Fmt("Attempted to load unregistered streamable asset `{}`.", assetName), Debug::LogLevel::Warning, Debug::LogMode::Debug);
-            return _loadFutures[{}];
+            return _loadFutures[EMPTY_STRING];
         }
         auto asset = *assetPtr;
 

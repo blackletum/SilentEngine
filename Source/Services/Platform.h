@@ -13,14 +13,20 @@ namespace Silent::Services
 
     constexpr auto OS_TYPE = 
 #if defined(_WIN32) || defined(_WIN64)
-    OsType::Windows;
+                             OsType::Windows;
 #elif defined(__APPLE__)
-    OsType::MacOs;
+                             OsType::MacOs;
 #elif defined(__linux__)
-    OsType::Linux;
+                             OsType::Linux;
 #else
-    OsType::Unknown;
+                             OsType::Unknown;
 #endif
+
+    /** @brief Gets the name of the OS.
+     *
+     * @return OS name.
+     */
+    std::string GetOsName();
 
     /** @brief Gets the platform-specific home directory.
      *

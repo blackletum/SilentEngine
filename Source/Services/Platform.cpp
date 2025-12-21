@@ -3,6 +3,31 @@
 
 namespace Silent::Services
 {
+    std::string GetOsName()
+    {
+        switch (OS_TYPE)
+        {
+            case OsType::Windows:
+            {
+                return "Windows";
+            }
+            case OsType::MacOs:
+            {
+                return "Mac OS";
+            }
+            case OsType::Linux:
+            {
+                return "Linux";
+            }
+            default:
+            {
+                break;
+            }
+        }
+
+        return "Unknown";
+    }
+
     std::filesystem::path GetHomeDirectory()
     {
 #if defined(_WIN32) || defined(_WIN64)
