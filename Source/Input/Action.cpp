@@ -156,8 +156,7 @@ namespace Silent::Input
             return false;
         }
 
-        delaySec = std::max(delaySec, 0.0f);
-
+        delaySec       = std::max(delaySec, 0.0f);
         int delayTicks = SEC_TO_TICK(delaySec);
         return _ticksActive >= delayTicks;
     }

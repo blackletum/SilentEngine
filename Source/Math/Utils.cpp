@@ -21,10 +21,10 @@ namespace Silent::Math
         return round(x / step) * step;
     }
 
-    float Remap(float x, float min0, float max0, float min1, float max1)
+    float Remap(float x, float fromMin, float fromMax, float toMin, float toMax)
     {
-        float alpha = (x - min0) / (max0 - min0);
-        return std::lerp(min1, max1, alpha);
+        float alpha = (x - fromMin) / (fromMax - fromMin);
+        return std::lerp(toMin, toMax, alpha);
     }
 
     bool IsApproxEqual(float a, float b, float epsilon)

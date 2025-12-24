@@ -93,44 +93,36 @@ namespace Silent::Math
         *this = Vector3::Lerp(*this, to, alpha);
     }
 
-    Vector3 Vector3::Smoothstep(const Vector3& from, const Vector3& to, float alpha)
+    Vector3 Vector3::Transform(const Vector3& vec, const Matrix& mat)
     {
-        return Vector3(glm::smoothstep(from.ToGlmVec3(), to.ToGlmVec3(), glm::vec3(alpha)));
+        return Vector3(glm::vec3(mat.ToGlmMat4() * glm::vec4(vec, 1.0f)));
     }
 
-    void Vector3::Smoothstep(const Vector3& to, float alpha)
+    void Vector3::Transform(const Matrix& mat)
     {
-        *this = Vector3::Smoothstep(*this, to, alpha);
-    }
-
-    Vector3 Vector3::Transform(const Vector3& vec, const Matrix& transformMat)
-    {
-        return Vector3(glm::vec3(transformMat.ToGlmMat4() * glm::vec4(vec, 1.0f)));
-    }
-
-    void Vector3::Transform(const Matrix& transformMat)
-    {
-        *this = Vector3::Transform(*this, transformMat);
+        *this = Vector3::Transform(*this, mat);
     }
 
     Vector3 Vector3::Translate(const Vector3& vec, const Vector3& dir, float dist)
     {
         return vec + (dir * dist);
     }
+    
+    Vector3 Vector3::Translate(const Vector3& vec, float headingRad, const Vector3& relOffset, const Vector3& axis)
+    {
+        auto axisAngle = AxisAngle(axis, headingRad);
+        auto rotMat    = axisAngle.ToRotationMatrix();
+        return vec + Vector3::Transform(relOffset, rotMat);
+    }
+
+    void Vector3::Translate(float headingRad, const Vector3& relOffset, const Vector3& axis)
+    {
+        *this = Vector3::Translate(*this, headingRad, relOffset, axis);
+    }
 
     void Vector3::Translate(const Vector3& dir, float dist)
     {
         *this = Vector3::Translate(*this, Vector3::Normalize(dir), dist);
-    }
-
-    Vector3 Vector3::Rotate(const Vector3& vec, const Matrix& rotMat)
-    {
-        return Vector3(glm::vec3(rotMat.ToGlmMat4() * glm::vec4(vec, 0.0f)));
-    }
-
-    void Vector3::Rotate(const Matrix& rotMat)
-    {
-        *this = Vector3::Rotate(*this, rotMat);
     }
 
     bool Vector3::Compare(const Vector3& vec0, const Vector3& vec1, float epsilon)

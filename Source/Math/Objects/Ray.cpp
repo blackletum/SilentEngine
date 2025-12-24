@@ -49,7 +49,7 @@ namespace Silent::Math
 
         // Compute local ray.
         auto localOrigin = Vector3::Transform(Origin, invTransformMat);
-        auto localDir    = Vector3::Rotate(Direction, invTransformMat);
+        auto localDir    = Vector3::Zero;//::Rotate(Direction, invTransformMat); @todo
         auto localRay    = Ray(localOrigin, localDir);
 
         // Test AABB intersection in local space.

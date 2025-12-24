@@ -24,22 +24,20 @@ namespace Silent::Math
         auto axis = Vector3::Cross(Vector3::UnitZ, dirNorm);
         axis.Normalize();
 
-        float halfAngle    = rad / 2.0f;
-        float sinHalfAngle = glm::sin(halfAngle);
+        float halfRad    = rad / 2.0f;
+        float sinHalfRad = glm::sin(halfRad);
 
-        w = glm::cos(halfAngle);
-        x = axis.x * sinHalfAngle;
-        y = axis.y * sinHalfAngle;
-        z = axis.z * sinHalfAngle;
+        w = glm::cos(halfRad);
+        x = axis.x * sinHalfRad;
+        y = axis.y * sinHalfRad;
+        z = axis.z * sinHalfRad;
     }
 
-    short Quaternion::AngularDistance(const Quaternion& from, const Quaternion& to)
+    float Quaternion::AngularDistance(const Quaternion& from, const Quaternion& to)
     {
-        float dot = glm::dot(from.ToGlmQuat(), to.ToGlmQuat());
-        dot       = glm::clamp(dot, -1.0f, 1.0f);
-
+        float dot = glm::clamp(glm::dot(from.ToGlmQuat(), to.ToGlmQuat()), -1.0f, 1.0f);
         float rad = glm::acos(dot) * 2.0f;
-        return FP_ANGLE_FROM_RAD(rad);
+        return rad;
     }
 
     Quaternion Quaternion::Invert(const Quaternion& quat)
@@ -74,7 +72,9 @@ namespace Silent::Math
 
     Vector3 Quaternion::ToDirection() const
     {
-        return Vector3::Rotate(Vector3::UnitZ, ToRotationMatrix());
+        return Vector3::Zero;
+        // @todo
+        //return Vector3::Rotate(Vector3::UnitZ, ToRotationMatrix());
     }
 
     EulerAngles Quaternion::ToEulerAngles() const
@@ -85,17 +85,17 @@ namespace Silent::Math
 
     AxisAngle Quaternion::ToAxisAngle() const
     {
-        float sinHalfAngle = glm::sqrt(1.0f - SQUARE(w));
+        float sinHalfRad = glm::sqrt(1.0f - SQUARE(w));
 
         // Compute axis.
         auto axis = Vector3::Zero;
-        if (sinHalfAngle < EPSILON)
+        if (sinHalfRad < EPSILON)
         {
             axis = Vector3::UnitZ;
         }
         else
         {
-            axis = Vector3(x, y, z) / sinHalfAngle;
+            axis = Vector3(x, y, z) / sinHalfRad;
         }
 
         // Compute angle.

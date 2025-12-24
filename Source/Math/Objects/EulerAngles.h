@@ -68,7 +68,7 @@ namespace Silent::Math
          */
         static EulerAngles InterpConstant(const EulerAngles& from, const EulerAngles& to, short angularVel);
 
-        /** @brief Computes a constant interpolation between the set of Euler angles and another set of Euler angles.
+        /** @brief Computes a constant interpolation with another set of Euler angles.
          *
          * @param to End Euler angles.
          * @param angularVel Angular velocity.
@@ -85,7 +85,7 @@ namespace Silent::Math
          */
         static EulerAngles Lerp(const EulerAngles& from, const EulerAngles& to, float alpha, short epsilon = DEFAULT_EPSILON);
 
-        /** @brief Linearly interpolates between the set of Euler angles and another set of Euler angles.
+        /** @brief Linearly interpolates with another set of Euler angles.
          *
          * @param to End Euler angles.
          * @param alpha Interpolation alpha.
@@ -102,7 +102,7 @@ namespace Silent::Math
          */
         static EulerAngles Slerp(const EulerAngles& from, const EulerAngles& to, float alpha);
 
-        /** @brief Computes the spherical linear interpolation between the set of Euler angles and another set of Euler angles.
+        /** @brief Computes the spherical linear interpolation with another set of Euler angles.
          *
          * @param to End Euler angles.
          * @param alpha Interpolation alpha.
@@ -122,25 +122,25 @@ namespace Silent::Math
         // Converters
         // ===========
 
-        /** @brief Converts the set of Euler angles to a normalized direction vector.
+        /** @brief Converts to a normalized direction vector.
          *
          * @return Normalized direction vector.
          */
         Vector3 ToDirection() const;
 
-        /** @brief Converts the set of Euler angles to a quaternion.
+        /** @brief Converts to a quaternion.
          *
          * @return Quaternion rotation.
          */
         Quaternion ToQuaternion() const;
 
-        /** @brief Converts the set of Euler angles to an axis-angle.
+        /** @brief Converts to an axis-angle.
          *
          * @return Axis angle rotation.
          */
         AxisAngle ToAxisAngle() const;
 
-        /** @brief Converts the set of Euler angles to a rotation matrix.
+        /** @brief Converts to a rotation matrix.
          *
          * @return Rotation matrix.
          */

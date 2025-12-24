@@ -17,8 +17,6 @@ namespace Silent::Math
 
     /** @brief Converts an integer to a fixed-point Q format.
      *
-     * @note Deprecated.
-     *
      * @param x `int` to convert.
      * @param shift Fixed-point shift.
      * @return `x` converted to fixed-point.
@@ -96,6 +94,14 @@ namespace Silent::Math
      */
     #define Q4(x) \
         FP_TO(x, Q4_SHIFT)
+
+    /** @brief Converts a floating-point value to Q*.6 fixed-point.
+     *
+     * @param x Value to convert (`float`).
+     * @return `x` converted to Q*.6 fixed-point.
+     */
+    #define Q6(x) \
+        FP_TO(x, Q6_SHIFT)
 
     /** @brief Converts a floating-point value to Q*.8 fixed-point.
      *

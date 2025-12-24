@@ -98,12 +98,8 @@ namespace Silent::Math
 
     Vector2 Vector2i::ToVector2(int shift) const
     {
-        if (shift != NO_VALUE)
-        {
-            return Vector2(FP_FLOAT(x, shift), FP_FLOAT(y, shift));
-        }
-
-        return Vector2(x, y);
+        return (shift != NO_VALUE) ? Vector2(FP_FLOAT(x, shift), FP_FLOAT(y, shift)) :
+                                     Vector2((float)x, (float)y);
     }
 
     const glm::ivec2& Vector2i::ToGlmVec2i() const

@@ -68,9 +68,9 @@ namespace Silent::Math
          *
          * @param from Start quaternion.
          * @param to End quaternion.
-         * @return Angular distance.
+         * @return Angular distance in randians.
          */
-        static short AngularDistance(const Quaternion& from, const Quaternion& to);
+        static float AngularDistance(const Quaternion& from, const Quaternion& to);
 
         /** @brief Inverts a quaternion.
          *

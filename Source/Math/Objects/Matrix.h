@@ -116,7 +116,7 @@ namespace Silent::Math
          *
          * @param from Start matrix.
          * @param to End matrix.
-         * @param alpha Interpolation alpha, range `[0.0f, 1.0f]`.
+         * @param alpha Interpolation alpha.
          * @return Linearly interpolated matrix.
          */
         static Matrix Lerp(const Matrix& from, const Matrix& to, float alpha);
@@ -124,7 +124,7 @@ namespace Silent::Math
         /** @brief Linearly interpolates between the matrix and another matrix.
          *
          * @param to End matrix.
-         * @param alpha Interpolation alpha, range `[0.0f, 1.0f]`.
+         * @param alpha Interpolation alpha.
          */
         void Lerp(const Matrix& to, float alpha);
 

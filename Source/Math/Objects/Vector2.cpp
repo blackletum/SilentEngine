@@ -3,6 +3,7 @@
 
 #include "Math/Constants.h"
 #include "Math/Objects/Matrix.h"
+#include "Math/Objects/Vector2i.h"
 
 namespace Silent::Math
 {
@@ -91,16 +92,6 @@ namespace Silent::Math
         *this = Vector2::Lerp(*this, to, alpha);
     }
 
-    Vector2 Vector2::Smoothstep(const Vector2& from, const Vector2& to, float alpha)
-    {
-        return Vector2(glm::smoothstep(from.ToGlmVec2(), to.ToGlmVec2(), glm::vec2(alpha)));
-    }
-
-    void Vector2::Smoothstep(const Vector2& to, float alpha)
-    {
-        *this = Vector2::Smoothstep(*this, to, alpha);
-    }
-
     Vector2 Vector2::Transform(const Vector2& vec, const Matrix& mat)
     {
         return Vector2(glm::vec2(mat.ToGlmMat4() * glm::vec4(vec, 0.0f, 1.0f)));
@@ -124,6 +115,12 @@ namespace Silent::Math
     bool Vector2::Compare(const Vector2& vec0, const Vector2& vec1, float epsilon)
     {
         return Vector2::DistanceSquared(vec0, vec1) <= SQUARE(epsilon);
+    }
+
+    Vector2i Vector2::ToVector2i(int shift) const
+    {
+        return (shift != NO_VALUE) ? Vector2i(FP_TO(x, shift), FP_TO(y, shift)) :
+                                     Vector2i((int)round(x), (int)round(y));
     }
 
     const glm::vec2& Vector2::ToGlmVec2() const

@@ -13,7 +13,7 @@ namespace Silent::Services
             }
             case OsType::MacOs:
             {
-                return "Mac OS";
+                return "macOS";
             }
             case OsType::Linux:
             {
