@@ -13,35 +13,58 @@ Track decompilation progress here: https://github.com/Vatuu/silent-hill-decomp
 - Timestep handling
 - Parallel task handling
 - Filesystem handling
-- Clean logging
+- Clean, extensive logging
 - Renderer with swappable backends
 - Sound system
 - Translator for internationalized scripts
 - Font manager
-- Various utilities pulled from other projects.
+- "Power" menu for deubgging
+- Various utilities pulled from other projects
 
-All considerations are being made to make this a flexible, readable, and extendable foundation. Portability is in mind as a top priority for multi-platform support from inception.
+All considerations are being made to establish a flexible, readable, and accessible foundation. Portability is in mind as a top priority for cross-platform support from inception.
 
 ### TODOs
 
-- The decomp must be farther along before the bulk of the porting work can begin. More basic things like the boot screen and game menus *could* be ported already with some effort, but it's not worth doing yet while the decomp is in constant flux.
-- Must switch to GCC as the compiler.
-- Forward renderer.
+- The decomp must be farther along before the bulk of the porting work can begin. More basic things like the boot screen and game menus could be ported already, but it's best to wait for the rest while the decomp is in constunt flux and much of the engine code remains to be deobfuscated.
+- Switch to GCC as the compiler. Works on Linux, Windows build has problems and relies on MSVC for now.
+- Forward renderer. Basic system abstraction is done, now it needs expansion.
 - Sound system. Need to write a `KDC`+`VAB` -> `XM` converter?
 - Parsers for all proprietary game file types.
-- Math needs more work.
+- Test math classes.
 - Extensive documentation.
+- Lua scripting.
+- Remove GLAD dependency. Primary renderer backend currently in progress uses `SDL_gpu`, others can be added in the future.
 
 ## Building (Windows/macOS/Linux)
 
-WIP. Ideally the project will be able to cross-compile between all main development platforms.
+WIP! Ideally, the project will be able to cross-compile between all main development platforms.
 
 ### Install dependencies
 
 The project has the following requirements:
 - cmake
 - git
+- ninja
+- pip
 - python3
+
+<details>
+<summary>Windows</summary>
+
+```
+winget install Kitware.CMake Git.Git Ninja-build.Ninja Python.Python.3
+```
+</details> <details> <summary>macOS</summary>
+
+```
+# TODO: Add macOS instructions here
+```
+</details> <details> <summary>Linux</summary>
+
+```
+sudo apt install build-essential git ninja-build python3 python3-pip
+```
+</details>
 
 ### Clone the repository
 
@@ -69,20 +92,49 @@ git submodule update --init --recursive
 
 Build LuaJIT locally:
 ```
-cd Libraries/LuaJIT
-make
-cd ../..
+cd Libraries/LuaJIT && make && cd ../..
 ```
+
+Generate GLAD source:
+```
+pip install glad
+glad --generator=c --api=gl=4.6 --profile=core --out-path=Libraries/glad
+```
+
+<details>
+<summary>Linux</summary>
+
+```
+sudo apt install build-essential git ninja-build python3 python3-pip
+```
+
+Install SDL dependencies:
+```
+sudo apt-get install build-essential git make \
+pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
+libaudio-dev libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
+libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev libthai-dev
+```
+
+Set up Python virtual environment:
+```
+python3 -m venv .venv
+source .venv/bin/activate
+```
+</details>
 
 ### Build the code (Debug/Release)
 
-Available `Make` commands:
-- `debug`: Runs Debug build configuration and builds a Debug executable.
-- `release`: Runs Debug build configuration and builds a Release executable.
-- `configure-debug`: Runs Debug build configuration.
-- `configure-release`: Runs Release build configuration.
-- `build-debug`: Builds a Debug executable.
-- `build-release`: Builds a Release executable.
+Available commands:
+- Configure Debug:`cmake -S . -B Build/Debug -G Ninja -DCMAKE_BUILD_TYPE=Debug`
+- Build Debug: `cmake --build Build/Debug`
+
+- Configure Debug:`cmake -S . -B Build/Release -G Ninja -DCMAKE_BUILD_TYPE=Release`
+- Build Release: `cmake --build Build/Release`
+
+- Activate Python virtual environment: `source .venv/bin/activate`
 
 ## Contributing
 

@@ -42,8 +42,10 @@ namespace Silent::Services
         }
 
         return {};
-#else
+#elif defined(__APPLE__) || defined(__linux__)
         return std::filesystem::path(getenv("HOME"));
+#else
+        return {};
 #endif
     }
 
