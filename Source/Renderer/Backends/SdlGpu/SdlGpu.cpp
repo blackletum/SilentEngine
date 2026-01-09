@@ -109,8 +109,9 @@ namespace Silent::Renderer
         _buffers.Sprites2d.Initialize(*_device, SPRITE_2D_COUNT_MAX * QUAD_VERTEX_COUNT, SPRITE_2D_COUNT_MAX * 6, "2D sprite vertices");
 
         // Reserve memory.
-        _primitives2d.reserve(PRIMITIVE_2D_COUNT_MAX);
-        _sprites2d.reserve(SPRITE_2D_COUNT_MAX);
+        _activeBuffer.Primitives2d.reserve(PRIMITIVE_2D_COUNT_MAX);
+        _activeBuffer.Sprites2d.reserve(SPRITE_2D_COUNT_MAX);
+        _renderBuffer = _activeBuffer; // @todo Check if this reserves memory like it's supposed to. `_activeBuffer` and `_renderBuffer` should have identical memory pools.
 
         // Create ImGui context.
         ImGui::CreateContext();
@@ -130,7 +131,7 @@ namespace Silent::Renderer
         auto* uploadCmdBuffer = SDL_AcquireGPUCommandBuffer(_device);
         auto* copyPass        = SDL_BeginGPUCopyPass(uploadCmdBuffer);
 
-        (*(SdlGpuTextureManager*)_textures.get()).Load(*copyPass, g_App.GetAssets().GetName(1854));
+        GetTextures().Load(*copyPass, g_App.GetAssets().GetName(1854));
 
         SDL_EndGPUCopyPass(copyPass);
         SDL_SubmitGPUCommandBuffer(uploadCmdBuffer);
@@ -157,14 +158,13 @@ namespace Silent::Renderer
     void SdlGpuRenderer::Update()
     {
         // Frame setup.
-        PrepareFrameData();
+        PrepareRenderBufferData();
 
         // Acquire command buffer.
         _commandBuffer = SDL_AcquireGPUCommandBuffer(_device);
         if (_commandBuffer == nullptr)
         {
             Debug::Log(Fmt("Failed to acquire command buffer: {}", SDL_GetError()), Debug::LogLevel::Error);
-            ClearFrameData();
             return;
         }
 
@@ -172,7 +172,6 @@ namespace Silent::Renderer
         _swapchainTexture = nullptr;
         if (!SDL_WaitAndAcquireGPUSwapchainTexture(_commandBuffer, _window, &_swapchainTexture, nullptr, nullptr))
         {
-            ClearFrameData();
             return;
         }
 
@@ -187,9 +186,6 @@ namespace Silent::Renderer
 
         // Submit command buffer to GPU.
         SDL_SubmitGPUCommandBuffer(_commandBuffer);
-
-        // Clear frame setup.
-        ClearFrameData();
     }
 
     void SdlGpuRenderer::SaveScreenshot() const
@@ -253,6 +249,11 @@ namespace Silent::Renderer
         SDL_EndGPURenderPass(&renderPass);
     }
 
+    SdlGpuTextureManager& SdlGpuRenderer::GetTextures()
+    {
+        return *(SdlGpuTextureManager*)_textures.get();
+    }
+
     void SdlGpuRenderer::Draw2dScene()
     {
         const auto& options = g_App.GetOptions();
@@ -278,10 +279,10 @@ namespace Silent::Renderer
         };
         auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, nullptr);
 
-        // 2D textures.
+        // 2D sprites. @todo 6 indices should be a constant.
         _pipelines.Bind(renderPass, RenderStage::Primitive2dTextured, BlendMode::Opaque);
         _buffers.Sprites2d.Bind(renderPass, 0, 0);
-        (*(SdlGpuTextureManager*)_textures.get()).Get(g_App.GetAssets().GetName(1854))->Bind(renderPass, *_samplers[(int)options->TextureFilter]);
+        GetTextures().Get(g_App.GetAssets().GetName(1854))->Bind(renderPass, *_samplers[(int)options->TextureFilter]);
         SDL_DrawGPUIndexedPrimitives(&renderPass, 6, sizeof(spriteBufferVerts) / sizeof(BufferTexVertex2d), 0, 0, 0);
 
         // 2D primitives.
@@ -345,7 +346,7 @@ namespace Silent::Renderer
         ImGui::NewFrame();
 
         // Draw GUIs.
-        for (auto& drawCall : _debugGuiDrawCalls)
+        for (auto& drawCall : _renderBuffer.DebugGuiDrawCalls)
         {
             drawCall();
         }
@@ -373,8 +374,8 @@ namespace Silent::Renderer
     void SdlGpuRenderer::Copy2dPrimitives(SDL_GPUCopyPass& copyPass, std::vector<BufferColorVertex2d>& bufferVerts)
     {
         // Create 2D primitive vertex buffer data.
-        bufferVerts.reserve((_primitives2d.size() * 2) * TRIANGLE_VERTEX_COUNT);
-        for (const auto& prim : _primitives2d)
+        bufferVerts.reserve((_renderBuffer.Primitives2d.size() * 2) * TRIANGLE_VERTEX_COUNT);
+        for (const auto& prim : _renderBuffer.Primitives2d)
         {
             // 2D triangle primitive.
             if (prim.Vertices.size() == TRIANGLE_VERTEX_COUNT)
@@ -415,9 +416,9 @@ namespace Silent::Renderer
     void SdlGpuRenderer::Copy2dSprites(SDL_GPUCopyPass& copyPass, std::vector<BufferTexVertex2d>& bufferVerts, std::vector<uint16>& bufferIdxs)
     {
         // Create 2D sprite vertex buffer data.
-        bufferVerts.reserve(_sprites2d.size() * 4);
-        bufferIdxs.reserve(_sprites2d.size() * 6);
-        for (const auto& sprite : _sprites2d)
+        bufferVerts.reserve(_renderBuffer.Sprites2d.size() * 4);
+        bufferIdxs.reserve(_renderBuffer.Sprites2d.size() * 6);
+        for (const auto& sprite : _renderBuffer.Sprites2d)
         {
             //auto pos = GetAspectCorrectScreenPosition(Vector2(vert.Position.x, vert.Position.y), prim.ScaleM);
             auto ndc = ConvertScreenPercentToNdc(sprite.Position);
