@@ -42,13 +42,13 @@
     path = Libraries/SDL
     url = https://github.com/libsdl-org/SDL.git
 
-[submodule "Libraries/sol2"]
-    path = Libraries/sol2
-    url = https://github.com/ThePhD/sol2.git
-
 [submodule "Libraries/smol-atlas"]
     path = Libraries/smol-atlas
     url = https://github.com/aras-p/smol-atlas.git
+
+[submodule "Libraries/sol2"]
+    path = Libraries/sol2
+    url = https://github.com/ThePhD/sol2.git
 
 [submodule "Libraries/spdlog"]
     path = Libraries/spdlog

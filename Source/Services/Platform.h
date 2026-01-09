@@ -2,8 +2,8 @@
 
 namespace Silent::Services
 {
-    /** @brief Supported operating systems. */
-    enum class OsType
+    /** @brief Supported platform types. */
+    enum class PlatformType
     {
         Unknown,
         Windows,
@@ -11,22 +11,22 @@ namespace Silent::Services
         Linux
     };
 
-    constexpr auto OS_TYPE = 
+    constexpr auto PLATFORM_TYPE = 
 #if defined(_WIN32) || defined(_WIN64)
-                             OsType::Windows;
+                                   PlatformType::Windows;
 #elif defined(__APPLE__)
-                             OsType::MacOs;
+                                   PlatformType::MacOs;
 #elif defined(__linux__)
-                             OsType::Linux;
+                                   PlatformType::Linux;
 #else
-                             OsType::Unknown;
+                                   PlatformType::Unknown;
 #endif
 
     /** @brief Gets the name of the OS.
      *
      * @return OS name.
      */
-    std::string GetOsName();
+    std::string GetPlatformName();
 
     /** @brief Gets the platform-specific home directory.
      *

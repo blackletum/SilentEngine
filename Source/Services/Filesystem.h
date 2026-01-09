@@ -4,6 +4,7 @@ namespace Silent::Services
 {
     constexpr char ASSETS_DIR_NAME[]             = "Assets";
     constexpr char ASSETS_FONTS_DIR_NAME[]       = "Fonts";
+    constexpr char ASSETS_LOCALES_DIR_NAME[]     = "Locales";
     constexpr char ASSETS_PSX_DIR_NAME[]         = "Stream/Psx"; // @todo Make this simply refer to "Stream" to allow addition of new streamable assets. Requires index -> name refactor.
     constexpr char SAVEGAME_DIR_NAME[]           = "Savegame";
     constexpr char SAVEGAME_FILE_DIR_NAME_BASE[] = "File ";
@@ -26,12 +27,12 @@ namespace Silent::Services
         // Fields
         // =======
 
-        std::filesystem::path _appDir         = {}; /** Application folder. */
-        std::filesystem::path _assetsDir      = {}; /** Game assets folder. */
-        std::filesystem::path _workDir        = {}; /** Workspace folder. */
-        std::filesystem::path _savegameDir    = {}; /** Savegame folder. */
-        std::filesystem::path _screenshotsDir = {}; /** Screenshots folder. */
-        std::filesystem::path _shadersDir     = {}; /** Shaders folder. */
+        std::filesystem::path _appDir         = {};
+        std::filesystem::path _assetsDir      = {};
+        std::filesystem::path _workDir        = {};
+        std::filesystem::path _savegameDir    = {};
+        std::filesystem::path _screenshotsDir = {};
+        std::filesystem::path _shadersDir     = {};
 
     public:
         // =============

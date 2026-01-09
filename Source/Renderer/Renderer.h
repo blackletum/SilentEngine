@@ -21,6 +21,8 @@ namespace Silent::Renderer
     /** @brief Data for double-buffering. */
     struct DataBuffer
     {
+        int DrawCallCount = 0;
+
         std::vector<Primitive3d>            Primitives3d      = {};
         std::vector<Primitive2d>            Primitives2d      = {};
         std::vector<Sprite2d>               Sprites2d         = {};
@@ -38,12 +40,11 @@ namespace Silent::Renderer
         // Fields
         // =======
 
-        RendererType _type          = RendererType::SdlGpu;
-        SDL_Window*  _window        = nullptr;
-        View         _view          = View();
-        Color        _clearColor    = Color::Clear;
-        int          _drawCallCount = 0; // @todo Probably belongs in `DataBuffer` as well.
-        bool         _isResized     = false;
+        RendererType _type       = RendererType::SdlGpu;
+        SDL_Window*  _window     = nullptr;
+        View         _view       = View();
+        Color        _clearColor = Color::Clear;
+        bool         _isResized  = false;
 
         std::unique_ptr<TextureManagerBase> _textures = nullptr;
 
@@ -81,7 +82,7 @@ namespace Silent::Renderer
          */
         float GetScreenAspectRatio() const;
 
-        /** @brief Gets the draw call count for the current render tick.
+        /** @brief Gets the draw call count for the previous render tick.
          *
          * @return Draw call count.
          */
@@ -101,7 +102,7 @@ namespace Silent::Renderer
         // Utilities
         // ==========
 
-        /** @brief Updates the render data buffer for the current frame and clears the active data buffer for the next update. */
+        /** @brief Updates the render data buffer for the current tick and clears the active data buffer for the next update. */
         void UpdateRenderDataBuffer();
 
         /** @brief Signals a viewport resize. */

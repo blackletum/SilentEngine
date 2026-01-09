@@ -45,7 +45,7 @@ namespace Silent::Services
         _appDir = std::filesystem::current_path();
 
         // Set screenshots path.
-        if (OS_TYPE == OsType::Unknown)
+        if (PLATFORM_TYPE == PlatformType::Unknown)
         {
             _screenshotsDir = _workDir / SCREENSHOTS_DIR_NAME;
         }

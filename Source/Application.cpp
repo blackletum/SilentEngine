@@ -111,7 +111,7 @@ namespace Silent
         // Debug.
         Debug::Initialize();
         Debug::Log(Fmt("Starting {} {}...", APP_NAME, APP_VERSION));
-        Debug::Log(Fmt("OS: {}", GetOsName()));
+        Debug::Log(Fmt("Platform: {}", GetPlatformName()));
         Debug::Log(Fmt("Repository: {}", GIT_REPO));
         Debug::Log(Fmt("Branch: {}", GIT_BRANCH));
         Debug::Log(Fmt("Commit: {}", GIT_COMMIT));
@@ -161,7 +161,7 @@ namespace Silent
         _work.Input.Initialize();
 
         // Show fullscreen toggle toaster hint.
-        _work.Toaster.Add(_work.Translator((OS_TYPE == OsType::MacOs) ? KEY_SYS_FULLSCREEN_HINT_MAC : KEY_SYS_FULLSCREEN_HINT_GENERIC));
+        _work.Toaster.Add(_work.Translator((PLATFORM_TYPE == PlatformType::MacOs) ? KEY_SYS_FULLSCREEN_HINT_MAC : KEY_SYS_FULLSCREEN_HINT_GENERIC));
 
         Debug::Log("Startup complete.");
     }

@@ -36,19 +36,19 @@ namespace Silent::Renderer
 
         // Define format flags.
         int formatFlags = 0;
-        switch (OS_TYPE)
+        switch (PLATFORM_TYPE)
         {
-            case OsType::Windows:
+            case PlatformType::Windows:
             {
                 formatFlags = SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXIL;
                 break;
             }
-            case OsType::MacOs:
+            case PlatformType::MacOs:
             {
                 formatFlags = SDL_GPU_SHADERFORMAT_MSL;
                 break;
             }
-            case OsType::Linux:
+            case PlatformType::Linux:
             {
                 formatFlags = SDL_GPU_SHADERFORMAT_SPIRV;
                 break;

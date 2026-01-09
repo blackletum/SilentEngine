@@ -24,7 +24,7 @@ namespace Silent::Renderer
 
     int RendererBase::GetDrawCallCount() const
     {
-        return _drawCallCount;
+        return _renderBuffer.DrawCallCount;
     }
 
     void RendererBase::SetClearColor(const Color& color)
@@ -34,8 +34,6 @@ namespace Silent::Renderer
 
     Vector2i RendererBase::GetScreenResolution() const
     {
-        constexpr auto RETRO_RES = Vector2i(320, 240);
-
         const auto& options = g_App.GetOptions();
 
         auto res = g_App.GetWindowResolution();
@@ -50,7 +48,7 @@ namespace Silent::Renderer
             }
             case RenderScaleType::Retro:
             {
-                res = RETRO_RES;
+                res = RETRO_SCREEN_SPACE_RES.ToVector2i();
                 break;
             }
         }
@@ -66,10 +64,9 @@ namespace Silent::Renderer
 
     void RendererBase::UpdateRenderDataBuffer()
     {
-        _drawCallCount = 0;
-
         std::swap(_renderBuffer, _activeBuffer);
 
+        _activeBuffer.DrawCallCount = 0;
         _activeBuffer.Primitives2d.clear();
         _activeBuffer.Primitives3d.clear();
         _activeBuffer.Sprites2d.clear();

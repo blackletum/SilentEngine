@@ -3,19 +3,19 @@
 
 namespace Silent::Services
 {
-    std::string GetOsName()
+    std::string GetPlatformName()
     {
-        switch (OS_TYPE)
+        switch (PLATFORM_TYPE)
         {
-            case OsType::Windows:
+            case PlatformType::Windows:
             {
                 return "Windows";
             }
-            case OsType::MacOs:
+            case PlatformType::MacOs:
             {
                 return "macOS";
             }
-            case OsType::Linux:
+            case PlatformType::Linux:
             {
                 return "Linux";
             }
