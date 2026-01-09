@@ -77,8 +77,8 @@ Clone https://github.com/Sezzary/SilentEngine to your desired directory. Cloning
 - ImGuizmo
 - json
 - LuaJIT
-- rectpack2D
 - SDL3
+- smol-atlas
 - sol2
 - spdlog + {fmt}
 - stb
