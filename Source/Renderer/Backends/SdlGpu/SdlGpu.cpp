@@ -283,14 +283,14 @@ namespace Silent::Renderer
         _pipelines.Bind(renderPass, RenderStage::Primitive2dTextured, BlendMode::Opaque);
         _buffers.Sprites2d.Bind(renderPass, 0, 0);
         GetTextures().Get(g_App.GetAssets().GetName(1854))->Bind(renderPass, *_samplers[(int)options->TextureFilter]);
-        SDL_DrawGPUIndexedPrimitives(&renderPass, 6, sizeof(spriteBufferVerts) / sizeof(BufferTexVertex2d), 0, 0, 0);
+        SDL_DrawGPUIndexedPrimitives(&renderPass, 12, 1, 0, 0, 0);
 
         // 2D primitives.
         _pipelines.Bind(renderPass, RenderStage::Primitive2d, BlendMode::Alpha);
         _buffers.Primitives2d.Bind(renderPass, 0);
         UniformBuffer.IsFastAlpha = false;
         SDL_PushGPUFragmentUniformData(_commandBuffer, 0, &UniformBuffer, sizeof(UniformBuffer));
-        SDL_DrawGPUPrimitives(&renderPass, bufferVerts.size(), sizeof(bufferVerts) / sizeof(BufferColorVertex2d), 0, 0);
+        SDL_DrawGPUPrimitives(&renderPass, bufferVerts.size(), 1, 0, 0);
         
         // End render pass.
         SDL_EndGPURenderPass(&renderPass);
@@ -418,6 +418,7 @@ namespace Silent::Renderer
         // Create 2D sprite vertex buffer data.
         bufferVerts.reserve(_renderBuffer.Sprites2d.size() * 4);
         bufferIdxs.reserve(_renderBuffer.Sprites2d.size() * 6);
+
         for (const auto& sprite : _renderBuffer.Sprites2d)
         {
             //auto pos = GetAspectCorrectScreenPosition(Vector2(vert.Position.x, vert.Position.y), prim.ScaleM);
@@ -434,10 +435,12 @@ namespace Silent::Renderer
                 });
             }*/
 
-            bufferVerts.push_back(BufferTexVertex2d{ Vector3(-1.0f,  1.0f, 0.0f), Vector2(0.0f, 0.0f) });
-            bufferVerts.push_back(BufferTexVertex2d{ Vector3( 1.0f,  1.0f, 0.0f), Vector2(1.0f, 0.0f) });
-            bufferVerts.push_back(BufferTexVertex2d{ Vector3( 1.0f, -1.0f, 0.0f), Vector2(1.0f, 1.0f) });
-            bufferVerts.push_back(BufferTexVertex2d{ Vector3(-1.0f, -1.0f, 0.0f), Vector2(0.0f, 1.0f) });
+            auto vert0 = Vector2(sprite.Position.x - 1.0);
+
+            bufferVerts.push_back(BufferTexVertex2d{ Vector3(-1.0f,  0.5f, 0.0f), sprite.UvMin });
+            bufferVerts.push_back(BufferTexVertex2d{ Vector3( 1.0f,  0.5f, 0.0f), Vector2(sprite.UvMax.x, sprite.UvMin.y) });
+            bufferVerts.push_back(BufferTexVertex2d{ Vector3( 1.0f, -0.5f, 0.0f), sprite.UvMax });
+            bufferVerts.push_back(BufferTexVertex2d{ Vector3(-1.0f, -0.5f, 0.0f), Vector2(sprite.UvMin.x, sprite.UvMax.y) });
 
             bufferIdxs.push_back(0);
             bufferIdxs.push_back(1);
@@ -445,6 +448,35 @@ namespace Silent::Renderer
             bufferIdxs.push_back(0);
             bufferIdxs.push_back(2);
             bufferIdxs.push_back(3);
+        }
+
+        for (const auto& sprite : _renderBuffer.Sprites2d)
+        {
+            //auto pos = GetAspectCorrectScreenPosition(Vector2(vert.Position.x, vert.Position.y), prim.ScaleM);
+            auto ndc = ConvertScreenPercentToNdc(sprite.Position);
+            /*for (int i = 0; i < 4; i++)
+            {
+                bufferVerts.push_back(BufferTexVertex2d
+                {
+                    .x = ndc.x,
+                    .y = ndc.y,
+                    .z = 0.0f,
+                    .u = sprite.UvMin,
+                    .v = ndc.v
+                });
+            }*/
+
+            bufferVerts.push_back(BufferTexVertex2d{ Vector3(-0.5f,  1.0f, 0.0f), Vector2(0.0f, 0.0f) });
+            bufferVerts.push_back(BufferTexVertex2d{ Vector3( 0.5f,  1.0f, 0.0f), Vector2(1.0f, 0.0f) });
+            bufferVerts.push_back(BufferTexVertex2d{ Vector3( 0.5f, -1.0f, 0.0f), Vector2(1.0f, 1.0f) });
+            bufferVerts.push_back(BufferTexVertex2d{ Vector3(-0.5f, -1.0f, 0.0f), Vector2(0.0f, 1.0f) });
+
+            bufferIdxs.push_back(4);
+            bufferIdxs.push_back(5);
+            bufferIdxs.push_back(6);
+            bufferIdxs.push_back(4);
+            bufferIdxs.push_back(6);
+            bufferIdxs.push_back(7);
         }
 
         // Update buffer.
