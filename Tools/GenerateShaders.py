@@ -99,7 +99,7 @@ def generate_shaders():
         if build_count == 0 and len(fail_names) == 0:
             print("Shaders are up-to-date.")
         else:
-            print(f"{build_count} shader{"" if build_count == 1 else "s"} built successfully." + f" {len(fail_names)} failed:" if len(fail_names) > 0 else "")
+            print(f"{build_count} shader{"" if build_count == 1 else "s"} built successfully." + (f" {len(fail_names)} failed:" if len(fail_names) > 0 else ""))
             for fail_name in fail_names:
                 print(fail_name)
     except Exception as ex:
