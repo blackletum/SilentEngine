@@ -105,8 +105,8 @@ namespace Silent::Renderer
         _samplers.push_back(SDL_CreateGPUSampler(_device, &linearSamplerInfo));
 
         // Initialize GPU buffers.
-        _buffers.Primitives2d.Initialize(*_device, SDL_GPU_BUFFERUSAGE_VERTEX, (PRIMITIVE_2D_COUNT_MAX * 2) * TRIANGLE_VERTEX_COUNT, "2d primitive triangle vertices");
-        _buffers.Sprites2d.Initialize(*_device, SPRITE_2D_COUNT_MAX * QUAD_VERTEX_COUNT, SPRITE_2D_COUNT_MAX * 6, "2D sprite vertices");
+        _gpuBuffers.Primitives2d.Initialize(*_device, SDL_GPU_BUFFERUSAGE_VERTEX, (PRIMITIVE_2D_COUNT_MAX * 2) * TRIANGLE_VERTEX_COUNT, "2d primitive triangle vertices");
+        _gpuBuffers.Sprites2d.Initialize(*_device, SPRITE_2D_COUNT_MAX * QUAD_VERTEX_COUNT, SPRITE_2D_COUNT_MAX * 6, "2D sprite vertices");
 
         // Reserve memory.
         _activeBuffer.Primitives2d.reserve(PRIMITIVE_2D_COUNT_MAX);
@@ -148,7 +148,7 @@ namespace Silent::Renderer
         ImGui::DestroyContext();
 
         //_textures TestTexture.~SdlGpuTexture();
-        _buffers = {};
+        _gpuBuffers = {};
         _pipelines.Deinitialize();
 
         SDL_ReleaseWindowFromGPUDevice(_device, _window);
@@ -279,15 +279,17 @@ namespace Silent::Renderer
         };
         auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, nullptr);
 
-        // 2D sprites. @todo 6 indices should be a constant.
+        // 2D sprites.
+        // @todo 6 indices should be a constant.
+        // @todo Batching.
         _pipelines.Bind(renderPass, RenderStage::Primitive2dTextured, BlendMode::Opaque);
-        _buffers.Sprites2d.Bind(renderPass, 0, 0);
-        GetTextures().Get(g_App.GetAssets().GetName(1854))->Bind(renderPass, *_samplers[(int)options->TextureFilter]);
-        SDL_DrawGPUIndexedPrimitives(&renderPass, 12, 1, 0, 0, 0);
+        _gpuBuffers.Sprites2d.Bind(renderPass, 0, 0);
+        GetTextures().Get("TIM/HERO_PIC.TIM")->Bind(renderPass, *_samplers[(int)options->TextureFilter]);
+        SDL_DrawGPUIndexedPrimitives(&renderPass, _renderBuffer.Sprites2d.size() * 6, 1, 0, 0, 0);
 
         // 2D primitives.
         _pipelines.Bind(renderPass, RenderStage::Primitive2d, BlendMode::Alpha);
-        _buffers.Primitives2d.Bind(renderPass, 0);
+        _gpuBuffers.Primitives2d.Bind(renderPass, 0);
         UniformBuffer.IsFastAlpha = false;
         SDL_PushGPUFragmentUniformData(_commandBuffer, 0, &UniformBuffer, sizeof(UniformBuffer));
         SDL_DrawGPUPrimitives(&renderPass, bufferVerts.size(), 1, 0, 0);
@@ -410,7 +412,7 @@ namespace Silent::Renderer
         }
 
         // Update buffer.
-        _buffers.Primitives2d.Update(copyPass, ToSpan(bufferVerts), 0);
+        _gpuBuffers.Primitives2d.Update(copyPass, ToSpan(bufferVerts), 0);
     }
 
     void SdlGpuRenderer::Copy2dSprites(SDL_GPUCopyPass& copyPass, std::vector<BufferTexVertex2d>& bufferVerts, std::vector<uint16>& bufferIdxs)
@@ -456,7 +458,7 @@ namespace Silent::Renderer
         }
 
         // Update GPU buffer.
-        _buffers.Sprites2d.UpdateVertices(copyPass, ToSpan(bufferVerts), 0);
-        _buffers.Sprites2d.UpdateIdxs(copyPass, ToSpan(bufferIdxs), 0);
+        _gpuBuffers.Sprites2d.UpdateVertices(copyPass, ToSpan(bufferVerts), 0);
+        _gpuBuffers.Sprites2d.UpdateIdxs(copyPass, ToSpan(bufferIdxs), 0);
     }
 }

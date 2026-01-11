@@ -76,7 +76,6 @@ namespace Silent::Gui
             In::MouseClickLeft
         };
 
-
         auto correctedExtents = Extents * GetScreenAspectCorrection(_scaleMode);
         auto bounds           = AxisAlignedBoundingRect(Center, correctedExtents);
         Update(bounds.Intersects(pos), SELECT_ACTION_IDS); 

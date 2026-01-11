@@ -26,20 +26,18 @@ namespace Silent::Renderer
             .num_levels           = 1
         };
         _texture = SDL_CreateGPUTexture(_device, &texInfo);
-
-        // Set texture name.
         SDL_SetGPUTextureName(_device, _texture, name.c_str());
 
         // Create transfer buffer.
         auto transferBufferInfo = SDL_GPUTransferBufferCreateInfo
         {
             .usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
-            .size  = (uint)((res.x * res.y) * 4)
+            .size  = (uint)((res.x * res.y) * RGBA_COMP_COUNT)
         };
         auto* transferBuffer = SDL_CreateGPUTransferBuffer(_device, &transferBufferInfo);
 
         byte* mappedTransferData = (byte*)SDL_MapGPUTransferBuffer(_device, transferBuffer, false);
-        memcpy(mappedTransferData, pixels.data(), (res.x * res.y) * 4);
+        memcpy(mappedTransferData, pixels.data(), (res.x * res.y) * RGBA_COMP_COUNT);
         SDL_UnmapGPUTransferBuffer(_device, transferBuffer);
 
         // Upload texture data.
@@ -72,12 +70,12 @@ namespace Silent::Renderer
         auto transferBufferInfo = SDL_GPUTransferBufferCreateInfo
         {
             .usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
-            .size  = (uint)((size.x * size.y) * 4)
+            .size  = (uint)((size.x * size.y) * RGBA_COMP_COUNT)
         };
         auto* transferBuffer = SDL_CreateGPUTransferBuffer(_device, &transferBufferInfo);
 
         byte* mappedTransferData = (byte*)SDL_MapGPUTransferBuffer(_device, transferBuffer, false);
-        memcpy(mappedTransferData, pixels.data(), (size.x * size.y) * 4);
+        memcpy(mappedTransferData, pixels.data(), (size.x * size.y) * RGBA_COMP_COUNT);
         SDL_UnmapGPUTransferBuffer(_device, transferBuffer);
 
         // Upload texture data.

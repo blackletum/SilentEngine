@@ -9,6 +9,7 @@
 #include "Services/Options.h"
 #include "Utils/Parallel.h"
 
+using namespace Silent::Input;
 using namespace Silent::Services;
 
 // `Scratchpad` includes.
@@ -24,7 +25,8 @@ namespace Silent::Debug
     {
         if constexpr (IS_DEBUG_BUILD)
         {
-            auto& input = g_App.GetInput();
+            auto& input    = g_App.GetInput();
+            auto& renderer = g_App.GetRenderer();
 
             bool isInit = true;
             if (isInit)
@@ -38,18 +40,22 @@ namespace Silent::Debug
 
             // ====================================
 
-            auto& renderer = g_App.GetRenderer();
-
             // Sprite test.
-            renderer.SubmitScreenSprite(0, Vector2::Zero, Vector2::One,
-                                        Vector2(25.0f, 50.0f), 0, Vector2(0.5f, 0.25f), Color::Clear, 1,
+
+            // Cursor.
+            renderer.SubmitScreenSprite("TIM/HERO_PIC.TIM", Vector2::Zero, Vector2::One,
+                                        input.GetCursorPosition(), 0.0f, Vector2(0.1f, 0.1f), Color::Clear, 0,
                                         AlignMode::Center, ScaleMode::Fill, BlendMode::Opaque);
-            renderer.SubmitScreenSprite(0, Vector2::Zero, Vector2::One,
-                                        Vector2(50.0f, 50.0f), 0, Vector2(0.5f, 1.0f), Color::Clear, 0,
+            // Harry portrait.
+            renderer.SubmitScreenSprite("1ST/2ZANKO_E.TIM", Vector2::Zero, Vector2::One,
+                                        Vector2(25.0f, 50.0f), 0.0f, Vector2(0.5f, 0.25f), Color::Clear, 1,
+                                        AlignMode::Center, ScaleMode::Fill, BlendMode::Opaque);
+            renderer.SubmitScreenSprite("TIM/HERO_PIC.TIM", Vector2::Zero, Vector2::One,
+                                        Vector2(50.0f, 50.0f), 0.0f, Vector2(0.5f, 1.0f), Color::Clear, 2,
                                         AlignMode::Center, ScaleMode::Fill, BlendMode::Opaque);
 
             // GUI button test.
-            static auto but = Button(Vector2(25.0f, 75.0f), Vector2(25.0f, 25.0f), ScaleMode::Fit,
+            static auto but = Button(Vector2(25.0f, 25.0f), Vector2(25.0f, 25.0f), ScaleMode::Fit,
                                      []() { Debug::Log("Entering!"); },
                                      [&]()
                                      {

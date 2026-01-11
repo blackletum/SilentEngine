@@ -119,9 +119,9 @@ namespace Silent::Input
          */
         const Vector2& GetAnalogAxis(AnalogAxisId axisId) const;
 
-        /** @brief Gets a reference to the mouse cursor's current screen position.
+        /** @brief Gets a reference to the mouse cursor's current screen position in percent.
          *
-         * @return Current mouse cursor screeb position.
+         * @return Current mouse cursor screen position in percent.
          */
         const Vector2& GetCursorPosition() const;
 

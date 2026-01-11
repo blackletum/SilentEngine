@@ -33,8 +33,9 @@ namespace Silent::Renderer
         SDL_GPUTexture*              _swapchainTexture = nullptr;
         SDL_GPUCommandBuffer*        _commandBuffer    = nullptr;
         std::vector<SDL_GPUSampler*> _samplers         = {};
-        BufferData                   _buffers          = {};
         PipelineManager              _pipelines        = PipelineManager();
+
+        BufferData _gpuBuffers = {};
 
     public:
         // =============

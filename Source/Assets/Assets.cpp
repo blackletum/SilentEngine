@@ -117,7 +117,7 @@ namespace Silent::Assets
         {
             if (entry.is_regular_file())
             {
-                files.push_back(entry.path());
+                files.push_back(entry.path().generic_string());
             }
         }
         Sort(files);

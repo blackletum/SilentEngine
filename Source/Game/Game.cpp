@@ -166,7 +166,7 @@ namespace Silent
             Savegame_CardCleanInit();
             func_8002E7BC();
             func_8002E85C();
-            Joy_Init();
+            //Joy_Init();
             VSyncCallback(&Gfx_VSyncCallback);
             InitGeom();
             func_8004BB10(); // Initializes something for graphics.
@@ -199,7 +199,7 @@ namespace Silent
             renderer.SetClearColor(Color::Clear);
 
             // Load `1ST/2ZANKO_E.TIM` ("There are violent and disturbing images...").
-            assets.Load(assets.GetName(e_FsFile::FILE_1ST_2ZANKO_E_TIM)).wait();
+            assets.Load("1ST/2ZANKO_E.TIM").wait();
 
             // Fade in `1ST/2ZANKO_E.TIM` with luma-multiply blending.
             static int fade = 0;
@@ -211,7 +211,7 @@ namespace Silent
             {
                 // @todo Non-functioning call. Submit fullscreen sprite with luma-multiply blending.
                 auto color = Color(1.0f, 1.0f, 1.0f, (float)fade / (float)FP_COLOR(1.0f));
-                //renderer.SubmitScreenSprite(e_FsFile::FILE_1ST_2ZANKO_E_TIM, Vector2::Zero, Vector2::One, SCREEN_SPACE_RES / 2.0f, FP_ANGLE(0.0f), Vector2::One,
+                //renderer.SubmitScreenSprite("1ST/2ZANKO_E.TIM", Vector2::Zero, Vector2::One, SCREEN_SPACE_RES / 2.0f, FP_ANGLE(0.0f), Vector2::One,
                 //                            color, 0, AlignMode::Center, ScaleMode::Fit, BlendMode::Opaque);
 
                 g_FullscreenAlphaBlend = (float)fade / (float)FP_COLOR(1.0f); // TEMP.
@@ -220,7 +220,7 @@ namespace Silent
             }
 
             // Load `1ST/FONT8NOC.TIM` (8x8 font).
-            assets.Load(assets.GetName(e_FsFile::FILE_1ST_FONT8NOC_TIM)).wait();
+            assets.Load("1ST/FONT8NOC.TIM").wait();
         }
     }
 }

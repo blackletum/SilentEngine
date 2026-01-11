@@ -477,7 +477,6 @@ namespace Silent::Input
         auto pos      = Vector2::Zero;
         auto butState = SDL_GetMouseState(&pos.x, &pos.y);
         pos           = (pos / renderer.GetScreenResolution().ToVector2()) * SCREEN_SPACE_RES;
-        pos.y         = SCREEN_SPACE_RES.y - pos.y;
 
         // Set mouse button event states.
         for (int butCode : VALID_MOUSE_BUTTON_CODES)

@@ -122,7 +122,7 @@ namespace Silent::Renderer
 
         /** @brief Submits a screen sprite for drawing.
          *
-         * @param assedIdx Asset index containing the sprite to draw.
+         * @param assetName Name of the sprite asset with the sprite to draw.
          * @param uvMin Minimum UV position as alpha (top-left).
          * @param uvMax Maximum UV position as alpha (bottom-right).
          * @param pos Screen position in percent.
@@ -134,7 +134,7 @@ namespace Silent::Renderer
          * @param scaleMode Sprite scale mode relative to the screen aspect ratio.
          * @param blendMode Draw blend mode.
          */
-        void SubmitScreenSprite(int assetIdx, const Vector2& uvMin, const Vector2& uvMax, const Vector2& pos, float rot, const Vector2& scale,
+        void SubmitScreenSprite(const std::string& assetName, const Vector2& uvMin, const Vector2& uvMax, const Vector2& pos, float rot, const Vector2& scale,
                                 const Color& color, int depth, AlignMode alignMode, ScaleMode scaleMode, BlendMode blendMode);
 
         /** @brief Initializes the renderer and its subsystems.
