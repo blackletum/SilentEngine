@@ -126,7 +126,7 @@ namespace Silent::Renderer
          * @param uvMin Minimum UV position as alpha (top-left).
          * @param uvMax Maximum UV position as alpha (bottom-right).
          * @param pos Screen position in percent.
-         * @param rot Sprite rotation.
+         * @param rot Sprite rotation in radians.
          * @param scale Sprite scale.
          * @param color Tint color and opacity.
          * @param depth Draw priority. Lower values take precedence.
@@ -134,7 +134,7 @@ namespace Silent::Renderer
          * @param scaleMode Sprite scale mode relative to the screen aspect ratio.
          * @param blendMode Draw blend mode.
          */
-        void SubmitScreenSprite(int assetIdx, const Vector2& uvMin, const Vector2& uvMax, const Vector2& pos, short rot, const Vector2& scale,
+        void SubmitScreenSprite(int assetIdx, const Vector2& uvMin, const Vector2& uvMax, const Vector2& pos, float rot, const Vector2& scale,
                                 const Color& color, int depth, AlignMode alignMode, ScaleMode scaleMode, BlendMode blendMode);
 
         /** @brief Initializes the renderer and its subsystems.
@@ -220,7 +220,9 @@ namespace Silent::Renderer
         // Helpers
         // ========
 
-        /** @brief Prepares renderer buffer data used for the current frame. Called at the start of `Update`. */
+        /** @brief Prepares submitted high-level object data to intermediate renderer buffer data used for the current frame.
+         * Called at the start of `Update`.
+         */
         void PrepareRenderBufferData();
 
         /** @brief Draws a 3D scene. Called before `Draw2dScene`. */

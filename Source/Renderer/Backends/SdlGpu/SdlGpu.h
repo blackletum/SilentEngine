@@ -14,12 +14,14 @@
 
 namespace Silent::Renderer
 {
+    /** @brief GPU buffer data. */
     struct BufferData
     {
         Buffer<BufferColorVertex2d>     Primitives2d = {};
         VertexBuffer<BufferTexVertex2d> Sprites2d    = {};
     };
 
+    /** SDL_gpu renderer backend. */
     class SdlGpuRenderer : public RendererBase
     {
     private:

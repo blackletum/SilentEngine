@@ -419,67 +419,43 @@ namespace Silent::Renderer
         bufferVerts.reserve(_renderBuffer.Sprites2d.size() * 4);
         bufferIdxs.reserve(_renderBuffer.Sprites2d.size() * 6);
 
-        for (const auto& sprite : _renderBuffer.Sprites2d)
+        // Convert render buffer data to GPU buffer.
+        for (int i = 0; i < _renderBuffer.Sprites2d.size(); i++)
         {
+            const auto& sprite = _renderBuffer.Sprites2d[i];
+
+            // @todo Apply scale mode later. Should merge primitives with sprites first, this way they can be layered easily.
             //auto pos = GetAspectCorrectScreenPosition(Vector2(vert.Position.x, vert.Position.y), prim.ScaleM);
             auto ndc = ConvertScreenPercentToNdc(sprite.Position);
-            /*for (int i = 0; i < 4; i++)
-            {
-                bufferVerts.push_back(BufferTexVertex2d
-                {
-                    .x = ndc.x,
-                    .y = ndc.y,
-                    .z = 0.0f,
-                    .u = sprite.UvMin,
-                    .v = ndc.v
-                });
-            }*/
 
-            auto vert0 = Vector2(sprite.Position.x - 1.0);
+            // Compute vertex positions.
+            auto pos0 = Vector3(ndc.x - sprite.Scale.x, ndc.y + sprite.Scale.y, 0.0f);
+            auto pos1 = Vector3(ndc.x + sprite.Scale.x, ndc.y + sprite.Scale.y, 0.0f);
+            auto pos2 = Vector3(ndc.x + sprite.Scale.x, ndc.y - sprite.Scale.y, 0.0f);
+            auto pos3 = Vector3(ndc.x - sprite.Scale.x, ndc.y - sprite.Scale.y, 0.0f);
 
-            bufferVerts.push_back(BufferTexVertex2d{ Vector3(-1.0f,  0.5f, 0.0f), sprite.UvMin });
-            bufferVerts.push_back(BufferTexVertex2d{ Vector3( 1.0f,  0.5f, 0.0f), Vector2(sprite.UvMax.x, sprite.UvMin.y) });
-            bufferVerts.push_back(BufferTexVertex2d{ Vector3( 1.0f, -0.5f, 0.0f), sprite.UvMax });
-            bufferVerts.push_back(BufferTexVertex2d{ Vector3(-1.0f, -0.5f, 0.0f), Vector2(sprite.UvMin.x, sprite.UvMax.y) });
+            // Compute vertex UVs.
+            auto uv0 = sprite.UvMin;
+            auto uv1 = Vector2(sprite.UvMax.x, sprite.UvMin.y);
+            auto uv2 = sprite.UvMax;
+            auto uv3 = Vector2(sprite.UvMin.x, sprite.UvMax.y);
 
-            bufferIdxs.push_back(0);
-            bufferIdxs.push_back(1);
-            bufferIdxs.push_back(2);
-            bufferIdxs.push_back(0);
-            bufferIdxs.push_back(2);
-            bufferIdxs.push_back(3);
+            // Submit vertices.
+            bufferVerts.push_back(BufferTexVertex2d{ pos0, uv0 });
+            bufferVerts.push_back(BufferTexVertex2d{ pos1, uv1 });
+            bufferVerts.push_back(BufferTexVertex2d{ pos2, uv2 });
+            bufferVerts.push_back(BufferTexVertex2d{ pos3, uv3 });
+
+            // Submit indices.
+            bufferIdxs.push_back((QUAD_VERTEX_COUNT * i) + 0);
+            bufferIdxs.push_back((QUAD_VERTEX_COUNT * i) + 1);
+            bufferIdxs.push_back((QUAD_VERTEX_COUNT * i) + 2);
+            bufferIdxs.push_back((QUAD_VERTEX_COUNT * i) + 0);
+            bufferIdxs.push_back((QUAD_VERTEX_COUNT * i) + 2);
+            bufferIdxs.push_back((QUAD_VERTEX_COUNT * i) + 3);
         }
 
-        for (const auto& sprite : _renderBuffer.Sprites2d)
-        {
-            //auto pos = GetAspectCorrectScreenPosition(Vector2(vert.Position.x, vert.Position.y), prim.ScaleM);
-            auto ndc = ConvertScreenPercentToNdc(sprite.Position);
-            /*for (int i = 0; i < 4; i++)
-            {
-                bufferVerts.push_back(BufferTexVertex2d
-                {
-                    .x = ndc.x,
-                    .y = ndc.y,
-                    .z = 0.0f,
-                    .u = sprite.UvMin,
-                    .v = ndc.v
-                });
-            }*/
-
-            bufferVerts.push_back(BufferTexVertex2d{ Vector3(-0.5f,  1.0f, 0.0f), Vector2(0.0f, 0.0f) });
-            bufferVerts.push_back(BufferTexVertex2d{ Vector3( 0.5f,  1.0f, 0.0f), Vector2(1.0f, 0.0f) });
-            bufferVerts.push_back(BufferTexVertex2d{ Vector3( 0.5f, -1.0f, 0.0f), Vector2(1.0f, 1.0f) });
-            bufferVerts.push_back(BufferTexVertex2d{ Vector3(-0.5f, -1.0f, 0.0f), Vector2(0.0f, 1.0f) });
-
-            bufferIdxs.push_back(4);
-            bufferIdxs.push_back(5);
-            bufferIdxs.push_back(6);
-            bufferIdxs.push_back(4);
-            bufferIdxs.push_back(6);
-            bufferIdxs.push_back(7);
-        }
-
-        // Update buffer.
+        // Update GPU buffer.
         _buffers.Sprites2d.UpdateVertices(copyPass, ToSpan(bufferVerts), 0);
         _buffers.Sprites2d.UpdateIdxs(copyPass, ToSpan(bufferIdxs), 0);
     }

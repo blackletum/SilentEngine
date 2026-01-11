@@ -41,7 +41,11 @@ namespace Silent::Debug
             auto& renderer = g_App.GetRenderer();
 
             // Sprite test.
-            renderer.SubmitScreenSprite(0, Vector2::Zero, Vector2::One, Vector2::One * 0.5f, 0, Vector2::One, Color::Clear, 0,
+            renderer.SubmitScreenSprite(0, Vector2::Zero, Vector2::One,
+                                        Vector2(25.0f, 50.0f), 0, Vector2(0.5f, 0.25f), Color::Clear, 1,
+                                        AlignMode::Center, ScaleMode::Fill, BlendMode::Opaque);
+            renderer.SubmitScreenSprite(0, Vector2::Zero, Vector2::One,
+                                        Vector2(50.0f, 50.0f), 0, Vector2(0.5f, 1.0f), Color::Clear, 0,
                                         AlignMode::Center, ScaleMode::Fill, BlendMode::Opaque);
 
             // GUI button test.

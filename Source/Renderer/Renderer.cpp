@@ -91,8 +91,9 @@ namespace Silent::Renderer
         _activeBuffer.Primitives2d.push_back(prim);
     }
 
-    void RendererBase::SubmitScreenSprite(int assetIdx, const Vector2& uvMin, const Vector2& uvMax, const Vector2& pos, short rot, const Vector2& scale,
-                                          const Color& color, int depth, AlignMode alignMode, ScaleMode scaleMode, BlendMode blendMode)
+    void RendererBase::SubmitScreenSprite(int assetIdx, const Vector2& uvMin, const Vector2& uvMax,
+                                          const Vector2& pos, float rot, const Vector2& scale, const Color& color,
+                                          int depth, AlignMode alignMode, ScaleMode scaleMode, BlendMode blendMode)
     {
         auto& assets = g_App.GetAssets();
 
@@ -107,7 +108,14 @@ namespace Silent::Renderer
         {
             .UvMin    = uvMin,
             .UvMax    = uvMax,
-            .Position = pos
+            .Position = pos,
+            .Rotation = rot,
+            .Scale    = scale,
+            .Col      = color,
+            .Depth    = depth,
+            .AlignM   = alignMode,
+            .ScaleM   = scaleMode,
+            .BlendM   = blendMode
         };
         _activeBuffer.Sprites2d.push_back(sprite);
     }
@@ -178,18 +186,27 @@ namespace Silent::Renderer
 
         auto sortTasks = ParallelTasks
         {
+            // @todo Is sorting like this on the CPU necessary?
             //[&]()
             //{
             //    // Sort 2D primitives by depth.
-            //    Sort(_primitives2d, [](const Primitive2d& prim0, const Primitive2d& prim1)
+            //    Sort(_renderBuffer.Primitives2d, [](const Primitive2d& prim0, const Primitive2d& prim1)
             //    {
             //        return prim0.Depth > prim1.Depth; // @todo Weird reverse order necessary here.
             //    });
-            //}
+            //},
+            [&]()
+            {
+                // Sort 2D sprites by depth.
+                // @todo Sort based on other heuristics too. Use sort keys for speed?
+                std::sort(_renderBuffer.Sprites2d.begin(), _renderBuffer.Sprites2d.end(),
+                [](const Sprite2d& sprite0, const Sprite2d& sprite1)
+                {
+                    return sprite0.Depth < sprite1.Depth;
+                });
+            }
         };
         executor.AddTasks(sortTasks).wait();
-
-        // @todo Intermediate data -> renderer-ready data. At later stages, outside this method, renderer-ready data -> GPU copy-ready data.
     }
 
     std::unique_ptr<RendererBase> CreateRenderer(RendererType type)
