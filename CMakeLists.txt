@@ -97,7 +97,6 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add library directories.
 #add_subdirectory(Libraries/assimp)
-add_subdirectory(Libraries/flatbuffers)
 add_subdirectory(Libraries/freetype)
 add_subdirectory(Libraries/glm)
 add_subdirectory(Libraries/harfbuzz)
@@ -106,11 +105,11 @@ add_subdirectory(Libraries/SDL)
 add_subdirectory(Libraries/sol2)
 add_subdirectory(Libraries/spdlog)
 add_subdirectory(Libraries/utfcpp)
+add_subdirectory(Libraries/yalantinglibs)
 
 # Add library header paths.
 target_include_directories(${CMAKE_PROJECT_NAME} SYSTEM PRIVATE
     #${CMAKE_CURRENT_LIST_DIR}/Libraries/assimp/include
-    ${CMAKE_CURRENT_LIST_DIR}/Libraries/flatbuffers/include
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/freetype/include
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/glm
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/harfbuzz
@@ -126,6 +125,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} SYSTEM PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/stb
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/utfcpp/source
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/vlc/include
+    ${CMAKE_CURRENT_LIST_DIR}/Libraries/yalantinglibs/include
 )
 
 # Create target for LuaJIT library.
@@ -135,7 +135,6 @@ set_target_properties(luajit PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_
 # Add libraries.
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
     #assimp
-    flatbuffers
     freetype
     glm
     harfbuzz
@@ -143,4 +142,5 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
     sol2
     SDL3::SDL3-static
     spdlog
+    yalantinglibs
 )

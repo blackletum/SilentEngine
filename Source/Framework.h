@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <deque>
+#include <expected>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -44,9 +45,6 @@
 //#include <assimp/Importer.hpp>
 //#include <assimp/postprocess.h>
 //#include <assimp/scene.h>
-
-// FlatBuffers
-#include <flatbuffers/flatbuffers.h>
 
 // FreeType
 #include <ft2build.h>
@@ -110,6 +108,9 @@ using json = nlohmann::json;
 
 // VLC
 #include <vlc/vlc.h>
+
+// yaLanTingLibs
+#include <ylt/struct_pack.hpp>
 
 // ==========
 // Resources

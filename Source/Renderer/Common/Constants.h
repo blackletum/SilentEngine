@@ -6,7 +6,15 @@ namespace Silent::Renderer
     constexpr auto RETRO_SCREEN_SPACE_RES     = Vector2(320.0f, 240.0f);
     constexpr char SCREENSHOT_FILENAME_BASE[] = "Screenshot_";
 
-    constexpr uint PRIMITIVE_2D_COUNT_MAX = 256;
-    constexpr uint SPRITE_2D_COUNT_MAX    = 256;
-    constexpr uint PRIMITIVE_3D_COUNT_MAX = 256;
+    constexpr int SHAPE_2D_COUNT_MAX  = 64;
+    constexpr int SPRITE_2D_COUNT_MAX = 64;
+    constexpr int DEBUG_GUI_COUNT_MAX = 8;
+
+    constexpr int TRI_IDX_COUNT   = 3;
+    constexpr int QUAD_IDX_COUNT  = 6;
+    constexpr int RGBA_COMP_COUNT = 4;
+
+    constexpr std::array<int, TRI_VERTEX_COUNT * 2> QUAD_TRI_IDXS = { 0, 1, 2, 0, 2, 3 };
+
+    constexpr int DEPTH_MAX = 1024;
 }

@@ -2,7 +2,7 @@
 
 #include "Renderer/Common/Constants.h"
 #include "Renderer/Common/Enums.h"
-#include "Renderer/Common/Objects/Primitive2d.h"
+#include "Renderer/Common/Objects/Scene/Shape2d.h"
 #include "Renderer/Common/Objects/Primitive3d.h"
 #include "Renderer/Common/Objects/Scene/Glyph.h"
 #include "Renderer/Common/Objects/Scene/Sprite2d.h"
@@ -18,18 +18,24 @@ namespace Silent::Renderer
         SdlGpu
     };
 
-    /** @brief Data for double-buffering. */
-    struct DataBuffer
+    /** @brief Double-buffered renderer data. */
+    struct DoubleBuffer
     {
-        int DrawCallCount = 0;
+        struct Data
+        {
+            int DrawCallCount = 0;
 
-        std::vector<Primitive3d>            Primitives3d      = {};
-        std::vector<Primitive2d>            Primitives2d      = {};
-        std::vector<Sprite2d>               Sprites2d         = {};
-        std::vector<Glyph>                  Glyphs            = {};
-        std::vector<Primitive2d>            DebugPrimitives2d = {};
-        std::vector<Primitive3d>            DebugPrimitives3d = {};
-        std::vector<std::function<void()>>  DebugGuiDrawCalls = {};
+            std::vector<Shape2d>                Shapes2d          = {};
+            std::vector<Sprite2d>               Sprites2d         = {};
+            std::vector<std::function<void()>>  DebugGuiDrawCalls = {};
+
+            std::vector<Primitive3d>            Primitives3d      = {};
+            std::vector<Shape2d>                DebugShapes2d     = {};
+            std::vector<Primitive3d>            DebugPrimitives3d = {};
+        };
+
+        Data Active = {};
+        Data Render = {};
     };
 
     /** @brief Renderer base. */
@@ -46,11 +52,10 @@ namespace Silent::Renderer
         Color        _clearColor = Color::Clear;
         bool         _isResized  = false;
 
-        std::unique_ptr<TextureManagerBase> _textures = nullptr;
+        DoubleBuffer                        _doubleBuffer = {};
+        std::unique_ptr<TextureManagerBase> _textures     = nullptr;
 
-        // @todo Cleaner way to manage this.
-        DataBuffer _activeBuffer = {};
-        DataBuffer _renderBuffer = {};
+        std::mutex _gpuMutex = {};
 
     public:
         // =============
@@ -102,40 +107,32 @@ namespace Silent::Renderer
         // Utilities
         // ==========
 
-        /** @brief Updates the render data buffer for the current tick and clears the active data buffer for the next update. */
-        void UpdateRenderDataBuffer();
+        /** @brief Swaps the double buffer and clears active data for new updates on the next tick. */
+        void SwapDoubleBuffer();
 
         /** @brief Signals a viewport resize. */
         void SignalResize();
 
-        /** @brief Submits a 2D primitive for drawing.
+        /** @brief Submits a 2D screen shape for drawing.
          *
-         * @param prim 2D primitive to draw.
+         * @param prim 2D screen shape to draw.
+         * @return `true` if the 2D screen shape was successfully submitted, `false` otherwise.
          */
-        void Submit2dPrimitive(const Primitive2d& prim);
+        bool SubmitShape2d(const Shape2d& shape);
+
+        /** @brief Submits a 2D screen sprite for drawing.
+         *
+         * @param sprite 2D screen sprite to draw.
+         * @return `true` if the 2D screen sprite was successfully submitted, `false` otherwise.
+         */
+        bool SubmitSprite2d(const Sprite2d& sprite);
 
         /** @brief Submits a glyph for drawing.
          *
          * @param glyph Glyph to draw.
+         * @return `true` if the glyph was successfully submitted, `false` otherwise.
          */
-        void SubmitGlyph(const Glyph& glyph);
-
-        /** @brief Submits a screen sprite for drawing.
-         *
-         * @param assetName Name of the sprite asset with the sprite to draw.
-         * @param uvMin Minimum UV position as alpha (top-left).
-         * @param uvMax Maximum UV position as alpha (bottom-right).
-         * @param pos Screen position in percent.
-         * @param rot Sprite rotation in radians.
-         * @param scale Sprite scale.
-         * @param color Tint color and opacity.
-         * @param depth Draw priority. Lower values take precedence.
-         * @param alignMode Sprite align mode relative to the screen aspect ratio.
-         * @param scaleMode Sprite scale mode relative to the screen aspect ratio.
-         * @param blendMode Draw blend mode.
-         */
-        void SubmitScreenSprite(const std::string& assetName, const Vector2& uvMin, const Vector2& uvMax, const Vector2& pos, float rot, const Vector2& scale,
-                                const Color& color, int depth, AlignMode alignMode, ScaleMode scaleMode, BlendMode blendMode);
+        //bool SubmitGlyph(const Glyph& glyph);
 
         /** @brief Initializes the renderer and its subsystems.
          *
@@ -155,15 +152,6 @@ namespace Silent::Renderer
         // ======
         // Debug
         // ======
-
-        /** @brief Submits a debug message for drawing.
-         *
-         * @param msg Message string.
-         * @param pos Screen position in percent.
-         * @param color Color.
-         * @param alignMode Align mode.
-         */
-        void SubmitDebugText(const std::string& msg, const Vector2& pos, const Color& color, TextAlignMode alignMode = TextAlignMode::Left);
 
         /** @brief Submits a function used to construct an ImGui power menu for drawing.
          *
@@ -220,10 +208,13 @@ namespace Silent::Renderer
         // Helpers
         // ========
 
-        /** @brief Prepares submitted high-level object data to intermediate renderer buffer data used for the current frame.
+        /** @brief Initializes the double buffer. */
+        void InitializeDoubleBuffer();
+
+        /** @brief Sorts render data in the double buffer, preparing it for batching and parsing to GPU buffer data.
          * Called at the start of `Update`.
          */
-        void PrepareRenderBufferData();
+        void SortRenderBufferData();
 
         /** @brief Draws a 3D scene. Called before `Draw2dScene`. */
         virtual void Draw3dScene() = 0;

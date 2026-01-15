@@ -43,16 +43,19 @@ namespace Silent::Debug
             // Sprite test.
 
             // Cursor.
-            renderer.SubmitScreenSprite("TIM/HERO_PIC.TIM", Vector2::Zero, Vector2::One,
-                                        input.GetCursorPosition(), 0.0f, Vector2(0.1f, 0.1f), Color::Clear, 0,
-                                        AlignMode::Center, ScaleMode::Fill, BlendMode::Opaque);
-            // Harry portrait.
-            renderer.SubmitScreenSprite("1ST/2ZANKO_E.TIM", Vector2::Zero, Vector2::One,
-                                        Vector2(25.0f, 50.0f), 0.0f, Vector2(0.5f, 0.25f), Color::Clear, 1,
-                                        AlignMode::Center, ScaleMode::Fill, BlendMode::Opaque);
-            renderer.SubmitScreenSprite("TIM/HERO_PIC.TIM", Vector2::Zero, Vector2::One,
-                                        Vector2(50.0f, 50.0f), 0.0f, Vector2(0.5f, 1.0f), Color::Clear, 2,
-                                        AlignMode::Center, ScaleMode::Fill, BlendMode::Opaque);
+            auto cursorSprite = Sprite2d::CreateSprite2d("TIM/HERO_PIC.TIM", Vector2::Zero, Vector2::One,
+                                                         input.GetCursorPosition(), 0.0f, Vector2(0.1f, 0.1f), Color::Clear, 0,
+                                                         AlignMode::Center, ScaleMode::Fill, BlendMode::Subtract);
+            renderer.SubmitSprite2d(cursorSprite);
+
+            auto sprite0 = Sprite2d::CreateSprite2d("1ST/2ZANKO_E.TIM", Vector2::Zero, Vector2::One,
+                                                    Vector2(25.0f, 50.0f), 0.0f, Vector2(0.5f, 0.25f), Color::Clear, 1,
+                                                    AlignMode::Center, ScaleMode::Fill, BlendMode::Add);
+            renderer.SubmitSprite2d(sprite0);
+            auto sprite1 = Sprite2d::CreateSprite2d("TIM/HERO_PIC.TIM", Vector2::Zero, Vector2::One,
+                                                    Vector2(50.0f, 50.0f), 0.0f, Vector2(0.5f, 1.0f), Color::Clear, 2,
+                                                    AlignMode::Center, ScaleMode::Fill, BlendMode::Add);
+            renderer.SubmitSprite2d(sprite1);
 
             // GUI button test.
             static auto but = Button(Vector2(25.0f, 25.0f), Vector2(25.0f, 25.0f), ScaleMode::Fit,
@@ -72,7 +75,7 @@ namespace Silent::Debug
                                             aspectCorrection.y = 1.0f / (1.0f / aspect);
                                         }
                                      
-                                        auto quad = Primitive2d::CreateQuad(Vector2(0.0f,  00.0f),
+                                        auto quad = Shape2d::CreateQuad(Vector2(0.0f,  00.0f),
                                                                             Vector2(0.0f,  50.0f),
                                                                             Vector2(50.0f, 50.0f) * aspectCorrection,
                                                                             Vector2(50.0f, 0.0f) * aspectCorrection,
@@ -81,7 +84,7 @@ namespace Silent::Debug
                                                                             Color(0.0f, 1.0f, 0.2f, 0.4f),
                                                                             Color(0.0f, 1.0f, 0.2f, 0.4f),
                                                                             0, ScaleMode::Fit, BlendMode::Alpha);
-                                        renderer.Submit2dPrimitive(quad);
+                                        renderer.SubmitShape2d(quad);
                                      },
                                      []() { Debug::Log("Leaving!"); },
                                      [&]()
@@ -99,7 +102,7 @@ namespace Silent::Debug
                                             aspectCorrection.y = 1.0f / (1.0f / aspect);
                                         }
                                      
-                                        auto quad = Primitive2d::CreateQuad(Vector2(0.0f,  00.0f),
+                                        auto quad = Shape2d::CreateQuad(Vector2(0.0f,  00.0f),
                                                                             Vector2(0.0f,  50.0f),
                                                                             Vector2(50.0f, 50.0f) * aspectCorrection,
                                                                             Vector2(50.0f, 0.0f) * aspectCorrection,
@@ -108,7 +111,7 @@ namespace Silent::Debug
                                                                             Color(1.0f, 0.0f, 0.4f, 0.4f),
                                                                             Color(1.0f, 0.0f, 0.4f, 0.4f),
                                                                             0, ScaleMode::Fit, BlendMode::Alpha);
-                                        renderer.Submit2dPrimitive(quad);
+                                        renderer.SubmitShape2d(quad);
                                      },
                                      []() { Debug::Log("Clicking!"); },
                                      []() { Debug::Log("Holding!"); },
@@ -121,21 +124,21 @@ namespace Silent::Debug
             }
 
             // @temp
-            auto tri0 = Primitive2d::CreateTriangle(Vector2(0.0f + 0.2f, 0.5f + 0.2f),
+            auto tri0 = Shape2d::CreateTriangle(Vector2(0.0f + 0.2f, 0.5f + 0.2f),
                                                     Vector2(-0.5f + 0.2f, -0.5f + 0.2f),
                                                     Vector2(0.5f + 0.2f, -0.5f + 0.2f),
                                                     Color(1.0f, 0.0f, 1.0f, 0.5f),
                                                     Color(1.0f, 1.0f, 1.0f, 0.5f),
                                                     Color(1.0f, 0.0f, 1.0f, 0.5f),
                                                     0);
-            auto tri1 = Primitive2d::CreateTriangle(Vector2(0.2f, 0.25f),
+            auto tri1 = Shape2d::CreateTriangle(Vector2(0.2f, 0.25f),
                                                     Vector2(-0.25f, -0.25f),
                                                     Vector2(0.25f, -0.25f),
                                                     Color(1.0f, 0.0f, 0.0f, 0.75f),
                                                     Color(0.0f, 1.0f, 1.0f, 0.75f),
                                                     Color(0.0f, 0.0f, 1.0f, 0.75f),
                                                     0);
-            auto quad = Primitive2d::CreateQuad(Vector2(40.0f, 40.0f),
+            auto quad = Shape2d::CreateQuad(Vector2(40.0f, 40.0f),
                                                 Vector2(50.0f, 40.0f),
                                                 Vector2(50.0f, 50.0f),
                                                 Vector2(40.0f, 50.0f),
@@ -144,42 +147,42 @@ namespace Silent::Debug
                                                 Color(0.0f, 1.0f, 0.0f, 1.0f),
                                                 Color(0.0f, 0.0f, 0.0f, 0.0f),
                                                 0, ScaleMode::Fit, BlendMode::Alpha);
-            auto line0 = Primitive2d::CreateLine(Vector2i(10, 10),
+            auto line0 = Shape2d::CreateLine(Vector2i(10, 10),
                                                 Vector2i(50, 10),
                                                 Color(1.0f, 1.0f, 0.0f, 1.0f),
                                                 Color(0.0f, 0.0f, 0.0f, 0.0f),
                                                 0);
-            auto line1 = Primitive2d::CreateLine(Vector2i(15, 11),
+            auto line1 = Shape2d::CreateLine(Vector2i(15, 11),
                                                 Vector2i(70, 11),
                                                 Color(1.0f, 1.0f, 0.0f, 1.0f),
                                                 Color(1.0f, 1.0f, 0.0f, 1.0f),
                                                 0);
-            auto line2 = Primitive2d::CreateLine(Vector2i(0, 1),
+            auto line2 = Shape2d::CreateLine(Vector2i(0, 1),
                                                  Vector2i(0, 239),
                                                  Color(1.0f, 1.0f, 0.0f, 1.0f),
                                                  Color(1.0f, 1.0f, 0.0f, 1.0f),
                                                  0);
-            auto line3 = Primitive2d::CreateLine(Vector2i(319, 0),
+            auto line3 = Shape2d::CreateLine(Vector2i(319, 0),
                                                  Vector2i(1, 0),
                                                  Color(1.0f, 1.0f, 0.0f, 1.0f),
                                                  Color(1.0f, 1.0f, 0.0f, 1.0f),
                                                  0);
-            //renderer.Submit2dPrimitive(tri0);
-            //renderer.Submit2dPrimitive(tri1);
-            renderer.Submit2dPrimitive(quad);
-            renderer.Submit2dPrimitive(line0);
-            renderer.Submit2dPrimitive(line1);
-            //renderer.Submit2dPrimitive(line2);
-            renderer.Submit2dPrimitive(line3);
+            //renderer.SubmitShape2d(tri0);
+            //renderer.SubmitShape2d(tri1);
+            renderer.SubmitShape2d(quad);
+            renderer.SubmitShape2d(line0);
+            renderer.SubmitShape2d(line1);
+            //renderer.SubmitShape2d(line2);
+            renderer.SubmitShape2d(line3);
 
             for (int i = 0; i < 11; i++)
             {
-                auto line3 = Primitive2d::CreateLine(Vector2i(39,  82 + (i * 16)),
+                auto line3 = Shape2d::CreateLine(Vector2i(39,  82 + (i * 16)),
                                                      Vector2i(200, 82 + (i * 16)),
                                                      Color::From8Bit(176, 176, 176),
                                                      Color::From8Bit(160, 128, 64),
                                                      0);
-                auto quadB0 = Primitive2d::CreateQuad(
+                auto quadB0 = Shape2d::CreateQuad(
                                                     Vector2i(52, 69 + (i * 16)),
                                                     Vector2i(52, 81 + (i * 16)),
                                                     Vector2i(40, 69 + (i * 16)),
@@ -189,7 +192,7 @@ namespace Silent::Debug
                                                     Color::From8Bit(160, 128, 64),
                                                     Color::From8Bit(255, 255, 255),
                                                     0);
-                auto quadB1 = Primitive2d::CreateQuad(
+                auto quadB1 = Shape2d::CreateQuad(
                                                     Vector2i(39, 68 + (i * 16)),
                                                     Vector2i(39, 82 + (i * 16)),
                                                     Vector2i(53, 68 + (i * 16)),
@@ -199,12 +202,12 @@ namespace Silent::Debug
                                                     Color::From8Bit(160, 128, 64),
                                                     Color::From8Bit(64,  64,  64),
                                                     1);
-                renderer.Submit2dPrimitive(line3);
-                renderer.Submit2dPrimitive(quadB1);
-                renderer.Submit2dPrimitive(quadB0);
+                renderer.SubmitShape2d(line3);
+                renderer.SubmitShape2d(quadB1);
+                renderer.SubmitShape2d(quadB0);
             }
 
-            auto tri = Primitive2d::CreateTriangle(
+            auto tri = Shape2d::CreateTriangle(
                                                    Vector2i(8, 84),
                                                    Vector2i(16, 76),
                                                    Vector2i(16, 92),
@@ -212,7 +215,7 @@ namespace Silent::Debug
                                                    Color::From8Bit(48, 255, 128),
                                                    Color::From8Bit(48, 255, 128),
                                                    0);
-            renderer.Submit2dPrimitive(tri);
+            renderer.SubmitShape2d(tri);
         }
     }
 }

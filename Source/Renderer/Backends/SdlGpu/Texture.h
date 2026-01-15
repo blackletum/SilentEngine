@@ -8,12 +8,6 @@ namespace Silent::Renderer
     class SdlGpuTexture : public ITexture
     {
     private:
-        // ==========
-        // Constants
-        // ==========
-
-        static constexpr int RGBA_COMP_COUNT = 4;
-
         // =======
         // Fields
         // =======
@@ -85,17 +79,6 @@ namespace Silent::Renderer
          */
         SdlGpuTextureManager(SDL_GPUDevice& device);
 
-        // ========
-        // Getters
-        // ========
-
-        /** @brief Gets a cached texture.
-         *
-         * @param name Texture name.
-         * @return Cached texture if it exists, otherwise `nullptr`.
-         */
-        SdlGpuTexture* Get(const std::string& name);
-
         // ==========
         // Utilities
         // ==========
@@ -115,5 +98,7 @@ namespace Silent::Renderer
          * @param assetIdx TIM asset name.
          */
         void Load(SDL_GPUCopyPass& copyPass, const std::string& assetName);
+
+        SdlGpuTexture& operator[](const std::string& name);
     };
 }

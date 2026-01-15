@@ -4,11 +4,10 @@
 #include "Application.h"
 #include "Renderer/Common/Objects/Primitive/Vertex2d.h"
 #include "Renderer/Common/Objects/Primitive/Vertex3d.h"
-#include "Renderer/Common/Objects/Primitive2d.h"
 #include "Renderer/Common/Objects/Primitive3d.h"
 #include "Renderer/Common/Objects/Scene/Glyph.h"
+#include "Renderer/Common/Objects/Scene/Shape2d.h"
 #include "Renderer/Common/Objects/Scene/Sprite2d.h"
-#include "Renderer/Common/Objects/Scene/Text.h"
 #include "Renderer/Backends/SdlGpu/SdlGpu.h"
 #include "Utils/Parallel.h"
 #include "Utils/Utils.h"
@@ -24,7 +23,7 @@ namespace Silent::Renderer
 
     int RendererBase::GetDrawCallCount() const
     {
-        return _renderBuffer.DrawCallCount;
+        return _doubleBuffer.Render.DrawCallCount;
     }
 
     void RendererBase::SetClearColor(const Color& color)
@@ -62,17 +61,17 @@ namespace Silent::Renderer
         return res.x / res.y;
     }
 
-    void RendererBase::UpdateRenderDataBuffer()
+    void RendererBase::SwapDoubleBuffer()
     {
-        std::swap(_renderBuffer, _activeBuffer);
+        std::swap(_doubleBuffer.Render, _doubleBuffer.Active);
 
-        _activeBuffer.DrawCallCount = 0;
-        _activeBuffer.Primitives2d.clear();
-        _activeBuffer.Primitives3d.clear();
-        _activeBuffer.Sprites2d.clear();
-        _activeBuffer.Glyphs.clear();
-        _activeBuffer.DebugPrimitives3d.clear();
-        _activeBuffer.DebugGuiDrawCalls.clear();
+        _doubleBuffer.Active.DrawCallCount = 0;
+        _doubleBuffer.Active.Shapes2d.clear();
+        _doubleBuffer.Active.Sprites2d.clear();
+        _doubleBuffer.Active.DebugGuiDrawCalls.clear();
+
+        _doubleBuffer.Active.Primitives3d.clear();
+        _doubleBuffer.Active.DebugPrimitives3d.clear();
     }
 
     void RendererBase::SignalResize()
@@ -80,61 +79,55 @@ namespace Silent::Renderer
         _isResized = true;
     }
 
-    void RendererBase::Submit2dPrimitive(const Primitive2d& prim)
+    bool RendererBase::SubmitShape2d(const Shape2d& shape)
     {
-        if (_activeBuffer.Primitives2d.size() >= PRIMITIVE_2D_COUNT_MAX)
+        if (_doubleBuffer.Active.Shapes2d.size() >= SHAPE_2D_COUNT_MAX)
         {
-            Debug::Log("Attampted to add 2D primitive to full container.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
-            return;
+            Debug::Log("Attampted to add 2D shape to full container.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
+            return false;
         }
 
-        _activeBuffer.Primitives2d.push_back(prim);
+        _doubleBuffer.Active.Shapes2d.push_back(shape);
+        return true;
     }
 
-    void RendererBase::SubmitScreenSprite(const std::string& assetName, const Vector2& uvMin, const Vector2& uvMax,
-                                          const Vector2& pos, float rot, const Vector2& scale, const Color& color,
-                                          int depth, AlignMode alignMode, ScaleMode scaleMode, BlendMode blendMode)
+    bool RendererBase::SubmitSprite2d(const Sprite2d& sprite)
     {
         auto& assets = g_App.GetAssets();
 
-        const auto asset = assets.GetAsset(assetName);
+        if (_doubleBuffer.Active.Sprites2d.size() >= SPRITE_2D_COUNT_MAX)
+        {
+            Debug::Log("Attampted to add 2D sprite to full container.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
+            return false;
+        }
+
+        const auto asset = assets.GetAsset(sprite.TextureName);
         if (asset->Type != AssetType::Tim)
         {
             Debug::Log("Attempted to submit non-image asset as screen sprite.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
-            return;
+            return false;
         }
 
-        auto sprite = Sprite2d
-        {
-            .TextureName = assetName,
-            .UvMin       = uvMin,
-            .UvMax       = uvMax,
-            .Position    = pos,
-            .Rotation    = rot,
-            .Scale       = scale,
-            .Col         = color,
-            .Depth       = depth,
-            .AlignM      = alignMode,
-            .ScaleM      = scaleMode,
-            .BlendM      = blendMode
-        };
-        _activeBuffer.Sprites2d.push_back(sprite);
-    }
-
-    void RendererBase::SubmitDebugText(const std::string& msg, const Vector2& pos, const Color& color, TextAlignMode alignMode)
-    {
-        // @todo
+        _doubleBuffer.Active.Sprites2d.push_back(sprite);
+        return true;
     }
 
     void RendererBase::SubmitDebugGui(std::function<void()> drawFunc)
     {
+        if (_doubleBuffer.Active.DebugGuiDrawCalls.size() >= DEBUG_GUI_COUNT_MAX)
+        {
+            Debug::Log("Attampted to add debug GUI draw call to full container.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
+            return;
+        }
+
         const auto& options = g_App.GetOptions();
         if (!options->EnablePowerMode)
         {
             return;
         }
 
-        _activeBuffer.DebugGuiDrawCalls.push_back(drawFunc);
+        _doubleBuffer.Active.DebugGuiDrawCalls.push_back(drawFunc);
+        return;
     }
 
     void RendererBase::SubmitDebugLine(const Vector2& from, const Vector2& to, const Color& color, ScaleMode scaleMode, Debug::Page page)
@@ -144,8 +137,8 @@ namespace Silent::Renderer
             return;
         }
 
-        auto line = Primitive2d::CreateLine(from, to, color, color, 0, scaleMode, BlendMode::Add);
-        _activeBuffer.DebugPrimitives2d.push_back(line);
+        auto line = Shape2d::CreateLine(from, to, color, color, 0, scaleMode, BlendMode::Add);
+        _doubleBuffer.Active.DebugShapes2d.push_back(line);
     }
 
     void RendererBase::SubmitDebugLine(const Vector3& from, const Vector3& to, const Color& color, Debug::Page page)
@@ -156,7 +149,7 @@ namespace Silent::Renderer
         }
 
         auto line = Primitive3d::CreateDebugLine(from, to, color);
-        _activeBuffer.DebugPrimitives3d.push_back(line);
+        _doubleBuffer.Active.DebugPrimitives3d.push_back(line);
     }
 
     void RendererBase::SubmitDebugTriangle(const Vector2& vert0, const Vector2& vert1, const Vector2& vert2, const Color& color, ScaleMode scaleMode, Debug::Page page)
@@ -166,8 +159,8 @@ namespace Silent::Renderer
             return;
         }
 
-        auto tri = Primitive2d::CreateTriangle(vert0, vert1, vert2, color, color, color, 0, scaleMode, BlendMode::Add);
-        _activeBuffer.DebugPrimitives2d.push_back(tri);
+        auto tri = Shape2d::CreateTriangle(vert0, vert1, vert2, color, color, color, 0, scaleMode, BlendMode::Add);
+        _doubleBuffer.Active.DebugShapes2d.push_back(tri);
     }
 
     void RendererBase::SubmitDebugTriangle(const Vector3& vert0, const Vector3& vert1, const Vector3& vert2, const Color& color, Debug::Page page)
@@ -178,30 +171,36 @@ namespace Silent::Renderer
         }
 
         auto tri = Primitive3d::CreateDebugTriangle(vert0, vert1, vert2, color);
-        _activeBuffer.DebugPrimitives3d.push_back(tri);
+        _doubleBuffer.Active.DebugPrimitives3d.push_back(tri);
     }
 
-    void RendererBase::PrepareRenderBufferData()
+    void RendererBase::InitializeDoubleBuffer()
+    {
+        _doubleBuffer.Active.Shapes2d.reserve(SHAPE_2D_COUNT_MAX);
+        _doubleBuffer.Active.Sprites2d.reserve(SPRITE_2D_COUNT_MAX);
+
+        _doubleBuffer.Render = _doubleBuffer.Active; 
+    }
+
+    void RendererBase::SortRenderBufferData()
     {
         auto& executor = g_App.GetExecutor();
 
         auto sortTasks = ParallelTasks
         {
-            // @todo Is sorting like this on the CPU necessary?
-            //[&]()
-            //{
-            //    // Sort 2D primitives by depth.
-            //    Sort(_renderBuffer.Primitives2d, [](const Primitive2d& prim0, const Primitive2d& prim1)
-            //    {
-            //        return prim0.Depth > prim1.Depth; // @todo Weird reverse order necessary here.
-            //    });
-            //},
+            // Sort 2D shapes.
             [&]()
             {
-                // Sort 2D sprites by depth.
+                Sort(_doubleBuffer.Render.Shapes2d, [](const Shape2d& shape0, const Shape2d& shape1)
+                {
+                    return shape0.Depth > shape1.Depth;
+                });
+            },
+            // Sort 2D sprites.
+            [&]()
+            {
                 // @todo Sort based on other heuristics too. Use sort keys for speed?
-                Sort(_renderBuffer.Sprites2d,
-                [](const Sprite2d& sprite0, const Sprite2d& sprite1)
+                Sort(_doubleBuffer.Render.Sprites2d, [](const Sprite2d& sprite0, const Sprite2d& sprite1)
                 {
                     return sprite0.Depth > sprite1.Depth;
                 });

@@ -21,11 +21,11 @@ namespace Silent::Utils
         // Fields
         // =======
 
-        std::vector<std::jthread> _threads      = {};
-        std::queue<ParallelTask>  _tasks        = {};
-        std::mutex                _taskMutex    = {};
-        std::condition_variable   _taskCond     = {};
-        bool                      _deinitialize = false;
+        std::vector<std::thread> _threads      = {};
+        std::queue<ParallelTask> _tasks        = {};
+        std::mutex               _taskMutex    = {};
+        std::condition_variable  _taskCond     = {};
+        bool                     _deinitialize = false;
 
     public:
         // =============
@@ -96,6 +96,31 @@ namespace Silent::Utils
          * @param promise Promise to set when the group counter reaches 0, indicating the group tasks are complete.
          */
         void HandleTask(const ParallelTask& task, std::atomic<int>& counter, std::promise<void>& promise);
+    };
+
+    /** @brief Parallel mutex lock. */
+    class ParallelLock
+    {
+    private:
+        // =======
+        // Fields
+        // =======
+
+        std::mutex* _mutex = nullptr;
+
+    public:
+        // =============
+        // Constructors
+        // =============
+
+        /** @brief Constructs a `ParallelLock` and locks a mutex if parallelism is enabled.
+         *
+         * @param mutex Mutex to lock.
+         */
+        ParallelLock(std::mutex& mutex);
+
+        /** @brief Gracefully destroys the `ParallelLock` and unlocks the mutex. */
+        ~ParallelLock();
     };
 
     /** @brief Gets the number of CPU cores on the system.

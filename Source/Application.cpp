@@ -194,7 +194,6 @@ namespace Silent
             _work.Clock.Update();
             PollEvents();
 
-            // Step game state and render.
             if (!_isPaused)
             {
                 Update();
@@ -280,21 +279,22 @@ namespace Silent
 
     void ApplicationManager::Render()
     {
-        if (_work.Clock.GetTicks() <= 0)
+        // Wait for previous frame to finish rendering in case state update finished early.
+        if (_prevFrameFuture.valid())
         {
-            return;
-        }
-
-        // Wait for previous frame to finish rendering.
-        static auto prevFrameFuture = std::future<void>();
-        if (prevFrameFuture.valid())
-        {
-            prevFrameFuture.wait();
+            _prevFrameFuture.wait();
         }
 
         // Render frame asynchronously.
-        _work.Renderer->UpdateRenderDataBuffer();
-        prevFrameFuture = _work.Executor.AddTask(TASK(_work.Renderer->Update()));
+        _work.Renderer->SwapDoubleBuffer();
+        if (_work.Options->EnableParallelism)
+        {
+            _prevFrameFuture = std::async(std::launch::async, TASK(_work.Renderer->Update()));
+        }
+        else
+        {
+            _work.Renderer->Update();
+        }
     }
 
     void ApplicationManager::PollEvents()
