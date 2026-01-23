@@ -1,7 +1,7 @@
 #include "Framework.h"
 #include "Renderer/Backends/SdlGpu/PipelineConfig.h"
 
-#include "Renderer/Backends/SdlGpu/Gpu/Layouts/Vertex2dBuffer.h"
+#include "Renderer/Backends/SdlGpu/Gpu/Layouts/BufferVertex2d.h"
 #include "Renderer/Backends/SdlGpu/Pipeline.h"
 
 namespace Silent::Renderer
@@ -89,16 +89,16 @@ namespace Silent::Renderer
 
     const std::vector<PipelineConfig> PIPELINE_CONFIGS =
     {
-        // 2D triangle.
+        // 2D sprite.
         PipelineConfig
         {
-            .Stage                        = RenderStage::Triangle2d,
-            .VertexShaderName             = "Triangle2d.vert",
+            .Stage                        = RenderStage::Sprite2d,
+            .VertexShaderName             = "Primitive2d.vert",
             .VertShaderSamplerCount       = 0,
             .VertShaderUniBufferCount     = 0,
             .VertShaderStorageBufferCount = 0,
             .VertShaderStorageTexCount    = 0,
-            .FragmentShaderName           = "Triangle2d.frag",
+            .FragmentShaderName           = "Sprite2d.frag",
             .FragShaderSamplerCount       = 1,
             .FragShaderUniBufferCount     = 1,
             .FragShaderStorageBufferCount = 0,
@@ -107,31 +107,34 @@ namespace Silent::Renderer
             {
                 {
                     .slot               = 0,
-                    .pitch              = sizeof(Vertex2dBuffer),
+                    .pitch              = sizeof(BufferVertex2d),
                     .input_rate         = SDL_GPU_VERTEXINPUTRATE_VERTEX,
                     .instance_step_rate = 0
                 }
             },
             .VertBufferAttribs =
             {
+                // `BufferVertex2d::Position`
                 {
                     .location    = 0,
                     .buffer_slot = 0,
                     .format      = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
                     .offset      = 0
                 },
+                // `BufferVertex2d::Uv`
                 {
                     .location    = 1,
                     .buffer_slot = 0,
                     .format      = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2,
-                    .offset      = sizeof(float) * Vector3::AXIS_COUNT
+                    .offset      = sizeof(Vector3)
                 },
+                // `BufferVertex2d::Col`
                 {
                     .location    = 2,
                     .buffer_slot = 0,
                     .format      = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4,
-                    .offset      = (sizeof(float) * Vector3::AXIS_COUNT) +
-                                   (sizeof(float) * Vector2::AXIS_COUNT)
+                    .offset      = sizeof(Vector3) +
+                                   sizeof(Vector2)
                 }
             },
             .BlendModes =
@@ -142,6 +145,60 @@ namespace Silent::Renderer
                 BlendMode::Multiply,
                 BlendMode::Add,
                 BlendMode::Subtract,
+                BlendMode::Wireframe
+            }
+        },
+        // 2D glyph.
+        PipelineConfig
+        {
+            .Stage                        = RenderStage::Glyph2d,
+            .VertexShaderName             = "Primitive2d.vert",
+            .VertShaderSamplerCount       = 0,
+            .VertShaderUniBufferCount     = 0,
+            .VertShaderStorageBufferCount = 0,
+            .VertShaderStorageTexCount    = 0,
+            .FragmentShaderName           = "Glyph2d.frag",
+            .FragShaderSamplerCount       = 1,
+            .FragShaderUniBufferCount     = 1,
+            .FragShaderStorageBufferCount = 0,
+            .FragShaderStorageTexCount    = 0,
+            .VertBufferDescs              =
+            {
+                {
+                    .slot               = 0,
+                    .pitch              = sizeof(BufferVertex2d),
+                    .input_rate         = SDL_GPU_VERTEXINPUTRATE_VERTEX,
+                    .instance_step_rate = 0
+                }
+            },
+            .VertBufferAttribs =
+            {
+                // `BufferVertex2d::Position`
+                {
+                    .location    = 0,
+                    .buffer_slot = 0,
+                    .format      = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
+                    .offset      = 0
+                },
+                // `BufferVertex2d::Uv`
+                {
+                    .location    = 1,
+                    .buffer_slot = 0,
+                    .format      = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2,
+                    .offset      = sizeof(Vector3)
+                },
+                // `BufferVertex2d::Col`
+                {
+                    .location    = 2,
+                    .buffer_slot = 0,
+                    .format      = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4,
+                    .offset      = sizeof(Vector3) +
+                                   sizeof(Vector2)
+                }
+            },
+            .BlendModes =
+            {
+                BlendMode::Alpha,
                 BlendMode::Wireframe
             }
         }

@@ -19,6 +19,7 @@ namespace Silent::Assets
         Red,
         LightGrey,
         White,
+        Black, // @todo Need to add this one for paper maps.
 
         Count
     };
@@ -37,7 +38,6 @@ namespace Silent::Assets
     // @todo Could be defined in a Lua script instead.
     const std::vector<FontMetadata> FONTS_METADATA
     {
-        FontMetadata
         {
             .Name      = "SmoothSerif",
             .Filenames =
@@ -46,10 +46,10 @@ namespace Silent::Assets
                 "NotoSerifJP-Medium.ttf",
                 "NotoSerifKR-Medium.ttf"
             },
-            .PointSize          = 48,
+            .PointSize          = 64,
+            .KerningScale       = 1.19f, // @todo Use this scale only for first font chain.
             .EnableAntialiasing = true
         },
-        FontMetadata
         {
             .Name      = "RetroSerif",
             .Filenames =
@@ -59,9 +59,9 @@ namespace Silent::Assets
                 "UnifontExMono.ttf"
             },
             .PointSize          = 16,
+            .KerningScale       = 1.0f,
             .EnableAntialiasing = false
         },
-        FontMetadata
         {
             .Name      = "SmoothSans",
             .Filenames =
@@ -70,10 +70,10 @@ namespace Silent::Assets
                 "NotoSansJP-Bold.ttf",
                 "NotoSansKR-Bold.ttf"
             },
-            .PointSize          = 32,
+            .PointSize          = 40,
+            .KerningScale       = 1.0f,
             .EnableAntialiasing = true
         },
-        FontMetadata
         {
             .Name      = "RetroSans",
             .Filenames =
@@ -83,7 +83,19 @@ namespace Silent::Assets
                 "dalmoori10.ttf"
             },
             .PointSize          = 10,
+            .KerningScale       = 1.0f,
             .EnableAntialiasing = false
+        },
+        {
+            .Name      = "Handwriting",
+            .Filenames = 
+            {
+                "FreeSansItalic.ttf"
+                // @todo Need others for Japanese and Korean.
+            },
+            .PointSize          = 64,
+            .KerningScale       = 1.0f,
+            .EnableAntialiasing = true
         }
     };
 }

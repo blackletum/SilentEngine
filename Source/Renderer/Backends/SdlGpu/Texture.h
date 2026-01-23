@@ -32,7 +32,7 @@ namespace Silent::Renderer
          * @param res Texture image resolution.
          * @param name Texture image name.
          */
-        SdlGpuTexture(SDL_GPUDevice& device, SDL_GPUCopyPass& copyPass, const std::span<byte>& pixels, const Vector2i res, const std::string& name);
+        SdlGpuTexture(SDL_GPUDevice& device, SDL_GPUCopyPass& copyPass, std::span<const byte> pixels, const Vector2i res, const std::string& name);
 
         /** @brief Gracefully destroys the `Texture` and frees GPU resources. */
         ~SdlGpuTexture();
@@ -45,10 +45,10 @@ namespace Silent::Renderer
          *
          * @param copyPass Copy pass.
          * @param pixels Updated texture image pixels.
-         * @param region Update region position.
-         * @param size Update region size.
+         * @param region Start pixel position of the region to update (top-left corner).
+         * @param size Pixel size of the region to update.
          */
-        void Update(SDL_GPUCopyPass& copyPass, const std::span<byte>& pixels, const Vector2i& region, const Vector2i& size);
+        void Update(SDL_GPUCopyPass& copyPass, std::span<const byte> pixels, const Vector2i& region, const Vector2i& size);
 
         /** @brief Binds the texture for use on the active fragment shader.
          *
@@ -90,7 +90,7 @@ namespace Silent::Renderer
          * @param res Texture image resolution.
          * @param name Texture name.
          */
-        void Load(SDL_GPUCopyPass& copyPass, const std::span<byte>& pixels, const Vector2i res, const std::string& name = {});
+        void Load(SDL_GPUCopyPass& copyPass, std::span<const byte> pixels, const Vector2i res, const std::string& name);
 
         /** @brief Loads a texture from a TIM asset.
          *
@@ -99,6 +99,6 @@ namespace Silent::Renderer
          */
         void Load(SDL_GPUCopyPass& copyPass, const std::string& assetName);
 
-        SdlGpuTexture& operator[](const std::string& name);
+        SdlGpuTexture* operator[](const std::string& name);
     };
 }

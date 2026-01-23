@@ -1,8 +1,9 @@
 #pragma once
 
 #include "Renderer/Backends/SdlGpu/Gpu/Buffer.h"
-#include "Renderer/Backends/SdlGpu/Gpu/Layouts/Triangle2dUniform.h"
-#include "Renderer/Backends/SdlGpu/Gpu/Layouts/Vertex2dBuffer.h"
+#include "Renderer/Backends/SdlGpu/Gpu/Layouts/BufferVertex2d.h"
+#include "Renderer/Backends/SdlGpu/Gpu/Layouts/UniformGlyph2d.h"
+#include "Renderer/Backends/SdlGpu/Gpu/Layouts/UniformSprite2d.h"
 #include "Renderer/Backends/SdlGpu/Gpu/VertexBuffer.h"
 #include "Renderer/Backends/SdlGpu/Pipeline.h"
 #include "Renderer/Backends/SdlGpu/Texture.h"
@@ -12,30 +13,33 @@
 
 namespace Silent::Renderer
 {
-    /** @brief Renderer draw batch. */
+    using UniformType = std::variant<UniformGlyph2d,
+                                     UniformSprite2d>;
+
+    /** @brief GPU buffer draw raw batch. */
     struct DrawBatch
     {
         std::string TextureName  = {};
+        RenderStage RenderStg    = RenderStage::Sprite2d;
         BlendMode   BlendMd      = BlendMode::Opaque;
+        UniformType Uniform      = {};
         int         BufferOffset = 0;
         int         BufferStride = 0;
     };
 
-    /** @brief Sorted draw batches. */
+    /** @brief Sorted GPU buffer draw batches. */
     struct DrawBatches
     {
-        std::vector<DrawBatch> Triangles2d = {};
+        std::vector<DrawBatch> Primitives2d = {}; // @todo Should be "Primitives2d".
     };
 
     /** @brief GPU buffers. */
     struct GpuBuffers
     {
-        VertexBuffer<Vertex2dBuffer> Triangle2dVertices = {};
-
-        Triangle2dUni Triangle2dUni = {};
+        VertexBuffer<BufferVertex2d> Vertices2d = {};
     };
 
-    /** SDL_gpu renderer backend. */
+    /** @brief SDL_gpu renderer backend. */
     class SdlGpuRenderer : public RendererBase
     {
     public:
@@ -90,10 +94,15 @@ namespace Silent::Renderer
         void DrawDebugGui() override;
 
         /** @brief Allocates memory pools for for draw batches and GPU buffers. */
-        void AllocateMemory();
+        void InitializeMemory();
 
-        /** @brief Clears draw batches for reuse. */
-        void ClearDrawBatches();
+        /** @brief Adds new glyph texture atlases and updates old ones if new glyphs have been added.
+         *
+         * @todo Race condition! Should run this before render thread.
+         *
+         * @param copyPass Copy pass.
+         */
+        void UpdateFontAtlasTextures(SDL_GPUCopyPass& copyPass);
 
         /** @brief Converts render buffer data to 2D triangle GPU buffer data and uploads it to the GPU.
          *
@@ -101,6 +110,23 @@ namespace Silent::Renderer
          *
          * @param copyPass Copy pass.
          */
-        void CopyGpuTriangles2d(SDL_GPUCopyPass& copyPass);
+        void CopyGpuPrimitives2d(SDL_GPUCopyPass& copyPass);
+
+        /** @brief Pushes uniform data to the GPU for the vertex shader.
+         *
+         * @param uni Uniform buffer to push.
+         * @param slotIdx Index of the vertex uniform slot to push data to.
+         */
+        void PushVertexUniform(const UniformType& uni, int slotIdx);
+
+        /** @brief Pushes uniform data to the GPU for the fragment shader.
+         *
+         * @param uni Uniform buffer to push.
+         * @param slotIdx Index of the fragment uniform slot to push data to.
+         */
+        void PushFragmentUniform(const UniformType& uni, int slotIdx);
+
+        /** @brief Clears draw batches for reuse. */
+        void ClearDrawBatches();
     };
 }

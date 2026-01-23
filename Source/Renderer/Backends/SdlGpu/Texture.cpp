@@ -11,7 +11,7 @@ using namespace Silent::Utils;
 
 namespace Silent::Renderer
 {
-    SdlGpuTexture::SdlGpuTexture(SDL_GPUDevice& device, SDL_GPUCopyPass& copyPass, const std::span<byte>& pixels, const Vector2i res, const std::string& name)
+    SdlGpuTexture::SdlGpuTexture(SDL_GPUDevice& device, SDL_GPUCopyPass& copyPass, std::span<const byte> pixels, const Vector2i res, const std::string& name)
     {
         _device = &device;
 
@@ -65,7 +65,7 @@ namespace Silent::Renderer
         SDL_ReleaseGPUTexture(_device, _texture);
     }
 
-    void SdlGpuTexture::Update(SDL_GPUCopyPass& copyPass, const std::span<byte>& pixels, const Vector2i& region, const Vector2i& size)
+    void SdlGpuTexture::Update(SDL_GPUCopyPass& copyPass, std::span<const byte> pixels, const Vector2i& region, const Vector2i& size)
     {
         // Create transfer buffer.
         auto transferBufferInfo = SDL_GPUTransferBufferCreateInfo
@@ -115,7 +115,7 @@ namespace Silent::Renderer
         _device = &device;
     }
 
-    void SdlGpuTextureManager::Load(SDL_GPUCopyPass& copyPass, const std::span<byte>& pixels, const Vector2i res, const std::string& name)
+    void SdlGpuTextureManager::Load(SDL_GPUCopyPass& copyPass, std::span<const byte> pixels, const Vector2i res, const std::string& name)
     {
         _textures[name] = std::make_unique<SdlGpuTexture>(*_device, copyPass, pixels, res, name);
     }
@@ -142,14 +142,15 @@ namespace Silent::Renderer
         Load(copyPass, ToSpan(data->Pixels), data->Resolution, asset->Name);
     }
 
-    SdlGpuTexture& SdlGpuTextureManager::operator[](const std::string& name)
+    SdlGpuTexture* SdlGpuTextureManager::operator[](const std::string& name)
     {
         auto* tex = Find(_textures, name);
         if (tex == nullptr)
         {
-            throw std::runtime_error(Fmt("Texture manager attempted to get missing GPU texture `{}`.", name));
+            Debug::Log(Fmt("Texture manager attempted to get missing GPU texture `{}`.", name), Debug::LogLevel::Warning);
+            return nullptr;
         }
 
-        return *(SdlGpuTexture*)tex->get();
+        return (SdlGpuTexture*)tex->get();
     }
 }

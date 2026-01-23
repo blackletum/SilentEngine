@@ -2,8 +2,9 @@
 #include "Renderer/Backends/SdlGpu/SdlGpu.h"
 
 #include "Application.h"
-#include "Renderer/Backends/SdlGpu/Gpu/Layouts/Triangle2dUniform.h"
-#include "Renderer/Backends/SdlGpu/Gpu/Layouts/Vertex2dBuffer.h"
+#include "Assets/Fonts.h"
+#include "Renderer/Backends/SdlGpu/Gpu/Layouts/BufferVertex2d.h"
+#include "Renderer/Backends/SdlGpu/Gpu/Layouts/UniformSprite2d.h"
 #include "Renderer/Backends/SdlGpu/Pipeline.h"
 #include "Renderer/Backends/SdlGpu/Texture.h"
 #include "Renderer/Common/Texture.h"
@@ -15,6 +16,7 @@
 #include "Services/Platform.h"
 #include "Utils/Utils.h"
 
+using namespace Silent::Assets;
 using namespace Silent::Services;
 using namespace Silent::Utils;
 
@@ -92,7 +94,7 @@ namespace Silent::Renderer
         };
         _samplers.push_back(SDL_CreateGPUSampler(_device, &linearSamplerInfo));
 
-        AllocateMemory();
+        InitializeMemory();
 
         // Create ImGui context.
         ImGui::CreateContext();
@@ -111,6 +113,11 @@ namespace Silent::Renderer
         // Upload transfer data to GPU resources.
         auto* uploadCmdBuffer = SDL_AcquireGPUCommandBuffer(_device);
         auto* copyPass        = SDL_BeginGPUCopyPass(uploadCmdBuffer);
+
+        // @todo If this isn't called and the texture is missing, for some reason
+        // the app hangs instead of crashing like it's supposed to. Why isn't such an error
+        // handled as written?
+        UpdateFontAtlasTextures(*copyPass);
 
         // Load temp. textures.
         GetTextures().Load(*copyPass, "TIM/HERO_PIC.TIM");
@@ -158,6 +165,13 @@ namespace Silent::Renderer
         {
             return;
         }
+
+        // Process copy pass.
+        auto* copyPass = SDL_BeginGPUCopyPass(_commandBuffer);
+
+        UpdateFontAtlasTextures(*copyPass);
+
+        SDL_EndGPUCopyPass(copyPass);
 
         // Draw frame.
         if (_swapchainTexture != nullptr)
@@ -255,7 +269,7 @@ namespace Silent::Renderer
         // Copy prepared GPU data.
         auto copyTasks = ParallelTasks
         {
-            TASK(CopyGpuTriangles2d(*copyPass))
+            TASK(CopyGpuPrimitives2d(*copyPass))
         };
         executor.AddTasks(copyTasks).wait();
 
@@ -271,25 +285,21 @@ namespace Silent::Renderer
         auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, nullptr);
 
         // 2D triangles.
-        _gpuBuffers.Triangle2dVertices.Bind(renderPass, 0, 0);
-        for (const auto& batch : _drawBatches.Triangles2d)
+        _gpuBuffers.Vertices2d.Bind(renderPass, 0, 0);
+        for (const auto& batch : _drawBatches.Primitives2d)
         {
             if (!batch.TextureName.empty())
             {
-                auto& tex = GetTextures()[batch.TextureName];
-                tex.Bind(renderPass, GetActiveSampler());
-
-                _gpuBuffers.Triangle2dUni.UseTexture = true;
-            }
-            else
-            {
-                _gpuBuffers.Triangle2dUni.UseTexture = false;
+                auto* tex = GetTextures()[batch.TextureName];
+                if (tex != nullptr)
+                {
+                    tex->Bind(renderPass, GetActiveSampler());
+                }
             }
 
-            _gpuBuffers.Triangle2dUni.IsFastAlpha = batch.BlendMd == BlendMode::FastAlpha;
-            SDL_PushGPUFragmentUniformData(_commandBuffer, 0, &_gpuBuffers.Triangle2dUni, sizeof(_gpuBuffers.Triangle2dUni));
+            _pipelines.Bind(renderPass, batch.RenderStg, batch.BlendMd);
+            PushFragmentUniform(batch.Uniform, 0);
 
-            _pipelines.Bind(renderPass, RenderStage::Triangle2d, batch.BlendMd);
             SDL_DrawGPUIndexedPrimitives(&renderPass, batch.BufferStride, 1, 0, batch.BufferOffset, 0);
 
             _doubleBuffer.Active.DrawCallCount++;
@@ -374,7 +384,7 @@ namespace Silent::Renderer
         SDL_EndGPURenderPass(renderPass);
     }
 
-    void SdlGpuRenderer::AllocateMemory()
+    void SdlGpuRenderer::InitializeMemory()
     {
         constexpr int SPRITE_2D_VERT_COUNT_MAX = SPRITE_2D_COUNT_MAX * QUAD_VERTEX_COUNT;
         constexpr int SPRITE_2D_IDX_COUNT_MAX  = SPRITE_2D_COUNT_MAX * QUAD_IDX_COUNT;
@@ -387,18 +397,47 @@ namespace Silent::Renderer
         constexpr int TRI_IDX_COUNT_MAX        = SPRITE_2D_IDX_COUNT_MAX;
 
         // Reserve draw batches.
-        _drawBatches.Triangles2d.reserve(TRI_BATCH_COUNT_MAX);
+        _drawBatches.Primitives2d.reserve(TRI_BATCH_COUNT_MAX);
 
         // Initialize GPU buffers.
-        _gpuBuffers.Triangle2dVertices.Initialize(*_device, TRI_VERT_COUNT_MAX, TRI_IDX_COUNT_MAX, "2D triangle vertices");
+        _gpuBuffers.Vertices2d.Initialize(*_device, TRI_VERT_COUNT_MAX, TRI_IDX_COUNT_MAX, "2D vertices");
     }
 
-    void SdlGpuRenderer::ClearDrawBatches()
+    void SdlGpuRenderer::UpdateFontAtlasTextures(SDL_GPUCopyPass& copyPass)
     {
-        _drawBatches.Triangles2d.clear();
+        auto& fonts = g_App.GetFonts();
+
+        // Run through registered fonts.
+        for (const auto& metadata : FONTS_METADATA)
+        {
+            auto* font = fonts.GetFont(metadata.Name);
+            if (font != nullptr)
+            {
+                const auto& atlases = font->GetTextureAtlases();
+                for (int atlasIdx : font->GetDirtyGpuAtlasIdxs())
+                {
+                    const auto& atlas = atlases[atlasIdx];
+
+                    // Initialize new or update existing GPU font atlas textures.
+                    // @todo Not efficient. Updates all atlases even if only 1 has been updated.
+                    auto  name = metadata.Name + std::to_string(atlasIdx);
+                    auto* tex  = GetTextures()[name];
+                    if (tex != nullptr)
+                    {
+                        tex->Update(copyPass, ToSpan(atlas), Vector2i::Zero, Vector2i(Font::ATLAS_SIZE));
+                    }
+                    else
+                    {
+                        GetTextures().Load(copyPass, ToSpan(atlas), Vector2i(Font::ATLAS_SIZE), name);
+                    }
+                }
+
+                font->ClearDirtyGpuAtlasIdxs();
+            }
+        }
     }
 
-    void SdlGpuRenderer::CopyGpuTriangles2d(SDL_GPUCopyPass& copyPass)
+    void SdlGpuRenderer::CopyGpuPrimitives2d(SDL_GPUCopyPass& copyPass)
     {
         // Compute sizes.
         int sprite2dVertCount = (_doubleBuffer.Render.Sprites2d.size() * 2) * TRI_VERTEX_COUNT;
@@ -407,7 +446,7 @@ namespace Silent::Renderer
         int shape2dIdxCount   = (_doubleBuffer.Render.Shapes2d.size() * 2) * TRI_IDX_COUNT;
 
         // Create GPU buffer data.
-        auto bufferVerts = std::vector<Vertex2dBuffer>{};
+        auto bufferVerts = std::vector<BufferVertex2d>{};
         auto bufferIdxs  = std::vector<uint16>{};
 
         bufferVerts.reserve(sprite2dVertCount + shape2dVertCount);
@@ -422,12 +461,70 @@ namespace Silent::Renderer
             //auto pos = GetAspectCorrectScreenPosition(Vector2(vert.Position.x, vert.Position.y), sprite.ScaleMd);
             auto ndc = ConvertScreenPercentToNdc(sprite.Position);
 
+            // Set alignment offset.
+            auto offset = Vector2::Zero;
+            switch (sprite.AlignMd)
+            {
+                default:
+                case AlignMode::Center:
+                {
+                    break;
+                }
+                case AlignMode::CenterTop:
+                {
+                    offset = Vector2(0.0f, -sprite.Scale.y);
+                    break;
+                }
+                case AlignMode::CenterBottom:
+                {
+                    offset = Vector2(0.0f, sprite.Scale.y);
+                    break;
+                }
+                case AlignMode::CenterLeft:
+                {
+                    offset = Vector2(sprite.Scale.x, 0.0f);
+                    break;
+                }
+                case AlignMode::CenterRight:
+                {
+                    offset = Vector2(-sprite.Scale.x, 0.0f);
+                    break;
+                }
+                case AlignMode::TopLeft:
+                {
+                    offset = Vector2(sprite.Scale.x, -sprite.Scale.y);
+                    break;
+                }
+                case AlignMode::TopRight:
+                {
+                    offset = Vector2(-sprite.Scale.x, -sprite.Scale.y);
+                    break;
+                }
+                case AlignMode::BottomLeft:
+                {
+                    offset = Vector2(sprite.Scale.x, sprite.Scale.y);
+                    break;
+                }
+                case AlignMode::BottomRight:
+                {
+                    offset = Vector2(-sprite.Scale.x, sprite.Scale.y);
+                    break;
+                }
+            }
+
+            // Compute relative vertex positions.
+            auto rotMat  = Matrix::CreateRotationZ(-sprite.Rotation);
+            auto relPos0 = Vector2::Transform(Vector2(-sprite.Scale.x, sprite.Scale.y) + offset, rotMat);
+            auto relPos1 = Vector2::Transform(sprite.Scale                             + offset, rotMat);
+            auto relPos2 = Vector2::Transform(Vector2(sprite.Scale.x, -sprite.Scale.y) + offset, rotMat);
+            auto relPos3 = Vector2::Transform(-sprite.Scale                            + offset, rotMat);
+
             // Compute vertex positions.
             float depthZ = std::clamp((float)sprite.Depth / (float)DEPTH_MAX, 0.0f, 1.0f);
-            auto  pos0   = Vector3(ndc.x - sprite.Scale.x, ndc.y + sprite.Scale.y, depthZ);
-            auto  pos1   = Vector3(ndc.x + sprite.Scale.x, ndc.y + sprite.Scale.y, depthZ);
-            auto  pos2   = Vector3(ndc.x + sprite.Scale.x, ndc.y - sprite.Scale.y, depthZ);
-            auto  pos3   = Vector3(ndc.x - sprite.Scale.x, ndc.y - sprite.Scale.y, depthZ);
+            auto  pos0   = Vector3(ndc.x + relPos0.x, ndc.y + relPos0.y, depthZ);
+            auto  pos1   = Vector3(ndc.x + relPos1.x, ndc.y + relPos1.y, depthZ);
+            auto  pos2   = Vector3(ndc.x + relPos2.x, ndc.y + relPos2.y, depthZ);
+            auto  pos3   = Vector3(ndc.x + relPos3.x, ndc.y + relPos3.y, depthZ);
 
             // Compute vertex UVs.
             auto uv0 = sprite.UvMin;
@@ -436,10 +533,10 @@ namespace Silent::Renderer
             auto uv3 = Vector2(sprite.UvMin.x, sprite.UvMax.y);
 
             // Add vertices.
-            bufferVerts.push_back(Vertex2dBuffer{ pos0, uv0, sprite.Col });
-            bufferVerts.push_back(Vertex2dBuffer{ pos1, uv1, sprite.Col });
-            bufferVerts.push_back(Vertex2dBuffer{ pos2, uv2, sprite.Col });
-            bufferVerts.push_back(Vertex2dBuffer{ pos3, uv3, sprite.Col });
+            bufferVerts.push_back(BufferVertex2d{ pos0, uv0, sprite.Col0 });
+            bufferVerts.push_back(BufferVertex2d{ pos1, uv1, sprite.Col1 });
+            bufferVerts.push_back(BufferVertex2d{ pos2, uv2, sprite.Col2 });
+            bufferVerts.push_back(BufferVertex2d{ pos3, uv3, sprite.Col3 });
 
             // Add indices.
             bufferIdxs.push_back((i * (QUAD_IDX_COUNT)) + 0);
@@ -450,10 +547,16 @@ namespace Silent::Renderer
             bufferIdxs.push_back((i * (QUAD_IDX_COUNT)) + 3);
 
             // @todo Batching. For now, collect each as its own batch of 2 triangles.
-            _drawBatches.Triangles2d.push_back(DrawBatch
+            _drawBatches.Primitives2d.push_back(DrawBatch
             {
                 .TextureName  = sprite.TextureName,
+                .RenderStg    = RenderStage::Sprite2d,
                 .BlendMd      = sprite.BlendMd,
+                .Uniform      = UniformSprite2d
+                {
+                    .UseTexture  = true, 
+                    .IsFastAlpha = sprite.BlendMd == BlendMode::FastAlpha
+                },
                 .BufferOffset = i * QUAD_VERTEX_COUNT,
                 .BufferStride = QUAD_IDX_COUNT
             });
@@ -475,7 +578,7 @@ namespace Silent::Renderer
                 {
                     //auto pos = GetAspectCorrectScreenPosition(Vector2(vert.Position.x, vert.Position.y), prim.ScaleM);
                     auto ndc = ConvertScreenPercentToNdc(Vector2(vert.Position.x, vert.Position.y));
-                    bufferVerts.push_back(Vertex2dBuffer{ Vector3(ndc.x, ndc.y, depthZ), Vector2::Zero, vert.Col });
+                    bufferVerts.push_back(BufferVertex2d{ Vector3(ndc.x, ndc.y, depthZ), Vector2::Zero, vert.Col });
                 }
 
                 // Add indices.
@@ -494,7 +597,7 @@ namespace Silent::Renderer
                 {
                     //auto pos = GetAspectCorrectScreenPosition(Vector2(vert.Position.x, vert.Position.y), prim.ScaleM);
                     auto ndc = ConvertScreenPercentToNdc(Vector2(vert.Position.x, vert.Position.y));
-                    bufferVerts.push_back(Vertex2dBuffer{ Vector3(ndc.x, ndc.y, depthZ), Vector2::Zero, vert.Col });
+                    bufferVerts.push_back(BufferVertex2d{ Vector3(ndc.x, ndc.y, depthZ), Vector2::Zero, vert.Col });
                 }
 
                 // Add indices.
@@ -510,10 +613,16 @@ namespace Silent::Renderer
             }
 
             // @todo Batching. For now, collect each as its own batch.
-            _drawBatches.Triangles2d.push_back(DrawBatch
+            _drawBatches.Primitives2d.push_back(DrawBatch
             {
-                .TextureName  = {},
-                .BlendMd      = shape.BlendMd,
+                .TextureName = {},
+                .RenderStg   = RenderStage::Sprite2d,
+                .BlendMd     = shape.BlendMd,
+                .Uniform     = UniformSprite2d
+                {
+                    .UseTexture  = false, 
+                    .IsFastAlpha = shape.BlendMd == BlendMode::FastAlpha
+                },
                 .BufferOffset = shape2dVertOffset,
                 .BufferStride = curIdxCount
             });
@@ -521,13 +630,99 @@ namespace Silent::Renderer
             shape2dVertOffset += curVertCount;
         }
 
+        // Process 2D glyphs.
+        int glyph2dVertOffset = bufferVerts.size();
+        for (const auto& glyph : _doubleBuffer.Render.Glyphs2d)
+        {
+            // @todo Apply scale mode later.
+            //auto pos = GetAspectCorrectScreenPosition(Vector2(vert.Position.x, vert.Position.y), sprite.ScaleMd);
+            auto ndc = ConvertScreenPercentToNdc(glyph.Position);
+
+            // Set alignment offset.
+            auto offset = Vector2(glyph.Scale.x, glyph.Scale.y);
+
+            // Compute relative vertex positions.
+            auto rotMat  = Matrix::CreateRotationZ(-glyph.Rotation);
+            auto relPos0 = Vector2::Transform(Vector2(-glyph.Scale.x, glyph.Scale.y) + offset, rotMat);
+            auto relPos1 = Vector2::Transform(glyph.Scale                            + offset, rotMat);
+            auto relPos2 = Vector2::Transform(Vector2(glyph.Scale.x, -glyph.Scale.y) + offset, rotMat);
+            auto relPos3 = Vector2::Transform(-glyph.Scale                           + offset, rotMat);
+
+            // Compute vertex positions.
+            float depthZ = std::clamp((float)glyph.Depth / (float)DEPTH_MAX, 0.0f, 1.0f);
+            auto  pos0   = Vector3(ndc.x + relPos0.x, ndc.y + relPos0.y, depthZ);
+            auto  pos1   = Vector3(ndc.x + relPos1.x, ndc.y + relPos1.y, depthZ);
+            auto  pos2   = Vector3(ndc.x + relPos2.x, ndc.y + relPos2.y, depthZ);
+            auto  pos3   = Vector3(ndc.x + relPos3.x, ndc.y + relPos3.y, depthZ);
+
+            // Compute vertex UVs.
+            auto uv0 = glyph.UvMin;
+            auto uv1 = Vector2(glyph.UvMax.x, glyph.UvMin.y);
+            auto uv2 = glyph.UvMax;
+            auto uv3 = Vector2(glyph.UvMin.x, glyph.UvMax.y);
+
+            // Add vertices.
+            bufferVerts.push_back(BufferVertex2d{ pos0, uv0, glyph.Col });
+            bufferVerts.push_back(BufferVertex2d{ pos1, uv1, glyph.Col });
+            bufferVerts.push_back(BufferVertex2d{ pos2, uv2, glyph.Col });
+            bufferVerts.push_back(BufferVertex2d{ pos3, uv3, glyph.Col });
+
+            // Add indices.
+            bufferIdxs.push_back(glyph2dVertOffset + 0);
+            bufferIdxs.push_back(glyph2dVertOffset + 1);
+            bufferIdxs.push_back(glyph2dVertOffset + 2);
+            bufferIdxs.push_back(glyph2dVertOffset + 0);
+            bufferIdxs.push_back(glyph2dVertOffset + 2);
+            bufferIdxs.push_back(glyph2dVertOffset + 3);
+
+            // @todo Batching. For now, collect each as its own batch of 2 triangles.
+            _drawBatches.Primitives2d.push_back(DrawBatch
+            {
+                .TextureName = glyph.AtlasName,
+                .RenderStg   = RenderStage::Glyph2d,
+                .BlendMd     = BlendMode::Alpha,
+                .Uniform     = UniformGlyph2d
+                {
+                    .HasGradient    = glyph.HasGradient,
+                    .GradientSteps  = (uint)glyph.GradientSteps,
+                    .GradientUvMinY = glyph.GradientUvMinY,
+                    .GradientUvMaxY = glyph.GradientUvMaxY
+                },
+                .BufferOffset = glyph2dVertOffset,
+                .BufferStride = QUAD_IDX_COUNT
+            });
+
+            glyph2dVertOffset += QUAD_VERTEX_COUNT;
+        }
+
         // Update GPU buffer.
         // @lock Restrict GPU access.
         {
             auto lock = ParallelLock(_gpuMutex);
     
-            _gpuBuffers.Triangle2dVertices.UpdateVertices(copyPass, ToSpan(bufferVerts), 0);
-            _gpuBuffers.Triangle2dVertices.UpdateIdxs(copyPass, ToSpan(bufferIdxs), 0);
+            _gpuBuffers.Vertices2d.UpdateVertices(copyPass, ToSpan(bufferVerts), 0);
+            _gpuBuffers.Vertices2d.UpdateIdxs(copyPass, ToSpan(bufferIdxs), 0);
         }
+    }
+
+    void SdlGpuRenderer::PushVertexUniform(const UniformType& uni, int slotIdx)
+    {
+        std::visit([&](auto&& arg)
+        {
+            SDL_PushGPUVertexUniformData(_commandBuffer, slotIdx, &arg, sizeof(arg));
+        }, uni);
+    }
+
+    void SdlGpuRenderer::PushFragmentUniform(const UniformType& uni, int slotIdx)
+    {
+        std::visit([&](auto&& arg)
+        {
+            SDL_PushGPUFragmentUniformData(_commandBuffer, slotIdx, &arg, sizeof(arg));
+        }, uni);
+    }
+
+    void SdlGpuRenderer::ClearDrawBatches()
+    {
+        _drawBatches.Primitives2d.clear();
     }
 }

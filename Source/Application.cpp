@@ -103,8 +103,6 @@ namespace Silent
         _isPaused = false;
         _quit     = false;
 
-        InitializeSignals();
-
         // Filesystem.
         _work.Filesystem.Initialize();
 
@@ -229,10 +227,6 @@ namespace Silent
             {
                 Debug::Log(Fmt("Failed to show cursor: {}", SDL_GetError()), Debug::LogLevel::Warning);
             }
-
-            // Move cursor to window center.
-            auto pos = GetWindowResolution().ToVector2() / 2.0f;
-            SDL_WarpMouseInWindow(_window, pos.x, pos.y);
         }
         // Hide.
         else if (_work.Options->EnableFullscreen && SDL_CursorVisible())
@@ -279,7 +273,7 @@ namespace Silent
 
     void ApplicationManager::Render()
     {
-        // Wait for previous frame to finish rendering in case state update finished early.
+        // Wait for previous frame to finish rendering.
         if (_prevFrameFuture.valid())
         {
             _prevFrameFuture.wait();

@@ -2,11 +2,11 @@
 
 #include "Renderer/Common/Constants.h"
 #include "Renderer/Common/Enums.h"
-#include "Renderer/Common/Objects/Scene/Shape2d.h"
 #include "Renderer/Common/Objects/Primitive3d.h"
-#include "Renderer/Common/Objects/Scene/Glyph.h"
+#include "Renderer/Common/Objects/Primitive/Primitive2d.h"
+#include "Renderer/Common/Objects/Scene/Shape2d.h"
 #include "Renderer/Common/Objects/Scene/Sprite2d.h"
-#include "Renderer/Common/Objects/Scene/Text.h"
+#include "Renderer/Common/Objects/Scene/Text2d.h"
 #include "Renderer/Common/Texture.h"
 #include "Renderer/Common/View.h"
 
@@ -18,20 +18,23 @@ namespace Silent::Renderer
         SdlGpu
     };
 
-    /** @brief Double-buffered renderer data. */
+    /** @brief Double-buffered scene data. */
     struct DoubleBuffer
     {
         struct Data
         {
             int DrawCallCount = 0;
 
-            std::vector<Shape2d>                Shapes2d          = {};
-            std::vector<Sprite2d>               Sprites2d         = {};
-            std::vector<std::function<void()>>  DebugGuiDrawCalls = {};
+            std::vector<Primitive2d> Primitives2d = {}; // @todo Sprites, shapes, and texts processed into this.
 
-            std::vector<Primitive3d>            Primitives3d      = {};
-            std::vector<Shape2d>                DebugShapes2d     = {};
-            std::vector<Primitive3d>            DebugPrimitives3d = {};
+            std::vector<Shape2d>               Shapes2d          = {}; // } @todo Not really renderer objects. Should be external.
+            std::vector<Sprite2d>              Sprites2d         = {}; // }
+            std::vector<Glyph2d>               Glyphs2d          = {};
+            std::vector<std::function<void()>> DebugGuiDrawCalls = {};
+
+            std::vector<Primitive3d>           Primitives3d      = {};
+            std::vector<Shape2d>               DebugShapes2d     = {};
+            std::vector<Primitive3d>           DebugPrimitives3d = {};
         };
 
         Data Active = {};
@@ -113,26 +116,26 @@ namespace Silent::Renderer
         /** @brief Signals a viewport resize. */
         void SignalResize();
 
-        /** @brief Submits a 2D screen shape for drawing.
+        /** @brief Submits an immediate-mode 2D screen shape for drawing.
          *
          * @param prim 2D screen shape to draw.
          * @return `true` if the 2D screen shape was successfully submitted, `false` otherwise.
          */
         bool SubmitShape2d(const Shape2d& shape);
 
-        /** @brief Submits a 2D screen sprite for drawing.
+        /** @brief Submits an immediate-mode 2D screen sprite for drawing.
          *
          * @param sprite 2D screen sprite to draw.
          * @return `true` if the 2D screen sprite was successfully submitted, `false` otherwise.
          */
         bool SubmitSprite2d(const Sprite2d& sprite);
 
-        /** @brief Submits a glyph for drawing.
+        /** @brief Submits immediate-mode 2D screen text glyphs for drawing.
          *
-         * @param glyph Glyph to draw.
-         * @return `true` if the glyph was successfully submitted, `false` otherwise.
+         * @param text 2D screen text to draw.
+         * @return `true` if the 2D screen text glyphs were successfully submitted, `false` otherwise.
          */
-        //bool SubmitGlyph(const Glyph& glyph);
+        bool SubmitText2d(const Text2d& text);
 
         /** @brief Initializes the renderer and its subsystems.
          *
@@ -210,6 +213,11 @@ namespace Silent::Renderer
 
         /** @brief Initializes the double buffer. */
         void InitializeDoubleBuffer();
+
+        // @todo Process these into 2D primitives.
+        void ProcessShapes2d();
+        void ProcessSprites2d();
+        void ProcessTexts2d();
 
         /** @brief Sorts render data in the double buffer, preparing it for batching and parsing to GPU buffer data.
          * Called at the start of `Update`.

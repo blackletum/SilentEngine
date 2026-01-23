@@ -8,31 +8,38 @@ namespace Silent::Utils
         std::string              Name               = {};
         std::vector<std::string> Filenames          = {};
         int                      PointSize          = 0;
+        float                    KerningScale       = 1.0f; // @todo Unnecessary? Keeps kerning similar between retro and HD variants. 
         bool                     EnableAntialiasing = false;
     };
 
-    /** @brief Rasterized glyph metadata. */
-    struct GlyphMetadata
+    /** @brief Rasterized glyph attributes. */
+    struct GlyphAttribs
     {
-        char32   CodePoint = 0;
-        int      AtlasIdx  = 0;
-        Vector2i Position  = Vector2i::Zero;
-        Vector2i Size      = Vector2i::Zero;
+        char32   CodePoint     = 0;
+        int      AtlasIdx      = 0;
+        Vector2i AtlasPosition = Vector2i::Zero;
+        Vector2i AtlasSize     = Vector2i::Zero;
+
+        Vector2 Bearing   = Vector2::Zero;
+        float   Advance   = 0.0f;
+        float   Ascender  = 0.0f;
+        float   Descender = 0.0f;
+        float   MinY      = 0.0f;
+        float   MaxY      = 0.0f;
     };
 
     /** @brief Shaped glyph data. */
     struct ShapedGlyph
     {
-        const GlyphMetadata& Metadata;
-        Vector2i             Advance = Vector2i::Zero;
-        Vector2i             Offset  = Vector2i::Zero;
+        const GlyphAttribs& Attribs;
+        float               Kerning = 0.0f;
     };
 
     /** @brief Shaped text data. */
     struct ShapedText
     {
         std::vector<ShapedGlyph> Glyphs = {};
-        int                      Width  = 0;
+        float                    Width  = 0.0f;
     };
 
     /** @brief Atlased font chain. */
@@ -54,17 +61,16 @@ namespace Silent::Utils
 
         std::string _name               = {};
         int         _pointSize          = 0;
+        float       _kerningScale       = 1.0f;
         bool        _enableAntialiasing = false;
-        float       _scaleFactor        = 0.0f;
-
-        std::unordered_map<char32, GlyphMetadata> _glyphs         = {}; /** Key = code point, value = rasterized glyph metadata. */
-        std::vector<smol_atlas_t*>                _rectAtlases    = {};
-        std::vector<std::vector<byte>>            _textureAtlases = {};
-        int                                       _activeAtlasIdx = 0;
         
-        int                     _fontCount = 0;
-        std::vector<FT_Face>    _ftFonts   = {};
-        std::vector<hb_font_t*> _hbFonts   = {};
+        std::vector<FT_Face>                     _ftFonts        = {};
+        std::unordered_map<char32, GlyphAttribs> _glyphs         = {}; /** Key = code point, value = rasterized glyph attributes. */
+        std::vector<smol_atlas_t*>               _rectAtlases    = {};
+        std::vector<std::vector<byte>>           _textureAtlases = {};
+        int                                      _activeAtlasIdx = 0;
+
+        std::set<int> _dirtyGpuAtlasIdxs = {};
 
     public:
         // =============
@@ -92,7 +98,7 @@ namespace Silent::Utils
 
         /** @brief Gets the point size.
          *
-         * @return point size.
+         * @return Point size.
          */
         int GetPointSize() const;
 
@@ -102,12 +108,29 @@ namespace Silent::Utils
          */
         const std::vector<std::vector<byte>>& GetTextureAtlases() const;
 
+        /** @brief Gets the indices of glyph atlas textures which require updating on the GPU.
+         *
+         * @return Dirty glyph texture atlas indices.
+         */
+        const std::set<int>& GetDirtyGpuAtlasIdxs() const;
+
         /** @brief Gets the shaped text for a message.
          *
          * @param msg Message to parse.
          * @return Shaped text.
          */
         ShapedText GetShapedText(const std::string& msg);
+
+        // ==========
+        // Utilities
+        // ==========
+
+        /** @brief Clears all indices of glyph texture atlases marked for updating on the GPU. */
+        void ClearDirtyGpuAtlasIdxs();
+
+        // ==========
+        // Inquirers
+        // ==========
 
     private:
         // ========
@@ -121,18 +144,27 @@ namespace Silent::Utils
          */
         std::vector<char32> GetCodePoints(const std::string& msg) const;
 
-        /** @brief Gets a shaping buffer for a given message.
-         *
-         * @param msg Message to create the buffer for.
-         * @return Shaping buffer.
-         */
-        hb_buffer_t* GetShapingBuffer(const std::string& msg) const;
-
         /** @brief Caches a new glyph in the texture atlas.
          *
          * @param codePoint Code point of the glyph to cache.
          */
         void CacheGlyph(char32 codePoint);
+
+        /** @brief Inserts a glyph rectangle into the active rectangle atlas.
+         *
+         * @param size Glyph size in pixels.
+         * @param codePoint Code point of the glyph.
+         * @return Inserted glyph rectangle.
+         * @throws `std::runtime_error` if rect insertion fails.
+         */
+        smol_atlas_item_t& InsertGlyphRect(const Vector2i& size, char32 codePoint);
+
+        /** @brief Rasterizes a glyph and inserts the pixels into the active texture atlas.
+         *
+         * @param ftFont FreeType font.
+         * @param attribs Attributes of the glyph to rasterize.
+         */
+        void RasterizeGlyph(const FT_Face& ftFont, const GlyphAttribs& attribs);
 
         /** @brief Adds a new glyph texture atlas to use for caching. */
         void AddAtlas();

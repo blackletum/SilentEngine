@@ -9,8 +9,8 @@ namespace Silent::Renderer
         // Material
         // =========
 
-        Triangle2d,
-        //GlyphGradient, // @todo
+        Sprite2d,
+        Glyph2d,
 
         // =============
         // Post-process
@@ -52,15 +52,10 @@ namespace Silent::Renderer
     /** @brief Screen space scale modes relative to the display aspect ratio. */
     enum class ScaleMode
     {
-        Fit,
-        Fill,
+        ShortEdge,
+        LongEdge,
+        HorizontalEdge, // } Might implement this, not sure.
+        VerticalEdge,   // }
         Stretch
-    };
-
-    /** @brief Text embellishment styles. */
-    enum class TextStyle
-    {
-        Flat,
-        Gradient
     };
 }

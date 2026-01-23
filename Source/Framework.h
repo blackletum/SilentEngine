@@ -48,6 +48,8 @@
 
 // FreeType
 #include <ft2build.h>
+#include <freetype/freetype.h>
+#include <freetype/ftglyph.h>
 
 // GLM
 #define GLM_ENABLE_EXPERIMENTAL
@@ -58,10 +60,6 @@
 #include <glm/gtx/matrix_interpolation.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/euler_angles.hpp>
-
-// HarfBuzz
-#include <hb.h>
-#include <hb-ft.h>
 
 // ImGui
 #include <imgui.h>
