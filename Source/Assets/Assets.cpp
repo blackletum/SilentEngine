@@ -141,7 +141,7 @@ namespace Silent::Assets
 
             // Define asset entry.
             auto asset   = _assets.back();
-            asset->Name  = std::filesystem::relative(file, assetsPath).string();
+            asset->Name  = std::filesystem::relative(file, assetsPath).generic_string();
             asset->Type  = ASSET_TYPES.at(ext);
             asset->File  = file;
             asset->Size  = std::filesystem::file_size(file);
