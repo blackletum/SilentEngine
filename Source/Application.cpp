@@ -162,9 +162,9 @@ namespace Silent
         {
             ImGui::GetIO().Fonts->AddFontFromFileTTF(fontDir.string().c_str(), IMGUI_FONT_POINT_SIZE * dpiScale);
         }
-        catch(const std::exception& e)
+        catch(const std::exception& ex)
         {
-            Debug::Log(Fmt("Failed to set ImGui to font `{}`.", fontDir.string()));
+            Debug::Log(Fmt("Failed to set ImGui to font `NotoSansMono.ttf`: {}.", ex.what()));
         }
 
         // Renderer.
