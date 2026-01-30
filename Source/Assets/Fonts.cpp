@@ -7,7 +7,7 @@ using namespace Silent::Utils;
 
 namespace Silent::Assets
 {
-    // @todo Could be defined in a Lua script instead.
+    // @todo Define these in a Lua script instead.
     const std::vector<FontMetadata> FONTS_METADATA
     {
         {
@@ -82,7 +82,7 @@ namespace Silent::Assets
             .Name      = "Handwriting",
             .Filenames = 
             {
-                "FreeSansItalic.ttf"
+                "FreeSerifItalic.ttf"
                 // @todo Need others for Japanese and Korean.
             },
             .PointSize = 64,

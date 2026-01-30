@@ -89,10 +89,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         $<$<CONFIG:RELEASE>:-O2 -g>
     )
 endif()
-#target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE
-#    $<$<CONFIG:DEBUG>:-DDEBUG_MODE>
-#    $<$<CONFIG:RELEASE>:-O2>
-#)
 
 # Set compiler warning level.
 if(MSVC)

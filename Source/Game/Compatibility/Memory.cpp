@@ -14,7 +14,7 @@ namespace Silent::Game
     void* GetScratchpadPtr(uint32 addr)
     {
         uint32 offset = addr - SCRATCHPAD_START_ADDR;
-        return &VirtualScratchpad + offset;
+        return &VirtualScratchpad[offset];
     }
 
     void* GetRamPtr(uint32 addr)

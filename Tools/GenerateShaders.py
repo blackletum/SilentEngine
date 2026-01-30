@@ -26,7 +26,7 @@ SHADERCROSS_NAME = "shadercross"
 BASE_PATH        = Path(__file__).parent
 SHADERCROSS_PATH = BASE_PATH / SHADERCROSS_NAME
 SOURCES_PATH     = BASE_PATH / "../Source/Renderer/Shaders"
-OUTPUT_PATH      = BASE_PATH / "../Build/Debug/Shaders" # @todo Make common output path for Debug and Release.
+OUTPUT_PATH      = BASE_PATH / "../Build/Assets/Shaders"
 TEMP_OUTPUT_PATH = OUTPUT_PATH / ".temp"
 
 def generate_shaders():

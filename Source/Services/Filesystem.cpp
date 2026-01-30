@@ -31,11 +31,6 @@ namespace Silent::Services
         return _screenshotsDir;
     }
     
-    const std::filesystem::path& FilesystemManager::GetShadersDirectory() const
-    {
-        return _shadersDir;
-    }
-
     void FilesystemManager::Initialize()
     {
         // Set workspace path.
@@ -59,20 +54,13 @@ namespace Silent::Services
         }
 
         // Set workspace paths.
-        _assetsDir   = _appDir  / ASSETS_DIR_NAME;
+        _assetsDir   = _appDir  / ".." / ASSETS_DIR_NAME;
         _savegameDir = _workDir / SAVEGAME_DIR_NAME;
-        _shadersDir  = _appDir  / SHADERS_DIR_NAME;
 
         // Check for assets directory.
         if (!std::filesystem::exists(_assetsDir))
         {
             throw std::runtime_error(Fmt("`{}` folder not found in application directory.", ASSETS_DIR_NAME));
-        }
-
-        // Check for shaders directory.
-        if (!std::filesystem::exists(_shadersDir))
-        {
-            throw std::runtime_error(Fmt("`{}` folder not found in application directory.", SHADERS_DIR_NAME));
         }
 
         // Create workspace directories.

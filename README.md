@@ -117,10 +117,10 @@ source .venv/bin/activate
 
 ### Transfer assets
 
-Copy the `Assets` folder from the repository to `Build/Debug`/`Build/Release`.
-You must source your own ROM of the 1.1 US release of the game. Extract all folders from the .SILENT archive to `Assets/Stream/Psx`.
+Copy the `Assets` folder from the root of the repository to the `Build` folder. Then, extract all folders from the ROM's .SILENT archive to `Assets/Stream/Psx`.
+Original game assets are not provided and your own ROM of the 1.1 US release of the game must be sourced.
 
-This is yet to be streamlined. Automation of this step will be provided in the future.
+This is yet to be streamlined and automation of this step will be provided in the future.
 
 ### Build the code (Debug/Release)
 

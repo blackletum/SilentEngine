@@ -100,7 +100,14 @@ namespace Silent
 
     float ApplicationManager::GetDpiScale() const
     {
-        return SDL_GetWindowDisplayScale(_window);
+        float dpiScale = SDL_GetWindowDisplayScale(_window);
+        if (dpiScale == 0.0f)
+        {
+            Debug::Log(Fmt("Failed to get DPI scale: {}", SDL_GetError()));
+            return 1.0f;
+        }
+
+        return dpiScale;
     }
 
     void ApplicationManager::Initialize()
@@ -157,14 +164,14 @@ namespace Silent
         ImGui::GetIO().DisplayFramebufferScale = ImVec2{ dpiScale, dpiScale };
 
         // Set ImGui font.
-        auto fontDir = _work.Filesystem.GetAssetsDirectory() / "Fonts/NotoSansMono.ttf";
+        auto fontDir = _work.Filesystem.GetAssetsDirectory() / ASSETS_FONTS_DIR_NAME / "NotoSansMono.ttf";
         try
         {
             ImGui::GetIO().Fonts->AddFontFromFileTTF(fontDir.string().c_str(), IMGUI_FONT_POINT_SIZE * dpiScale);
         }
         catch(const std::exception& ex)
         {
-            Debug::Log(Fmt("Failed to set ImGui to font `NotoSansMono.ttf`: {}.", ex.what()));
+            Debug::Log(Fmt("Failed to set ImGui font to `NotoSansMono.ttf`: {}.", ex.what()));
         }
 
         // Renderer.
