@@ -2,11 +2,11 @@
 
 #include "Renderer/Common/Constants.h"
 #include "Renderer/Common/Enums.h"
-#include "Renderer/Common/Objects/Primitive3d.h"
-#include "Renderer/Common/Objects/Primitive/Primitive2d.h"
-#include "Renderer/Common/Objects/Scene/Shape2d.h"
-#include "Renderer/Common/Objects/Scene/Sprite2d.h"
-#include "Renderer/Common/Objects/Scene/Text2d.h"
+#include "Renderer/Common/Resources/Primitive/Primitive2d.h"
+#include "Renderer/Common/Resources/Primitive/Primitive3d.h"
+#include "Renderer/Common/Resources/Scene/Shape2d.h"
+#include "Renderer/Common/Resources/Scene/Sprite2d.h"
+#include "Renderer/Common/Resources/Scene/Text2d.h"
 #include "Renderer/Common/Texture.h"
 #include "Renderer/Common/View.h"
 
@@ -25,16 +25,11 @@ namespace Silent::Renderer
         {
             int DrawCallCount = 0;
 
-            std::vector<Primitive2d> Primitives2d = {}; // @todo Sprites, shapes, and texts processed into this.
-
-            std::vector<Shape2d>               Shapes2d          = {}; // } @todo Not really renderer objects. Should be external.
-            std::vector<Sprite2d>              Sprites2d         = {}; // }
-            std::vector<Glyph2d>               Glyphs2d          = {};
-            std::vector<std::function<void()>> DebugGuiDrawCalls = {};
-
+            std::vector<Primitive2d>           Primitives2d      = {};
             std::vector<Primitive3d>           Primitives3d      = {};
             std::vector<Shape2d>               DebugShapes2d     = {};
             std::vector<Primitive3d>           DebugPrimitives3d = {};
+            std::vector<std::function<void()>> DebugGuiDrawCalls = {};
         };
 
         Data Active = {};
@@ -58,7 +53,11 @@ namespace Silent::Renderer
         DoubleBuffer                        _doubleBuffer = {};
         std::unique_ptr<TextureManagerBase> _textures     = nullptr;
 
-        std::mutex _gpuMutex = {};
+        std::mutex _primitives2dMutex = {};
+
+        std::vector<Shape2d>  _shapes2d  = {}; // } @todo Not really renderer objects. Should be part of an external system.
+        std::vector<Sprite2d> _sprites2d = {}; // }
+        std::vector<Glyph2d>  _glyphs2d  = {}; // }
 
     public:
         // =============
@@ -110,8 +109,8 @@ namespace Silent::Renderer
         // Utilities
         // ==========
 
-        /** @brief Swaps the double buffer and clears active data for new updates on the next tick. */
-        void SwapDoubleBuffer();
+        /** @brief Processes high-level object data and swaps the double buffer.. */
+        void PrepareRenderBuffer();
 
         /** @brief Signals a viewport resize. */
         void SignalResize();
@@ -214,27 +213,51 @@ namespace Silent::Renderer
         /** @brief Initializes the double buffer. */
         void InitializeDoubleBuffer();
 
-        // @todo Process these into 2D primitives.
-        void ProcessShapes2d();
+        /** @brief Processes 2D sprites into 2d primitives. */
         void ProcessSprites2d();
-        void ProcessTexts2d();
 
-        /** @brief Sorts render data in the double buffer, preparing it for batching and parsing to GPU buffer data.
+        /** @brief Processes 2D shapes into 2d primitives. */
+        void ProcessShapes2d();
+
+        /** @brief Processes 2D glyphs into 2d primitives. */
+        void ProcessGlyphs2d();
+
+        /** @brief Sorts render buffer data in the double buffer.
          * Called at the start of `Update`.
          */
         void SortRenderBufferData();
 
-        /** @brief Draws a 3D scene. Called before `Draw2dScene`. */
+        void DrawFrame();
+
+        /** @brief Draws a 3D scene to a cleared off-screen render texture.
+         * Called before `Draw2dScene`.
+         */
         virtual void Draw3dScene() = 0;
 
-        /** @brief Draws a 2D scene on top of the 3D scene. Called after `Draw3dScene` and before `DrawPostProcess`. */
+        /** @brief Draws dithering over the 3D scene to an off-screen render texture.
+         * Called after `Draw3dScene` and before `Draw2dScene`.
+         */
+        virtual void DrawDither() = 0;
+
+        /** @brief Draws a 2D scene on top of the 3D scene to an off-screen render texture.
+         * Called after `Draw3dScene` and before `DrawPostProcess`.
+         */
         virtual void Draw2dScene() = 0;
 
-        /** @brief Draws post-process effects on top of the 3D and 2D scene. Called after `Draw2dScene` and before `DrawDebugGui`. */
+        /** @brief Draws post-process effects on top of the combined 3D and 2D scenes to an off-screen render texture.
+         * Called after `Draw2dScene` and before `DrawViewport`.
+         */
         virtual void DrawPostProcess() = 0;
 
-        /** @brief Draws a power menu on top of the post-processed 3D and 2D scenes. Called after `DrawPostProcess`. */
-        virtual void DrawDebugGui() = 0;
+        /** @brief Draws the viewport containing post-procesed, combined 3D and 2D scenes to the swapchain.
+         * Called after `DrawPostProcess` and before `DrawPowerMenu`.
+         */
+        virtual void DrawViewport() = 0 ;
+
+        /** @brief Draws a power menu on top of the viewport to the swapchain.
+         * Called after `DrawViewport`.
+         */
+        virtual void DrawPowerMenu() = 0;
     };
 
     /** @brief Creates a renderer of a specified backend type.

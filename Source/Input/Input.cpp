@@ -126,6 +126,7 @@ namespace Silent::Input
         };
         executor.AddTasks(tasks).wait();
 
+        // @todo Should also differentiate mouse to show/hide cursor.
         // Update "using gamepad" state.
         if (_deviceStates.HasKeyboardInput || _deviceStates.HasMouseInput)
         {
@@ -558,7 +559,7 @@ namespace Silent::Input
 
         // Collect stick axes.
         auto stickAxes = std::vector<Vector2>(VALID_GAMEPAD_STICK_AXIS_CODES.size() / Vector2::AXIS_COUNT);
-        for (int i = 0, j = 0; i < VALID_GAMEPAD_STICK_AXIS_CODES.size(); i++)
+        for (int i, j = 0; i < VALID_GAMEPAD_STICK_AXIS_CODES.size(); i++)
         {
             if (!IsGamepadConnected())
             {

@@ -1,22 +1,18 @@
 #pragma once
 
-#include "Renderer/Backends/SdlGpu/Gpu/Buffer.h"
-#include "Renderer/Backends/SdlGpu/Gpu/Layouts/BufferVertex2d.h"
-#include "Renderer/Backends/SdlGpu/Gpu/Layouts/UniformGlyph2d.h"
-#include "Renderer/Backends/SdlGpu/Gpu/Layouts/UniformSprite2d.h"
-#include "Renderer/Backends/SdlGpu/Gpu/VertexBuffer.h"
-#include "Renderer/Backends/SdlGpu/Pipeline.h"
-#include "Renderer/Backends/SdlGpu/Texture.h"
-#include "Renderer/Common/Objects/Primitive/Vertex2d.h"
-#include "Renderer/Common/Objects/Primitive/Vertex3d.h"
+#include "Renderer/Backends/SdlGpu/Pipeline/Pipeline.h"
+#include "Renderer/Backends/SdlGpu/Resources/Buffer.h"
+#include "Renderer/Backends/SdlGpu/Resources/Texture.h"
+#include "Renderer/Backends/SdlGpu/Resources/VertexBuffer.h"
+#include "Renderer/Common/Resources/Buffers.h"
+#include "Renderer/Common/Resources/Primitive/Vertex2d.h"
+#include "Renderer/Common/Resources/Primitive/Vertex3d.h"
+#include "Renderer/Common/Resources/Uniforms.h"
 #include "Renderer/Renderer.h"
 
-namespace Silent::Renderer
+namespace Silent::Renderer::SdlGpu
 {
-    using UniformType = std::variant<UniformGlyph2d,
-                                     UniformSprite2d>;
-
-    /** @brief GPU buffer draw raw batch. */
+    /** @brief GPU buffer draw batch. */
     struct DrawBatch
     {
         std::string TextureName  = {};
@@ -30,25 +26,20 @@ namespace Silent::Renderer
     /** @brief Sorted GPU buffer draw batches. */
     struct DrawBatches
     {
-        std::vector<DrawBatch> Primitives2d = {}; // @todo Should be "Primitives2d".
+        std::vector<DrawBatch> Primitives2d = {};
     };
 
     /** @brief GPU buffers. */
     struct GpuBuffers
     {
+        VertexBuffer<BufferVertex2d> ViewportVertices2d = {};
+
         VertexBuffer<BufferVertex2d> Vertices2d = {};
     };
 
     /** @brief SDL_gpu renderer backend. */
-    class SdlGpuRenderer : public RendererBase
+    class Renderer : public RendererBase
     {
-    public:
-        // ==========
-        // Constants
-        // ==========
-
-        static constexpr char NAME[] = "SDL_gpu";
-
     private:
         // =======
         // Fields
@@ -58,6 +49,7 @@ namespace Silent::Renderer
         std::vector<SDL_GPUSampler*> _samplers  = {};
         PipelineManager              _pipelines = PipelineManager();
         
+        SDL_GPUTexture*       _renderTexture    = nullptr;
         SDL_GPUTexture*       _swapchainTexture = nullptr;
         SDL_GPUCommandBuffer* _commandBuffer    = nullptr;
         DrawBatches           _drawBatches      = {};
@@ -68,8 +60,8 @@ namespace Silent::Renderer
         // Constructors
         // =============
 
-        /** @brief Constructs an uninitialized default `SdlGpuRenderer`. */
-        SdlGpuRenderer() = default;
+        /** @brief Constructs an uninitialized default `Renderer`. */
+        Renderer() = default;
 
         // ==========
         // Utilities
@@ -85,16 +77,19 @@ namespace Silent::Renderer
         // Helpers
         // ========
 
-        SdlGpuTextureManager& GetTextures();
-        SDL_GPUSampler&       GetActiveSampler();
+        SDL_GPUTexture* GetRenderTexture();
+        TextureManager& GetTextures();
+        SDL_GPUSampler& GetActiveSampler();
 
         void Draw3dScene() override;
+        void DrawDither() override;
         void Draw2dScene() override;
         void DrawPostProcess() override;
-        void DrawDebugGui() override;
+        void DrawViewport() override;
+        void DrawPowerMenu() override;
 
-        /** @brief Allocates memory pools for for draw batches and GPU buffers. */
-        void InitializeMemory();
+        /** @brief Allocates memory pools for draw batches and GPU buffers. */
+        void InitializeGpuBuffers();
 
         /** @brief Adds new glyph texture atlases and updates old ones if new glyphs have been added.
          *
@@ -111,6 +106,8 @@ namespace Silent::Renderer
          * @param copyPass Copy pass.
          */
         void CopyGpuPrimitives2d(SDL_GPUCopyPass& copyPass);
+
+        void CopyGpuViewportQuad(SDL_GPUCopyPass& copyPass);
 
         /** @brief Pushes uniform data to the GPU for the vertex shader.
          *

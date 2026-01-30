@@ -2,13 +2,14 @@
 #include "Renderer/Renderer.h"
 
 #include "Application.h"
-#include "Renderer/Common/Objects/Primitive/Vertex2d.h"
-#include "Renderer/Common/Objects/Primitive/Vertex3d.h"
-#include "Renderer/Common/Objects/Primitive3d.h"
-#include "Renderer/Common/Objects/Scene/Shape2d.h"
-#include "Renderer/Common/Objects/Scene/Sprite2d.h"
-#include "Renderer/Common/Objects/Scene/Text2d.h"
 #include "Renderer/Backends/SdlGpu/SdlGpu.h"
+#include "Renderer/Common/Resources/Primitive/Primitive3d.h"
+#include "Renderer/Common/Resources/Primitive/Vertex2d.h"
+#include "Renderer/Common/Resources/Primitive/Vertex3d.h"
+#include "Renderer/Common/Resources/Scene/Shape2d.h"
+#include "Renderer/Common/Resources/Scene/Sprite2d.h"
+#include "Renderer/Common/Resources/Scene/Text2d.h"
+#include "Renderer/Common/Utils.h"
 #include "Utils/Parallel.h"
 #include "Utils/Utils.h"
 
@@ -61,21 +62,39 @@ namespace Silent::Renderer
         return res.x / res.y;
     }
 
-    void RendererBase::SwapDoubleBuffer()
+    void RendererBase::PrepareRenderBuffer()
     {
+        auto& executor = g_App.GetExecutor();
+
         // @todo Need to call `UpdateFontAtlasTextures` here. Backends need their own
         // pre-render data prep method.
 
+        // @todo Using parallelism causes flickering here. Why?
+        // Generate active buffer data.
+        //auto tasks = ParallelTasks
+        //{
+        //    TASK(ProcessShapes2d()),
+        //    TASK(ProcessSprites2d()),
+        //    TASK(ProcessGlyphs2d())
+        //};
+        //executor.AddTasks(tasks).wait();
+        ProcessShapes2d();
+        ProcessSprites2d();
+        ProcessGlyphs2d();
+
+        // Swap double buffer.
         std::swap(_doubleBuffer.Render, _doubleBuffer.Active);
 
+        // Clear active buffer.
         _doubleBuffer.Active.DrawCallCount = 0;
-        _doubleBuffer.Active.Shapes2d.clear();
-        _doubleBuffer.Active.Sprites2d.clear();
-        _doubleBuffer.Active.Glyphs2d.clear();
-        _doubleBuffer.Active.DebugGuiDrawCalls.clear();
-
+        _doubleBuffer.Active.Primitives2d.clear();
         _doubleBuffer.Active.Primitives3d.clear();
         _doubleBuffer.Active.DebugPrimitives3d.clear();
+        _doubleBuffer.Active.DebugGuiDrawCalls.clear();
+
+        _shapes2d.clear();
+        _sprites2d.clear();
+        _glyphs2d.clear();
     }
 
     void RendererBase::SignalResize()
@@ -85,13 +104,13 @@ namespace Silent::Renderer
 
     bool RendererBase::SubmitShape2d(const Shape2d& shape)
     {
-        if (_doubleBuffer.Active.Shapes2d.size() >= SHAPE_2D_COUNT_MAX)
+        if (_shapes2d.size() >= SHAPE_2D_COUNT_MAX)
         {
             Debug::Log("Attempted to submit 2D shape to full container.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
             return false;
         }
 
-        _doubleBuffer.Active.Shapes2d.push_back(shape);
+        _shapes2d.push_back(shape);
         return true;
     }
 
@@ -99,7 +118,7 @@ namespace Silent::Renderer
     {
         auto& assets = g_App.GetAssets();
 
-        if (_doubleBuffer.Active.Sprites2d.size() >= SPRITE_2D_COUNT_MAX)
+        if (_sprites2d.size() >= SPRITE_2D_COUNT_MAX)
         {
             Debug::Log("Attempted to submit 2D sprite to full container.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
             return false;
@@ -114,15 +133,14 @@ namespace Silent::Renderer
         //    return false;
         //}
 
-        _doubleBuffer.Active.Sprites2d.push_back(sprite);
+        _sprites2d.push_back(sprite);
         return true;
     }
 
     bool RendererBase::SubmitText2d(const Text2d& text)
     {
-        constexpr auto SHADOW_COLOR    = Color::From8Bit(16,  16,  16);
-        // @todo Improve `constexpr` compatibility of math classes.
-        static const auto SHADOW_OFFSET = SCREEN_SPACE_RES * (1.0f / RETRO_SCREEN_SPACE_RES.y);
+        constexpr auto SHADOW_COLOR  = Color::From8Bit(16, 16, 16);
+        static const auto SHADOW_OFFSET = SCREEN_SPACE_RES * (1.0f / RETRO_SCREEN_SPACE_RES.y); // @todo Make `constexpr`.
 
         auto& fonts = g_App.GetFonts();
 
@@ -147,7 +165,8 @@ namespace Silent::Renderer
         //color.A()  = text.Opacity;
 
         // Compute text position. @todo Alignment should be in markup.
-        auto textOffset = Vector2::One;
+        // @todo Use common function for alignment pivots.
+        auto textOffset = Vector2::Zero;
         switch (text.AlignMd)
         {
             case AlignMode::Center:
@@ -203,9 +222,8 @@ namespace Silent::Renderer
         for (const auto& shapedGlyph : shapedText.Glyphs)
         {
             // Compute texture atlas UVs.
-            auto uvMin  = shapedGlyph.Attribs.AtlasPosition.ToVector2() / Vector2(Font::ATLAS_SIZE); 
-            auto uvMax  = uvMin + (shapedGlyph.Attribs.AtlasSize.ToVector2() / Vector2(Font::ATLAS_SIZE));
-            auto uvSize = uvMax - uvMin;
+            auto uvMin = shapedGlyph.Attribs.AtlasPosition.ToVector2() / Vector2(Font::ATLAS_SIZE); 
+            auto uvMax = uvMin + (shapedGlyph.Attribs.AtlasSize.ToVector2() / Vector2(Font::ATLAS_SIZE));
 
             // Compute rotated offset.
             auto adjPixelOffset = Vector2::Transform(pixelOffset, rotMat);
@@ -220,8 +238,8 @@ namespace Silent::Renderer
             auto pos         = adjTextPos + relPos;
 
             // Compute scale.
-            auto relScale = Vector2((float)shapedGlyph.Attribs.AtlasSize.x / (float)shapedGlyph.Attribs.AtlasSize.y, 1.0f) *
-                            Vector2((float)shapedGlyph.Attribs.AtlasSize.y / (float)font->GetPointSize());
+            auto relScale = Vector2((float)(shapedGlyph.Attribs.AtlasSize.x) / (float)(shapedGlyph.Attribs.AtlasSize.y), 1.0f) *
+                            Vector2((float)(shapedGlyph.Attribs.AtlasSize.y) / (float)font->GetPointSize());
             auto scale    = relScale * text.Scale;
 
             // Concatenate name for texture atlas containing glyph.
@@ -229,7 +247,7 @@ namespace Silent::Renderer
 
             auto AddGlyph = [&](const Vector2& offset, const Color& color, int depth, bool hasGradient)
             {
-                if (_doubleBuffer.Active.Glyphs2d.size() >= GLYPH_2D_COUNT_MAX)
+                if (_glyphs2d.size() >= GLYPH_2D_COUNT_MAX)
                 {
                     Debug::Log("Attempted to submit 2D glyph to full container.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
                     return false;
@@ -239,7 +257,7 @@ namespace Silent::Renderer
                                                     atlasName, uvMin, uvMax,
                                                     pos + offset, text.Rotation, scale, color,
                                                     depth, ScaleMode::ShortEdge);
-                _doubleBuffer.Active.Glyphs2d.push_back(glyph);
+                _glyphs2d.push_back(glyph);
 
                 return true;
             };
@@ -253,6 +271,7 @@ namespace Silent::Renderer
             // Submit 2D drop shadow glyph.
             if (text.HasShadow)
             {
+                // @todo Scale offset.
                 auto adjShadowOffset = Vector2::Transform(SHADOW_OFFSET, rotMat);
                 if (!AddGlyph(adjShadowOffset, SHADOW_COLOR, text.Depth + 1, false))
                 {
@@ -261,7 +280,7 @@ namespace Silent::Renderer
             }
 
             // Update horizontal offset.
-            pixelOffset.x += shapedGlyph.Kerning * text.KerningScale;
+            pixelOffset.x += shapedGlyph.Spacing + text.Tracking;
         }
 
         return true;
@@ -331,11 +350,260 @@ namespace Silent::Renderer
 
     void RendererBase::InitializeDoubleBuffer()
     {
-        _doubleBuffer.Active.Shapes2d.reserve(SHAPE_2D_COUNT_MAX);
-        _doubleBuffer.Active.Sprites2d.reserve(SPRITE_2D_COUNT_MAX);
-        _doubleBuffer.Active.Glyphs2d.reserve(GLYPH_2D_COUNT_MAX);
+        auto ReserveMemory = [](DoubleBuffer::Data& data)
+        {
+            data.Primitives2d.reserve(SHAPE_2D_COUNT_MAX + 
+                                      SPRITE_2D_COUNT_MAX + 
+                                      GLYPH_2D_COUNT_MAX);
+        };
 
-        _doubleBuffer.Render = _doubleBuffer.Active; 
+        ReserveMemory(_doubleBuffer.Active);
+        ReserveMemory(_doubleBuffer.Render);
+
+        _shapes2d.reserve(SHAPE_2D_COUNT_MAX);
+        _sprites2d.reserve(SPRITE_2D_COUNT_MAX);
+        _glyphs2d.reserve(GLYPH_2D_COUNT_MAX);
+    }
+
+    void RendererBase::ProcessSprites2d()
+    {
+        for (const auto& sprite : _sprites2d)
+        {
+            // @todo Apply scale mode later.
+            //auto pos = GetAspectCorrectScreenPosition(Vector2(vert.Position.x, vert.Position.y), sprite.ScaleMd);
+            auto ndc = ConvertScreenPercentToNdc(sprite.Position);
+
+            // Set alignment offset.
+            auto offset = Vector2::Zero;
+            switch (sprite.AlignMd)
+            {
+                default:
+                case AlignMode::Center:
+                {
+                    break;
+                }
+                case AlignMode::CenterTop:
+                {
+                    offset = Vector2(0.0f, -sprite.Scale.y);
+                    break;
+                }
+                case AlignMode::CenterBottom:
+                {
+                    offset = Vector2(0.0f, sprite.Scale.y);
+                    break;
+                }
+                case AlignMode::CenterLeft:
+                {
+                    offset = Vector2(sprite.Scale.x, 0.0f);
+                    break;
+                }
+                case AlignMode::CenterRight:
+                {
+                    offset = Vector2(-sprite.Scale.x, 0.0f);
+                    break;
+                }
+                case AlignMode::TopLeft:
+                {
+                    offset = Vector2(sprite.Scale.x, -sprite.Scale.y);
+                    break;
+                }
+                case AlignMode::TopRight:
+                {
+                    offset = Vector2(-sprite.Scale.x, -sprite.Scale.y);
+                    break;
+                }
+                case AlignMode::BottomLeft:
+                {
+                    offset = Vector2(sprite.Scale.x, sprite.Scale.y);
+                    break;
+                }
+                case AlignMode::BottomRight:
+                {
+                    offset = Vector2(-sprite.Scale.x, sprite.Scale.y);
+                    break;
+                }
+            }
+
+            // Compute relative vertex positions.
+            auto rotMat  = Matrix::CreateRotationZ(-sprite.Rotation);
+            auto relPos0 = Vector2::Transform(Vector2(-sprite.Scale.x, sprite.Scale.y) + offset, rotMat);
+            auto relPos1 = Vector2::Transform(sprite.Scale                             + offset, rotMat);
+            auto relPos2 = Vector2::Transform(Vector2(sprite.Scale.x, -sprite.Scale.y) + offset, rotMat);
+            auto relPos3 = Vector2::Transform(-sprite.Scale                            + offset, rotMat);
+
+            // Compute vertex positions.
+            auto pos0 = Vector2(ndc.x + relPos0.x, ndc.y + relPos0.y);
+            auto pos1 = Vector2(ndc.x + relPos1.x, ndc.y + relPos1.y);
+            auto pos2 = Vector2(ndc.x + relPos2.x, ndc.y + relPos2.y);
+            auto pos3 = Vector2(ndc.x + relPos3.x, ndc.y + relPos3.y);
+
+            // Compute vertex UVs.
+            auto uv0 = sprite.UvMin;
+            auto uv1 = Vector2(sprite.UvMax.x, sprite.UvMin.y);
+            auto uv2 = sprite.UvMax;
+            auto uv3 = Vector2(sprite.UvMin.x, sprite.UvMax.y);
+
+            // Add 2D primitive.
+            // @lock Restrict 2D primitives access.
+            {
+                auto lock = ParallelLock(_primitives2dMutex);
+
+                _doubleBuffer.Active.Primitives2d.push_back(Primitive2d
+                {
+                    .Vertices =
+                    {
+                        { pos0, sprite.Col0, uv0 },
+                        { pos1, sprite.Col1, uv1 },
+                        { pos2, sprite.Col2, uv2 },
+                        { pos3, sprite.Col3, uv3 }
+                    },
+                    .Depth       = sprite.Depth,
+                    .TextureName = sprite.TextureName,
+                    .RenderStg   = RenderStage::Sprite2d,
+                    .BlendMd     = sprite.BlendMd,
+                    .Uniform     = UniformSprite2d
+                    {
+                        .UseTexture  = true, 
+                        .IsFastAlpha = sprite.BlendMd == BlendMode::FastAlpha
+                    }
+                });
+            }
+        }
+    }
+
+    void RendererBase::ProcessShapes2d()
+    {
+        for (const auto& shape : _shapes2d)
+        {
+            // Triangle.
+            if (shape.Vertices.size() == TRI_VERTEX_COUNT)
+            {
+                // Compute vertex positions.
+                auto pos0 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[0].Position.x, shape.Vertices[0].Position.y));
+                auto pos1 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[1].Position.x, shape.Vertices[1].Position.y));
+                auto pos2 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[2].Position.x, shape.Vertices[2].Position.y));
+
+                // Add 2D primitive.
+                // @lock Restrict 2D primitives access.
+                {
+                    auto lock = ParallelLock(_primitives2dMutex);
+
+                    _doubleBuffer.Active.Primitives2d.push_back(Primitive2d
+                    {
+                        .Vertices =
+                        {
+                            Vertex2d{ pos0, shape.Vertices[0].Col, Vector2::Zero },
+                            Vertex2d{ pos1, shape.Vertices[1].Col, Vector2::Zero },
+                            Vertex2d{ pos2, shape.Vertices[2].Col, Vector2::Zero },
+                        },
+                        .Depth       = shape.Depth,
+                        .TextureName = {},
+                        .RenderStg   = RenderStage::Sprite2d,
+                        .BlendMd     = shape.BlendMd,
+                        .Uniform     = UniformSprite2d
+                        {
+                            .UseTexture  = false, 
+                            .IsFastAlpha = shape.BlendMd == BlendMode::FastAlpha
+                        }
+                    });
+                }
+            }
+            // Line or quad.
+            else if (shape.Vertices.size() == QUAD_VERTEX_COUNT)
+            {
+                // Compute vertex positions.
+                auto pos0 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[0].Position.x, shape.Vertices[0].Position.y));
+                auto pos1 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[1].Position.x, shape.Vertices[1].Position.y));
+                auto pos2 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[2].Position.x, shape.Vertices[2].Position.y));
+                auto pos3 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[3].Position.x, shape.Vertices[3].Position.y));
+
+                // Add 2D primitive.
+                // @lock Restrict 2D primitives access.
+                {
+                    auto lock = ParallelLock(_primitives2dMutex);
+
+                    _doubleBuffer.Active.Primitives2d.push_back(Primitive2d
+                    {
+                        .Vertices =
+                        {
+                            Vertex2d{ pos0, shape.Vertices[0].Col, Vector2::Zero },
+                            Vertex2d{ pos1, shape.Vertices[1].Col, Vector2::Zero },
+                            Vertex2d{ pos2, shape.Vertices[2].Col, Vector2::Zero },
+                            Vertex2d{ pos3, shape.Vertices[3].Col, Vector2::Zero }
+                        },
+                        .Depth       = shape.Depth,
+                        .TextureName = {},
+                        .RenderStg   = RenderStage::Sprite2d,
+                        .BlendMd     = shape.BlendMd,
+                        .Uniform     = UniformSprite2d
+                        {
+                            .UseTexture  = false, 
+                            .IsFastAlpha = shape.BlendMd == BlendMode::FastAlpha
+                        }
+                    });
+                }
+            }
+        }
+    }
+
+    void RendererBase::ProcessGlyphs2d()
+    {
+        for (const auto& glyph : _glyphs2d)
+        {
+            // @todo Apply scale mode later.
+            //auto pos = GetAspectCorrectScreenPosition(Vector2(vert.Position.x, vert.Position.y), sprite.ScaleMd);
+            auto ndc = ConvertScreenPercentToNdc(glyph.Position);
+
+            // Set alignment offset.
+            auto offset = Vector2(glyph.Scale.x, glyph.Scale.y);
+
+            // Compute relative vertex positions.
+            auto rotMat  = Matrix::CreateRotationZ(-glyph.Rotation);
+            auto relPos0 = Vector2::Transform(Vector2(-glyph.Scale.x, glyph.Scale.y) + offset, rotMat);
+            auto relPos1 = Vector2::Transform(glyph.Scale                            + offset, rotMat);
+            auto relPos2 = Vector2::Transform(Vector2(glyph.Scale.x, -glyph.Scale.y) + offset, rotMat);
+            auto relPos3 = Vector2::Transform(-glyph.Scale                           + offset, rotMat);
+
+            // Compute vertex positions.
+            auto pos0 = ndc + relPos0;
+            auto pos1 = ndc + relPos1;
+            auto pos2 = ndc + relPos2;
+            auto pos3 = ndc + relPos3;
+
+            // Compute vertex UVs.
+            auto uv0 = glyph.UvMin;
+            auto uv1 = Vector2(glyph.UvMax.x, glyph.UvMin.y);
+            auto uv2 = glyph.UvMax;
+            auto uv3 = Vector2(glyph.UvMin.x, glyph.UvMax.y);
+
+            // Add 2D primitive.
+            // @lock Restrict 2D primitives access.
+            {
+                auto lock = ParallelLock(_primitives2dMutex);
+
+                _doubleBuffer.Active.Primitives2d.push_back(Primitive2d
+                {
+                    .Vertices =
+                    {
+                        Vertex2d{ pos0, glyph.Col, uv0 },
+                        Vertex2d{ pos1, glyph.Col, uv1 },
+                        Vertex2d{ pos2, glyph.Col, uv2 },
+                        Vertex2d{ pos3, glyph.Col, uv3 }
+                    },
+                    .Depth       = glyph.Depth,
+                    .TextureName = glyph.AtlasName,
+                    .RenderStg   = RenderStage::Glyph2d,
+                    .BlendMd     = BlendMode::Alpha,
+                    .Uniform     = UniformGlyph2d
+                    {
+                        .HasGradient    = glyph.HasGradient,
+                        .GradientSteps  = (uint)glyph.GradientSteps,
+                        .GradientUvMinY = glyph.GradientUvMinY,
+                        .GradientUvMaxY = glyph.GradientUvMaxY
+                    }
+                });
+            }
+        }
     }
 
     void RendererBase::SortRenderBufferData()
@@ -344,33 +612,27 @@ namespace Silent::Renderer
 
         auto sortTasks = ParallelTasks
         {
-            // Sort 2D glyphs.
+            // Sort 2D primitives. @todo Use sort keys?
             [&]()
             {
-                Sort(_doubleBuffer.Render.Glyphs2d, [](const Glyph2d& glyph0, const Glyph2d& glyph1)
+                Sort(_doubleBuffer.Render.Primitives2d, [](const Primitive2d& prim0, const Primitive2d& prim1)
                 {
-                    return glyph0.Depth > glyph1.Depth;
-                });
-            },
-            // Sort 2D shapes.
-            [&]()
-            {
-                Sort(_doubleBuffer.Render.Shapes2d, [](const Shape2d& shape0, const Shape2d& shape1)
-                {
-                    return shape0.Depth > shape1.Depth;
-                });
-            },
-            // Sort 2D sprites.
-            [&]()
-            {
-                // @todo Sort based on other heuristics too. Use sort keys for speed?
-                Sort(_doubleBuffer.Render.Sprites2d, [](const Sprite2d& sprite0, const Sprite2d& sprite1)
-                {
-                    return sprite0.Depth > sprite1.Depth;
+                    return prim0.Depth > prim1.Depth;
                 });
             }
         };
         executor.AddTasks(sortTasks).wait();
+    }
+
+    void RendererBase::DrawFrame()
+    {
+        // @todo Refactor into a render graph?
+        Draw3dScene();
+        DrawDither();
+        Draw2dScene();
+        DrawPostProcess();
+        DrawViewport();
+        DrawPowerMenu();
     }
 
     std::unique_ptr<RendererBase> CreateRenderer(RendererType type)
@@ -379,7 +641,7 @@ namespace Silent::Renderer
         {
             case RendererType::SdlGpu:
             {
-                return std::make_unique<SdlGpuRenderer>();
+                return std::make_unique<SdlGpu::Renderer>();
             }
         }
 

@@ -1,6 +1,24 @@
 # <img src="https://github.com/Sezzary/SilentEngine/blob/master/Resources/Icon.png" alt="Icon" width="64" height="64"/> Silent Engine
 
-Track decompilation progress here: https://github.com/Vatuu/silent-hill-decomp
+*Silent Engine* is an in-progress cross-platform engine port designed to run the original *Silent Hill* on modern systems. It aims to be a monolithic, flexible, and future-proof foundation with modern standards that will enable long-term goals such as translation support and modding. Written from the ground-up with a high-quality, no-compromise codebase.
+
+*Q: CAN I PLAY THIS?*
+A: Not yet! There's still significant work to be done. Very little game logic resides in this repository so far, as the focus is on building a solid engine foundation before integrating gameplay and graphics. All considerations are being made to avoid technical debt. Additionally, the decompilation must be farther along before most of the porting work can begin. While basics like game menus are slowly underway, it's best to wait on the rest while the decompilation remains in constunt flux. Much of the original engine code is yet to be deobfuscated and documented.
+
+Decompilation progress can be tracked here:
+https://github.com/Vatuu/silent-hill-decomp
+
+## Prospects
+
+- Windows/macOS/Linux support out of the box, with the potential for other platforms later.
+- Modern renderer supporting Vulkan, DX12, and Metal, with the potential for other backends in the future if needed.
+- Various graphics toggles for a retro or modern look.
+- Retro and HD font options. .TTF fonts matching the originals have been found or meticulously recreated.
+- Clean, well-documented codebase.
+- Lua scripting.
+- Translation support.
+- Modding support.
+- Many others.
 
 ## Current foundations
 
@@ -13,30 +31,25 @@ Track decompilation progress here: https://github.com/Vatuu/silent-hill-decomp
 - Timestep handling
 - Parallel task handling
 - Filesystem handling
-- Clean, extensive logging
+- Extensive warning and error logging
 - Renderer with swappable backends
-- Sound system
 - Translator for internationalized scripts
 - Font manager
 - "Power" menu for deubgging
 - Various utilities pulled from other projects
 
-All considerations are being made to establish a flexible, readable, and accessible foundation. Portability is in mind as a top priority for cross-platform support from inception.
-
 ### TODOs
 
-- The decomp must be farther along before the bulk of the porting work can begin. More basic things like the boot screen and game menus could be ported already, but it's best to wait for the rest while the decomp is in constunt flux and much of the engine code remains to be deobfuscated.
-- Switch to GCC as the compiler. Works on Linux, Windows build has problems and relies on MSVC for now.
+- Switch to GCC as the compiler. Works on Linux, Windows build has problems and relies on MSVC for now. Need MinGW?
 - Forward renderer. Basic system abstraction is done, now it needs expansion.
 - Sound system. Need to write a `KDC`+`VAB` -> `XM` converter?
 - Parsers for all proprietary game file types.
-- Test math classes.
-- Extensive documentation.
+- Renderer expanison.
 - Lua scripting.
 
 ## Building (Windows/macOS/Linux)
 
-WIP! Ideally, the project will be able to cross-compile between all main development platforms.
+This section is incomplete. Ideally, the project will be able to cross-compile between all main development platforms.
 
 ### Install dependencies
 
@@ -67,22 +80,7 @@ sudo apt install build-essential git ninja-build python3 python3-pip
 
 ### Clone the repository
 
-Clone https://github.com/Sezzary/SilentEngine to your desired directory. Cloning recursively will ensure the following submodules are included in the process:
-- assimp
-- FreeType
-- GLM
-- ImGui
-- ImGuizmo
-- json
-- LuaJIT
-- SDL3
-- smol-atlas
-- sol2
-- spdlog + {fmt}
-- stb
-- UTF8-CPP
-- VLC
-- yalantinglibs
+Clone https://github.com/Sezzary/SilentEngine to your desired directory. Cloning recursively will ensure the submodules are included in the process.
 ```
 git clone --recursive https://github.com/Sezzary/SilentEngine
 git submodule update --init --recursive
@@ -116,6 +114,13 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 </details>
+
+### Transfer assets
+
+Copy the `Assets` folder from the repository to `Build/Debug`/`Build/Release`.
+You must source your own ROM of the 1.1 US release of the game. Extract all folders from the .SILENT archive to `Assets/Stream/Psx`.
+
+This is yet to be streamlined. Automation of this step will be provided in the future.
 
 ### Build the code (Debug/Release)
 
