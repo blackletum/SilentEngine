@@ -51,7 +51,7 @@ namespace Silent::Renderer
         bool         _isResized  = false;
 
         DoubleBuffer                        _doubleBuffer = {};
-        std::unique_ptr<TextureManagerBase> _textures     = nullptr;
+        std::unique_ptr<TextureCacheBase> _textures     = nullptr;
 
         std::mutex _primitives2dMutex = {};
 

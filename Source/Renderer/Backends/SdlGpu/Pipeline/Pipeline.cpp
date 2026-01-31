@@ -112,7 +112,8 @@ namespace Silent::Renderer::SdlGpu
         SDL_ReleaseGPUShader(_device, fragShader);
     }
 
-    SDL_GPUShader* PipelineManager::LoadShader(const std::string& filename, int samplerCount, int storageTexCount, int storageBufferCount, int uniBufferCount)
+    SDL_GPUShader* PipelineManager::LoadShader(const std::string& filename,
+                                               int samplerCount, int storageTexCount, int storageBufferCount, int uniBufferCount)
     {
         // Define shader stage.
         auto stage = SDL_GPUShaderStage::SDL_GPU_SHADERSTAGE_VERTEX;
@@ -138,21 +139,22 @@ namespace Silent::Renderer::SdlGpu
         auto        activeFormatFlag = (SDL_GPUShaderFormat)SDL_GPU_SHADERFORMAT_INVALID;
         const char* entryPoint       = nullptr;
 
+        auto shadersDir = fs.GetAssetsDirectory() / ASSETS_SHADERS_DIR_NAME / filename;
         if (formatFlags & SDL_GPU_SHADERFORMAT_SPIRV)
         {
-            snprintf(fullPath, sizeof(fullPath), "%s.spv", (fs.GetAssetsDirectory() / ASSETS_SHADERS_DIR_NAME / filename).string().c_str());
+            snprintf(fullPath, sizeof(fullPath), "%s.spv", shadersDir.c_str());
             activeFormatFlag = SDL_GPU_SHADERFORMAT_SPIRV;
             entryPoint       = "main";
         }
         else if (formatFlags & SDL_GPU_SHADERFORMAT_MSL)
         {
-            snprintf(fullPath, sizeof(fullPath), "%s.msl", (fs.GetAssetsDirectory() / ASSETS_SHADERS_DIR_NAME / filename).string().c_str());
+            snprintf(fullPath, sizeof(fullPath), "%s.msl", shadersDir.c_str());
             activeFormatFlag = SDL_GPU_SHADERFORMAT_MSL;
             entryPoint       = "main0";
         }
         else if (formatFlags & SDL_GPU_SHADERFORMAT_DXIL)
         {
-            snprintf(fullPath, sizeof(fullPath), "%s.dxil", (fs.GetAssetsDirectory() / ASSETS_SHADERS_DIR_NAME / filename).string().c_str());
+            snprintf(fullPath, sizeof(fullPath), "%s.dxil", shadersDir.c_str());
             activeFormatFlag = SDL_GPU_SHADERFORMAT_DXIL;
             entryPoint       = "main";
         }
@@ -171,6 +173,7 @@ namespace Silent::Renderer::SdlGpu
             return nullptr;
         }
 
+        // Create shader.
         auto shaderInfo = SDL_GPUShaderCreateInfo
         {
             .code_size            = codeSize,
@@ -183,15 +186,13 @@ namespace Silent::Renderer::SdlGpu
             .num_storage_buffers  = (uint)storageBufferCount,
             .num_uniform_buffers  = (uint)uniBufferCount
         };
-
-        // Create shader.
         auto* shader = SDL_CreateGPUShader(_device, &shaderInfo);
         if (shader == nullptr)
         {
             Debug::Log(Fmt("Failed to create shader `{}`: {}", filename, SDL_GetError()));
         }
-        SDL_free(code);
 
+        SDL_free(code);
         return shader;
     }
 

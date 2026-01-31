@@ -2,7 +2,7 @@
 #include "Renderer/Backends/SdlGpu/Resources/Texture.h"
 
 #include "Application.h"
-#include "Assets/Assets.h"
+#include "Assets/AssetStreamer.h"
 #include "Renderer/Common/Constants.h"
 #include "Utils/Utils.h"
 
@@ -12,7 +12,7 @@ using namespace Silent::Utils;
 namespace Silent::Renderer::SdlGpu
 {
     Texture::Texture(SDL_GPUDevice& device, SDL_GPUCopyPass& copyPass,
-                     SDL_GPUTextureUsageFlags usageFlags, std::span<const byte> pixels, const Vector2i res, const std::string& name)
+                     SDL_GPUTextureUsageFlags usageFlags, std::span<const byte> pixels, const Vector2i& res, const std::string& name)
     {
         _device     = &device;
         _resolution = res;
@@ -122,17 +122,17 @@ namespace Silent::Renderer::SdlGpu
         SDL_BindGPUFragmentSamplers(&renderPass, 0, &texSamplerBinding, 1);
     }
 
-    TextureManager::TextureManager(SDL_GPUDevice& device)
+    TextureCache::TextureCache(SDL_GPUDevice& device)
     {
         _device = &device;
     }
 
-    void TextureManager::Load(SDL_GPUCopyPass& copyPass, std::span<const byte> pixels, const Vector2i res, const std::string& name)
+    void TextureCache::Load(SDL_GPUCopyPass& copyPass, std::span<const byte> pixels, const Vector2i res, const std::string& name)
     {
         _textures[name] = std::make_unique<Texture>(*_device, copyPass, SDL_GPU_TEXTUREUSAGE_SAMPLER, pixels, res, name);
     }
 
-    void TextureManager::Load(SDL_GPUCopyPass& copyPass, const std::string& assetName)
+    void TextureCache::Load(SDL_GPUCopyPass& copyPass, const std::string& assetName)
     {
         auto& assets = g_App.GetAssets();
 
@@ -154,7 +154,7 @@ namespace Silent::Renderer::SdlGpu
         Load(copyPass, ToSpan(data->Pixels), data->Resolution, asset->Name);
     }
 
-    Texture* TextureManager::operator[](const std::string& name)
+    Texture* TextureCache::operator[](const std::string& name)
     {
         auto* tex = Find(_textures, name);
         if (tex == nullptr)

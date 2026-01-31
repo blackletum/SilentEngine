@@ -71,7 +71,7 @@ namespace Silent::Renderer::SdlGpu
         InitializeGpuBuffers();
 
         // Initialize texture manager.
-        _textures = std::make_unique<TextureManager>(*_device);
+        _textures = std::make_unique<TextureCache>(*_device);
 
         // Initialize pipelines.
         _pipelines.Initialize(*_window, *_device);
@@ -268,9 +268,9 @@ namespace Silent::Renderer::SdlGpu
         return _renderTexture;
     }
 
-    TextureManager& Renderer::GetTextures()
+    TextureCache& Renderer::GetTextures()
     {
-        return *(TextureManager*)_textures.get();
+        return *(TextureCache*)_textures.get();
     }
 
     SDL_GPUSampler& Renderer::GetActiveSampler()

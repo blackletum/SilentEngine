@@ -1,7 +1,7 @@
 #include "Framework.h"
 #include "Application.h"
 
-#include "Assets/Assets.h"
+#include "Assets/AssetStreamer.h"
 #include "Assets/Fonts.h"
 #include "Assets/Locales.h"
 #include "Assets/TranslationKeys.h"
@@ -31,7 +31,7 @@ namespace Silent
 {
     ApplicationManager g_App = ApplicationManager();
 
-    AssetManager& ApplicationManager::GetAssets()
+    AssetStreamer& ApplicationManager::GetAssets()
     {
         return _work.Assets;
     }
@@ -103,7 +103,7 @@ namespace Silent
         float dpiScale = SDL_GetWindowDisplayScale(_window);
         if (dpiScale == 0.0f)
         {
-            Debug::Log(Fmt("Failed to get DPI scale: {}", SDL_GetError()));
+            Debug::Log(Fmt("Failed to get DPI scale: {}", SDL_GetError()), Debug::LogLevel::Warning);
             return 1.0f;
         }
 
@@ -171,7 +171,7 @@ namespace Silent
         }
         catch(const std::exception& ex)
         {
-            Debug::Log(Fmt("Failed to set ImGui font to `NotoSansMono.ttf`: {}.", ex.what()));
+            Debug::Log(Fmt("Failed to set ImGui font to `NotoSansMono.ttf`: {}.", ex.what()), Debug::LogLevel::Warning);
         }
 
         // Renderer.

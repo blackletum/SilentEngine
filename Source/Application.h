@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Assets/Assets.h"
+#include "Assets/AssetStreamer.h"
 #include "Audio/Audio.h"
 #include "Input/Input.h"
 #include "Renderer/Renderer.h"
@@ -29,7 +29,7 @@ namespace Silent
     /** @brief Application workspace. Keeps all subsystems. */
     struct ApplicationWork
     {
-        AssetManager                  Assets     = AssetManager();
+        AssetStreamer                 Assets     = AssetStreamer();
         AudioManager                  Audio      = AudioManager();
         FilesystemManager             Filesystem = FilesystemManager();
         FontManager                   Fonts      = FontManager();
@@ -70,11 +70,11 @@ namespace Silent
         // Getters
         // ========
 
-        /** @brief Gets the assets subsystem instance.
+        /** @brief Gets the asset streamer subsystem instance.
          *
-         * @return Assets instance.
+         * @return Asset streamer instance.
          */
-        AssetManager& GetAssets();
+        AssetStreamer& GetAssets();
 
         /** @brief Gets the audio subsystem instance.
          *

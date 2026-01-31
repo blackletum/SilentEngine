@@ -2,7 +2,7 @@
 #include "Debug/PowerMenu.h"
 
 #include "Application.h"
-#include "Assets/Assets.h"
+#include "Assets/AssetStreamer.h"
 #include "Assets/Locales.h"
 #include "Debug/Debug.h"
 #include "Services/Options.h"

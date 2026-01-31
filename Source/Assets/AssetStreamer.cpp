@@ -1,5 +1,5 @@
 #include "Framework.h"
-#include "Assets/Assets.h"
+#include "Assets/AssetStreamer.h"
 
 #include "Application.h"
 #include "Assets/Parsers/Tim.h"
@@ -34,7 +34,7 @@ namespace Silent::Assets
         { AssetType::Tmd, ParseTmd }
     };
 
-    const std::string& AssetManager::GetName(int assetIdx) const
+    const std::string& AssetStreamer::GetName(int assetIdx) const
     {
         // Get asset.
         if (assetIdx < 0 || assetIdx >= _assets.size())
@@ -47,7 +47,7 @@ namespace Silent::Assets
         return asset->Name;
     }
 
-    std::vector<std::string> AssetManager::GetLoadedNames() const
+    std::vector<std::string> AssetStreamer::GetLoadedNames() const
     {
         // Run through registered assets.
         auto names = std::vector<std::string>{};
@@ -62,7 +62,7 @@ namespace Silent::Assets
         return names;
     }
 
-    const std::shared_ptr<Asset> AssetManager::GetAsset(int assetIdx)
+    const std::shared_ptr<Asset> AssetStreamer::GetAsset(int assetIdx)
     {
         // Get asset.
         if (assetIdx < 0 || assetIdx >= _assets.size())
@@ -90,7 +90,7 @@ namespace Silent::Assets
         return asset;
     }
 
-    const std::shared_ptr<Asset> AssetManager::GetAsset(const std::string& assetName)
+    const std::shared_ptr<Asset> AssetStreamer::GetAsset(const std::string& assetName)
     {
         // Check if asset exists.
         const int* assetIdx = Find(_idxs, assetName);
@@ -104,12 +104,12 @@ namespace Silent::Assets
         return GetAsset(*assetIdx);
     }
 
-    bool AssetManager::IsBusy() const
+    bool AssetStreamer::IsBusy() const
     {
         return _loadingCount > 0;
     }
 
-    void AssetManager::Initialize(const std::filesystem::path& assetsPath)
+    void AssetStreamer::Initialize(const std::filesystem::path& assetsPath)
     {
         // Collect files sorted alphabetically.
         auto files = std::vector<std::filesystem::path>{};
@@ -159,7 +159,7 @@ namespace Silent::Assets
         Debug::Log(Fmt("Registered {} streamable assets.", _assets.size()), Debug::LogLevel::Info, Debug::LogMode::Debug);
     }
 
-    const std::future<void>& AssetManager::Load(int assetIdx)
+    const std::future<void>& AssetStreamer::Load(int assetIdx)
     {
         auto& executor = g_App.GetExecutor();
 
@@ -227,7 +227,7 @@ namespace Silent::Assets
         return _loadFutures[assetIdx];
     }
 
-    const std::future<void>& AssetManager::Load(const std::string& assetName)
+    const std::future<void>& AssetStreamer::Load(const std::string& assetName)
     {
         // Check if asset exists.
         const int* assetIdx = Find(_idxs, assetName);
@@ -241,7 +241,7 @@ namespace Silent::Assets
         return Load(*assetIdx);
     }
 
-    void AssetManager::Unload(int assetIdx)
+    void AssetStreamer::Unload(int assetIdx)
     {
         // Get asset.
         if (assetIdx < 0 || assetIdx >= _assets.size())
@@ -267,7 +267,7 @@ namespace Silent::Assets
         Debug::Log(Fmt("Unloaded streamable asset `{}`.", GetName(assetIdx)), Debug::LogLevel::Info, Debug::LogMode::Debug);
     }
 
-    void AssetManager::Unload(const std::string& assetName)
+    void AssetStreamer::Unload(const std::string& assetName)
     {
         // Check if asset exists.
         const int* assetIdx = Find(_idxs, assetName);
@@ -281,7 +281,7 @@ namespace Silent::Assets
         Unload(*assetIdx);
     }
 
-    void AssetManager::UnloadAll()
+    void AssetStreamer::UnloadAll()
     {
         // Run through registered assets.
         for (auto& asset : _assets)

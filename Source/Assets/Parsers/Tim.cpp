@@ -1,6 +1,10 @@
 #include "Framework.h"
 #include "Assets/Parsers/Tim.h"
 
+#include "Renderer/Common/Constants.h"
+
+using namespace Silent::Renderer;
+
 namespace Silent::Assets
 {
     constexpr int TRANSPARENT_COLOR_FLAG = 1 << 15;
@@ -140,13 +144,13 @@ namespace Silent::Assets
         auto asset = TimAsset
         {
             .Resolution = res,
-            .Pixels     = std::vector<byte>((res.x * res.y) * 4)
+            .Pixels     = std::vector<byte>((res.x * res.y) * RGBA_COMP_COUNT)
         };
 
         auto setPixelColor = [&](int x, int y, uint16 color)
         {
             // Collect extracted RGBA components.
-            byte* out = &asset.Pixels[((y * res.x) + x) * 4];
+            byte* out = &asset.Pixels[((y * res.x) + x) * RGBA_COMP_COUNT];
             out[0]    = (color & 0x1F) << 3;                        // B.
             out[1]    = ((color >> 5) & 0x1F) << 3;                 // G.
             out[2]    = ((color >> 10) & 0x1F) << 3;                // R.

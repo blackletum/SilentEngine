@@ -63,7 +63,7 @@ namespace Silent::Game
         ControllerFlag_LStickLeft   = 1 << 27
     };
 
-    /** @brief Controller key bindings for input actions. Bontains bitfield of button presses assigned to each action.
+    /** @brief Controller key bindings for input actions. Contains bitfield of button presses assigned to each action.
      *
      * Bitfields only contain buttons. Analog directions and D-Pad aren't included.
      */

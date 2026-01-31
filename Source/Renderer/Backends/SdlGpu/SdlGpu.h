@@ -77,8 +77,22 @@ namespace Silent::Renderer::SdlGpu
         // Helpers
         // ========
 
+        /** @brief Gets the offscreen render texture.
+         *
+         * @return Offscreen render texture.
+         */
         SDL_GPUTexture* GetRenderTexture();
-        TextureManager& GetTextures();
+
+        /** @brief Gets the texture cache.
+         *
+         * @return Texture cache.
+         */
+        TextureCache& GetTextures();
+
+        /** @brief Gets the active texture sampler according to user options.
+         *
+         * @return Active texture sampler.
+         */
         SDL_GPUSampler& GetActiveSampler();
 
         void Draw3dScene() override;

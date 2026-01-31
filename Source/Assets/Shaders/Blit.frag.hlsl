@@ -21,4 +21,14 @@ float4 main(Input input) : SV_Target
     // Compute final fragment color.
     float3 color = texColor.rgb + Brightness;
     return float4(color, 1.0f);
+
+    // Convert 0-1 UVs to integer pixel coordinates.
+    /*uint2 pixelCoord = uint2(input.TexCoord * float2(320, 240));
+
+    // Load exact texel (no interpolation/filtering).
+    float4 texColor = Texture.Load(int3(pixelCoord, 0));
+
+    // Apply brightness.
+    float3 color = texColor.rgb + Brightness;
+    return float4(color, 1.0f);*/
 }

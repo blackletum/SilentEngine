@@ -2,32 +2,39 @@
 
 namespace Silent::Renderer
 {
-    /** @brief GPU texture interface. */
-    class ITexture
-    {
-    public:
-        // =============
-        // Constructors
-        // =============
-
-        virtual ~ITexture() = default;
-    };
-
-    /** @brief GPU texture cache manager base. */
-    class TextureManagerBase
+    /** @brief GPU texture base. */
+    class TextureBase
     {
     protected:
         // =======
         // Fields
         // =======
 
-        std::unordered_map<std::string, std::unique_ptr<ITexture>> _textures = {}; /** Key = texture name, value = GPU texture. */
+        Vector2i _resolution = Vector2i::Zero;
 
     public:
         // =============
         // Constructors
         // =============
 
-        virtual ~TextureManagerBase() = default;
+        virtual ~TextureBase() = default;
+    };
+
+    /** @brief GPU texture cache base. */
+    class TextureCacheBase
+    {
+    protected:
+        // =======
+        // Fields
+        // =======
+
+        std::unordered_map<std::string, std::unique_ptr<TextureBase>> _textures = {}; /** Key = texture name, value = GPU texture. */
+
+    public:
+        // =============
+        // Constructors
+        // =============
+
+        virtual ~TextureCacheBase() = default;
     };
 }

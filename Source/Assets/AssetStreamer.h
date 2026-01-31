@@ -62,7 +62,7 @@ namespace Silent::Assets
     };
 
     /** @brief Asset streamer. */
-    class AssetManager
+    class AssetStreamer
     {
     private:
         // =======
@@ -80,7 +80,7 @@ namespace Silent::Assets
         // Constructors
         // =============
 
-        AssetManager() = default;
+        AssetStreamer() = default;
 
         // ========
         // Getters

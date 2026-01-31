@@ -2,7 +2,7 @@
 #include "Game/Game.h"
 
 #include "Application.h"
-#include "Assets/Assets.h"
+#include "Assets/AssetStreamer.h"
 #include "Services/Clock.h"
 
 namespace Silent

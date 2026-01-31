@@ -5,16 +5,15 @@
 namespace Silent::Renderer::SdlGpu
 {
     /** @brief GPU texture. */
-    class Texture : public ITexture
+    class Texture : public TextureBase
     {
     private:
         // =======
         // Fields
         // =======
 
-        SDL_GPUDevice*  _device     = nullptr;
-        SDL_GPUTexture* _texture    = nullptr;
-        Vector2i        _resolution = Vector2i::Zero;
+        SDL_GPUDevice*  _device  = nullptr;
+        SDL_GPUTexture* _texture = nullptr;
 
     public:
         // =============
@@ -35,7 +34,7 @@ namespace Silent::Renderer::SdlGpu
          * @param name Texture image name.
          */
         Texture(SDL_GPUDevice& device, SDL_GPUCopyPass& copyPass,
-                SDL_GPUTextureUsageFlags usageFlags, std::span<const byte> pixels, const Vector2i res, const std::string& name);
+                SDL_GPUTextureUsageFlags usageFlags, std::span<const byte> pixels, const Vector2i& res, const std::string& name);
 
         /** @brief Gracefully destroys the `Texture` and frees GPU resources. */
         ~Texture();
@@ -77,8 +76,8 @@ namespace Silent::Renderer::SdlGpu
         void Bind(SDL_GPURenderPass& renderPass, SDL_GPUSampler& sampler);
     };
 
-    /** @brief GPU texture cache manager. */
-    class TextureManager : public TextureManagerBase
+    /** @brief GPU texture cache. */
+    class TextureCache : public TextureCacheBase
     {
     private:
         // =======
@@ -92,11 +91,11 @@ namespace Silent::Renderer::SdlGpu
         // Constructors
         // =============
 
-        /** @brief Constructs an `TextureManager` with a device reference.
+        /** @brief Constructs an `TextureCache` with a device reference.
          *
          * @param device GPU device.
          */
-        TextureManager(SDL_GPUDevice& device);
+        TextureCache(SDL_GPUDevice& device);
 
         // ==========
         // Utilities
