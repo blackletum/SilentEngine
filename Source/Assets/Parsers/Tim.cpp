@@ -1,22 +1,25 @@
 #include "Framework.h"
 #include "Assets/Parsers/Tim.h"
 
+#include "Application.h"
 #include "Renderer/Common/Constants.h"
+#include "Utils/Stream.h"
+#include "Utils/Utils.h"
 
 using namespace Silent::Renderer;
+using namespace Silent::Utils;
 
 namespace Silent::Assets
 {
-    constexpr int TRANSPARENT_COLOR_FLAG = 1 << 15;
-
-    /** @brief Bits per pixel types. */
-    enum class BitsPerPixel
+    /** @brief TIM bits per pixel types. */
+    enum class TimBppType
     {
         Bpp4,
         Bpp8,
         Bpp16
     };
 
+    /** @brief TIM color flags. */
     enum class TimFlags
     {
         Bpp4    = 0,
@@ -27,92 +30,85 @@ namespace Silent::Assets
 
     std::shared_ptr<void> ParseTim(const std::filesystem::path& filename)
     {
-        constexpr int HEADER_MAGIC  = 0x10;
-        constexpr int BPP_MASK      = 0x7;
+        constexpr int HEADER_MAGIC           = 0x10;
+        constexpr int BPP_MASK               = 0x7;
+        constexpr int TRANSPARENT_COLOR_FLAG = 1 << 15;
+
+        const auto& fs = g_App.GetFilesystem();
 
         // Read file.
-        auto file = std::ifstream(filename, std::ios::binary);
-        if (!file.is_open())
+        auto stream = Stream(filename, true, false);
+        if (!stream.IsOpen())
         {
-            throw std::runtime_error(Fmt("Couldn't open TIM `{}`.", filename.string()));
+            throw std::runtime_error(Fmt("Failed to open TIM `{}`.",
+                                         std::filesystem::relative(fs.GetAssetsDirectory(), filename).string()));
         }
 
         // Confirm TIM format magic.
-        uint32 magic = 0;
-        file.read((byte*)&magic, 4);
+        uint32 magic = stream.ReadUint32();
         if (magic != HEADER_MAGIC)
         {
-            throw std::runtime_error(Fmt("Invalid TIM `{}`.", filename.string()));
+            throw std::runtime_error(Fmt("Failed to parse invalid TIM `{}`.",
+                                         std::filesystem::relative(fs.GetAssetsDirectory(), filename).string()));
         }
 
         // Read CLUT and BPP flags.
-        uint32 flags = 0;
-        file.read((byte*)&flags, 4);
+        uint32 flags = stream.ReadUint32();
 
         // Read CLUT.
         auto clut = std::vector<uint16>{};
         if (flags & (int)TimFlags::HasClut)
         {
             // Read size.
-            uint32 clutSize = 0;
-            file.read((byte*)&clutSize, 4);
+            uint32 clutSize = stream.ReadUint32();
 
             // Read frame buffer coordinates (unused).
-            uint16 clutX = 0;
-            uint16 clutY = 0;
-            file.read((byte*)&clutX, 2);
-            file.read((byte*)&clutY, 2);
+            uint16 clutX = stream.ReadUint16();
+            uint16 clutY = stream.ReadUint16();
 
             // Read dimensions.
-            uint16 clutW = 0;
-            uint16 clutH = 0;
-            file.read((byte*)&clutW, 2);
-            file.read((byte*)&clutH, 2);
+            uint16 clutW = stream.ReadUint16();
+            uint16 clutH = stream.ReadUint16();
 
             // Read color values.
             uint clutCount = clutW * clutH;
             clut.resize(clutCount);
-            file.read((byte*)clut.data(), clutCount * 2);
+            stream.ReadArray(ToSpan(clut));
         }
 
         // Read image data header (unused).
-        uint32 imageSize = 0;
-        file.read((byte*)&imageSize, 4);
+        uint32 imageSize = stream.ReadUint32();;
 
         // Read frame buffer coordinates (unused).
-        uint16 imageX = 0;
-        uint16 imageY = 0;
-        file.read((byte*)&imageX, 2);
-        file.read((byte*)&imageY, 2);
+        uint16 imageX = stream.ReadUint16();
+        uint16 imageY = stream.ReadUint16();
 
         // Read image dimensions.
-        uint16 imageW = 0;
-        uint16 imageH = 0;
-        file.read((byte*)&imageW, 2);
-        file.read((byte*)&imageH, 2);
+        uint16 imageW = stream.ReadUint16();
+        uint16 imageH = stream.ReadUint16();
 
         // Define BPP.
-        auto bpp = BitsPerPixel::Bpp4;
+        auto bpp = TimBppType::Bpp4;
         switch ((TimFlags)(flags & BPP_MASK))
         {
             case TimFlags::Bpp4:
             {
-                bpp = BitsPerPixel::Bpp4;
+                bpp = TimBppType::Bpp4;
                 break;
             }
             case TimFlags::Bpp8:
             {
-                bpp = BitsPerPixel::Bpp8;
+                bpp = TimBppType::Bpp8;
                 break;
             }
             case TimFlags::Bpp16:
             {
-                bpp = BitsPerPixel::Bpp16;
+                bpp = TimBppType::Bpp16;
                 break;
             }
             default:
             {
-                std::runtime_error("TIM has no BPP flags.");
+                std::runtime_error("Failed to read TIM with no BPP flags.");
             }
         }
 
@@ -120,17 +116,17 @@ namespace Silent::Assets
         int widthCoeff = 1;
         switch (bpp)
         {
-            case BitsPerPixel::Bpp4:
+            case TimBppType::Bpp4:
             {
                 widthCoeff = 4;
                 break;
             }
-            case BitsPerPixel::Bpp8:
+            case TimBppType::Bpp8:
             {
                 widthCoeff = 2;
                 break;
             }
-            case BitsPerPixel::Bpp16:
+            case TimBppType::Bpp16:
             {
                 widthCoeff = 1;
                 break;
@@ -147,7 +143,7 @@ namespace Silent::Assets
             .Pixels     = std::vector<byte>((res.x * res.y) * RGBA_COMP_COUNT)
         };
 
-        auto setPixelColor = [&](int x, int y, uint16 color)
+        auto SetPixelColor = [&](int x, int y, uint16 color)
         {
             // Collect extracted RGBA components.
             byte* out = &asset.Pixels[((y * res.x) + x) * RGBA_COMP_COUNT];
@@ -155,7 +151,14 @@ namespace Silent::Assets
             out[1]    = ((color >> 5) & 0x1F) << 3;                 // G.
             out[2]    = ((color >> 10) & 0x1F) << 3;                // R.
             out[3]    = (color & TRANSPARENT_COLOR_FLAG) ? 255 : 0; // A.
-            // @todo (0, 248, 0) is treated as pure black? Some textures have these bright-green areas.
+
+            // Interpret R0, G248, B0 as black. @todo Check if this is really required for some textures.
+            if (out[0] == 0   && // B.
+                out[1] == 248 && // G.
+                out[2] == 0)     // R.
+            {
+                out[1] = 0;
+            }
         };
 
         // Read pixels.
@@ -166,10 +169,10 @@ namespace Silent::Assets
                 switch (bpp)
                 {
                     default:
-                    case BitsPerPixel::Bpp4:
+                    case TimBppType::Bpp4:
                     {
-                        uint16 colors = 0;
-                        file.read((byte*)&colors, 2);
+                        // Read colors.
+                        uint16 colors = stream.ReadUint16();
 
                         for (int i = 0; i < 4 && x < res.x; i++, x++)
                         {
@@ -177,47 +180,45 @@ namespace Silent::Assets
                             if (clut.empty())
                             {
                                 uint16 color = idx * (0xFFFF / 0xF);
-                                setPixelColor(x, y, color);
+                                SetPixelColor(x, y, color);
                             }
                             else
                             {
                                 uint16 color = clut[idx];
-                                setPixelColor(x, y, color);
+                                SetPixelColor(x, y, color);
                             }
                         }
                         break;
                     }
-                    case BitsPerPixel::Bpp8:
+                    case TimBppType::Bpp8:
                     {
-                        // Read color data.
-                        uint idx = 0;
-                        file.read((byte*)&idx, 1);
+                        // Read color index.
+                        uint8 idx = stream.ReadUint8();
                         
                         // Set pixel.
                         if (clut.empty())
                         {
                             // Grayscale color `[0, 255]`.
                             uint16 color = idx * (0xFFFF / 0xFF);
-                            setPixelColor(x, y, color);
+                            SetPixelColor(x, y, color);
                         }
                         else
                         {
                             // CLUT color.
                             uint16 color = clut[idx];
-                            setPixelColor(x, y, color);
+                            SetPixelColor(x, y, color);
                         }
 
                         x++;
                         break;
                     }
-                    case BitsPerPixel::Bpp16:
+                    case TimBppType::Bpp16:
                     {
                         // Read color.
-                        uint16 color = 0;
-                        file.read((byte*)&color, 2);
+                        uint16 color = stream.ReadUint16();
 
                         // Set pixel.
-                        setPixelColor(x, y, color);
+                        SetPixelColor(x, y, color);
 
                         x++;
                         break;

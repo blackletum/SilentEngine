@@ -47,6 +47,30 @@ namespace Silent::Utils
         return size;
     }
 
+    int Stream::GetPosition()
+    {
+        if (!IsOpen())
+        {
+            return NO_VALUE;
+        }
+
+        return (int)_stream.tellg();
+    }
+
+    void Stream::SetPosition(int pos)
+    {
+        if (!IsOpen())
+        {
+            return;
+        }
+
+        _stream.seekg(pos, std::fstream::beg);
+        if (_stream.fail())
+        {
+            Debug::Log(Fmt("Failed to SetPosition binary file data stream to position {}.", pos), Debug::LogLevel::Error);
+        }
+    }
+
     bool Stream::IsOpen() const
     {
         return _stream.is_open();
@@ -61,6 +85,12 @@ namespace Silent::Utils
     {
         _stream.flush();
         _stream.close();
+    }
+
+    void Stream::Skip(int size)
+    {
+        auto buffer = std::vector<byte>(size);
+        _stream.read((byte*)buffer.data(), size);
     }
 
     void Stream::Read(void* buffer, int size)
@@ -87,6 +117,13 @@ namespace Silent::Utils
         return val;
     }
 
+    int8 Stream::ReadInt8()
+    {
+        int8 val = 0;
+        Read((int8*)&val, sizeof(int8));
+        return val;
+    }
+
     int16 Stream::ReadInt16()
     {
         int16 val = 0;
@@ -106,6 +143,11 @@ namespace Silent::Utils
         int64 val = 0;
         Read((byte*)&val, sizeof(int64));
         return val;
+    }
+
+    uint8 Stream::ReadUint8()
+    {
+        return (uint8)ReadInt8();
     }
 
     uint16 Stream::ReadUint16()
@@ -138,6 +180,37 @@ namespace Silent::Utils
         str.resize(size);
 
         Read(str.data(), size);
+        return str;
+    }
+
+    std::string Stream::ReadNullString(int size)
+    {
+        constexpr int BUFFER_SIZE = 32;
+
+        auto str = std::string();
+        str.reserve(BUFFER_SIZE);
+
+        int startPos = GetPosition();
+
+        bool isNullHit = false;
+        int  limit     = (size != NO_VALUE) ? size : (GetSize() - startPos);
+        for (int i = 0; i < limit; ++i)
+        {
+            char c = ReadByte();
+            if (c == '\0') 
+            {
+                isNullHit = true;
+                break;
+            }
+
+            str += c;
+        }
+
+        if (size != NO_VALUE)
+        {
+            SetPosition(startPos + size);
+        }
+
         return str;
     }
 

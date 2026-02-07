@@ -2,6 +2,8 @@
 #include "Assets/AssetStreamer.h"
 
 #include "Application.h"
+#include "Assets/Parsers/Anm.h"
+#include "Assets/Parsers/Ilm.h"
 #include "Assets/Parsers/Tim.h"
 #include "Assets/Parsers/Tmd.h"
 #include "Utils/Parallel.h"
@@ -30,6 +32,8 @@ namespace Silent::Assets
 
     static const auto PARSER_FUNCS = std::unordered_map<AssetType, std::function<std::shared_ptr<void>(const std::filesystem::path& file)>>
     {
+        { AssetType::Anm, ParseAnm },
+        { AssetType::Ilm, ParseIlm },
         { AssetType::Tim, ParseTim },
         { AssetType::Tmd, ParseTmd }
     };

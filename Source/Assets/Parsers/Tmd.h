@@ -1,62 +1,47 @@
 #pragma once
 
+#include "Renderer/Common/Enums.h"
+
+using namespace Silent::Renderer;
+
 namespace Silent::Assets
 {
-    struct TmdQuad
+    /** @brief TMD indexed vertex. */
+    struct TmdVertex
     {
-
+        int PositionIdx = 0;
+        int NormalIdx   = 0;
+        int UvIdx       = 0;
+        int ColorIdx    = 0;
     };
 
-    struct TmdTriangle
+    /** @brief TMD triangle or quad primitive. */
+    struct TmdPrimitive
     {
-
+        std::vector<TmdVertex> Vertices = {};
+        BlendMode              BlendMd  = BlendMode::Opaque;
     };
 
-    struct TmdLine
-    {
-
-    };
-
-    struct TmdSprite
-    {
-
-    };
-
-    using TmdPrimitive = std::variant<TmdQuad,
-                                      TmdTriangle,
-                                      TmdLine,
-                                      TmdSprite>;
-
+    /** @brief TMD mesh. */
     struct TmdMesh
     {
-        std::vector<Vector3>      Vertices   = {};
-        std::vector<Vector3>      Normals    = {};
-        std::vector<TmdPrimitive> Primitives = {};
+        std::vector<TmdPrimitive> Primitives  = {};
+        std::vector<Vector3>      Positions   = {};
+        std::vector<Vector3>      Normals     = {};
+        std::vector<Vector2>      Uvs         = {};
+        std::vector<Color>        Colors      = {};
+        std::string               TextureName = {}; // @todo Unsure how to attach a texture. Maybe write a hardcoded table?
     };
 
+    /** @brief TMD asset data. */
     struct TmdAsset
     {
-        struct Triangle
-        {
-            static constexpr int TRI_VERTEX_COUNT = 3;
-
-            std::array<int, TRI_VERTEX_COUNT> Vertices = {};
-            std::array<int, TRI_VERTEX_COUNT> Normals  = {};
-        };
-
-        struct Mesh
-        {
-            std::vector<Vector3>  Vertices  = {};
-            std::vector<Vector3>  Normals   = {};
-            std::vector<Triangle> Triangles = {};
-        };
-
-        std::vector<Mesh> Meshes = {};
+        std::vector<TmdMesh> Meshes = {};
     };
 
-    /** @brief Parses a TMD file to a usable asset.
+    /** @brief Parses a TMD asset file.
      *
-     * @param filename Absolute asset file path on the system.
+     * @param filename Absolute asset file path.
      * @return Parsed TMD asset data as a `void` pointer.
      */
     std::shared_ptr<void> ParseTmd(const std::filesystem::path& filename);

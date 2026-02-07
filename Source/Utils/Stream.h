@@ -41,6 +41,22 @@ namespace Silent::Utils
          */
         int GetSize();
 
+        /** @brief Gets the current position in the file.
+         *
+         * @return Position in bytes from the start of the file.
+         */
+        int GetPosition();
+
+        // ========
+        // Setters
+        // ========
+
+        /** @brief Sets the file pointer to a given position in the file.
+         *
+         * @param pos Position in bytes from the start of the file.
+         */
+        void SetPosition(int pos);
+
         // ==========
         // Inquirers
         // ==========
@@ -64,6 +80,12 @@ namespace Silent::Utils
         /** @brief Closes the file. */
         void Close();
 
+        /** @brief Skips the file pointer of the data stream ahead a given number of bytes.
+         *
+         * @param size Size in bytes to skip.
+         */
+        void Skip(int size);
+
         /** @brief Reads buffer data from the data stream and increments the file pointer.
          *
          * @param[out] buffer Output buffer.
@@ -83,6 +105,12 @@ namespace Silent::Utils
          */
         byte ReadByte();
 
+        /** @brief Reads an 8-bit integer from the data stream and increments the file pointer.
+         *
+         * @return `int8` data.
+         */
+        int8 ReadInt8();
+
         /** @brief Reads a 16-bit integer from the data stream and increments the file pointer.
          *
          * @return `int16` data.
@@ -100,6 +128,12 @@ namespace Silent::Utils
          * @return `int64` data.
          */
         int64 ReadInt64();
+
+        /** @brief Reads an 8-bit unsigned integer from the data stream and increments the file pointer.
+         *
+         * @return `uint8` data.
+         */
+        uint8 ReadUint8();
 
         /** @brief Reads a 16-bit unsigned integer from the data stream and increments the file pointer.
          *
@@ -125,11 +159,18 @@ namespace Silent::Utils
          */
         float ReadFloat();
 
-        /** @brief Reads a string from the data stream and increments the file pointer.
+        /** @brief Reads a length-prefixed string from the data stream and increments the file pointer.
          *
          * @return `std::string` data.
          */
         std::string ReadString();
+
+        /** @brief Reads a null-terminated string from the data stream and increments the file pointer.
+         *
+         * @param size Optional fixed string size in bytes. If `NO_VALUE`, reads until a null character is encountered.
+         * @return `std::string` data.
+         */
+        std::string ReadNullString(int size = NO_VALUE);
 
         /** @brief Reads a bitfield from the data stream and increments the file pointer.
          *
