@@ -3,6 +3,7 @@
 
 #include "Application.h"
 #include "Renderer/Common/Enums.h"
+#include "Renderer/Common/Resources/Buffers.h"
 #include "Utils/Stream.h"
 #include "Utils/Utils.h"
 
@@ -39,7 +40,7 @@ namespace Silent::Assets
     /** @brief TMD packed texture attributes. */
     enum class TmdTextureAttribs
     {
-        Tpage        = (1 << 0) | (1 << 2) | (1 << 3) | (1 << 4), /** Unused. */
+        TPage        = (1 << 0) | (1 << 2) | (1 << 3) | (1 << 4), /** PSX texture page. */
         BlendMode    = (1 << 5) | (1 << 6),                       /** `TmdBlendMode` */
         TextureDepth = (1 << 7) | (1 << 8)                        /** Unused. */
     };
@@ -149,7 +150,8 @@ namespace Silent::Assets
         auto stream = Stream(filename, true, false);
         if (!stream.IsOpen())
         {
-            throw std::runtime_error(Fmt("Failed to open TMD `{}`.", std::filesystem::relative(fs.GetAssetsDirectory(), filename).string()));
+            throw std::runtime_error(Fmt("Failed to open TMD `{}`.",
+                                         std::filesystem::relative(filename, fs.GetAssetsDirectory()).string()));
         }
 
         // Read header.
@@ -188,7 +190,7 @@ namespace Silent::Assets
             // Adjust offsets.
             if (header.Flags & (int)TmdFlags::Fixp)
             {
-                meshDesc.PositionOffset    -= baseAddr;
+                meshDesc.PositionOffset  -= baseAddr;
                 meshDesc.NormalOffset    -= baseAddr;
                 meshDesc.PrimitiveOffset -= baseAddr;
             }
@@ -209,6 +211,8 @@ namespace Silent::Assets
             const auto& meshDesc = meshDescs[i];
 
             auto mesh = TmdMesh{};
+
+            // @todo Texture name?
 
             // Create UV and color index lookups.
             auto uvLookup    = std::unordered_map<Vector2, int>{}; // Key = UV, value = UV index.
@@ -272,6 +276,7 @@ namespace Silent::Assets
                         auto uvs       = std::vector<Vector2>(vertCount, Vector2::Zero);
                         auto colors    = std::vector<Color>(vertCount, Color::White);
                         auto blendMode = BlendMode::Opaque;
+                        int  tpage     = 0;
                         bool isTri     = vertCount == TRI_VERTEX_COUNT;
 
                         // Read textured polygon.
@@ -316,6 +321,9 @@ namespace Silent::Assets
                             {
                                 color = Color(1.0f, 1.0f, 1.0f, colorAlpha);
                             }
+
+                            // Set tpage.
+                            tpage = tsb & (int)TmdTextureAttribs::TPage;
                         }
                         // Read untextured polygon.
                         else
@@ -371,7 +379,8 @@ namespace Silent::Assets
                         // Collect primitive.
                         auto prim = TmdPrimitive
                         {
-                            .BlendMd = blendMode
+                            .BlendMd = blendMode,
+                            .TPage   = tpage
                         };
                         for (int i = 0; i < vertCount; i++)
                         {
@@ -389,8 +398,9 @@ namespace Silent::Assets
                     case TmdPrimitiveType::Line:
                     case TmdPrimitiveType::Sprite:
                     {
-                        Debug::Log(Fmt("Attempted to read unsupported primitive type while parsing TMD `{}`.", filename.string()),
-                                       Debug::LogLevel::Warning);
+                        Debug::Log(Fmt("Attempted to read unsupported primitive type while parsing TMD `{}`.",
+                                       filename.string()),
+                                   Debug::LogLevel::Warning);
                         break;
                     }
                 }
@@ -407,16 +417,61 @@ namespace Silent::Assets
 
             // Collect indexed colors.
             mesh.Colors.resize(colorLookup.size());
-            for (const auto& [keycolor, colorIdx] : colorLookup)
+            for (const auto& [keyColor, colorIdx] : colorLookup)
             {
-                mesh.Colors[colorIdx] = keycolor;
+                mesh.Colors[colorIdx] = keyColor;
             }
 
             // Collect mesh.
             asset.Meshes.push_back(std::move(mesh));
         }
 
-        // @todo Sort primitives by CLUT for efficient batching when rendering. CLUT can be interpreted in a shader.
+        // Convert to linear meshes. @todo Implement render buckets? Sort primitives by CLUT?
+        for (auto& mesh : asset.Meshes)
+        {
+            // Run through primitives.
+            auto vertLookup = std::unordered_map<TmdVertex, int>{};
+            for (const auto& prim : mesh.Primitives)
+            {
+                // Collect primitive vertex indices.
+                auto primIdxs = std::vector<uint16>{};
+                for (const auto& vert : prim.Vertices)
+                {
+                    uint16 newIdx = GetLookupIdx(vertLookup, vert);
+                    primIdxs.push_back(newIdx);
+                }
+
+                // Collect linear vertex indices.
+                if (primIdxs.size() == TRI_IDX_COUNT)
+                {
+                    mesh.Linear.Idxs.insert(mesh.Linear.Idxs.end(),
+                    {
+                        primIdxs[0], primIdxs[1], primIdxs[2]
+                    });
+                }
+                else if (primIdxs.size() == QUAD_IDX_COUNT)
+                {
+                    mesh.Linear.Idxs.insert(mesh.Linear.Idxs.end(),
+                    {
+                        primIdxs[0], primIdxs[1], primIdxs[2], 
+                        primIdxs[0], primIdxs[2], primIdxs[3]
+                    });
+                }
+            }
+
+            // Collect linear indexed vertices.
+            mesh.Linear.Vertices.resize(vertLookup.size());
+            for (const auto& [keyVert, vertIdx] : vertLookup)
+            {
+                mesh.Linear.Vertices[vertIdx] = BufferVertex3d
+                {
+                    .Position = mesh.Positions[keyVert.PositionIdx],
+                    .Normal   = mesh.Normals[keyVert.NormalIdx],
+                    .Uv       = mesh.Uvs[keyVert.UvIdx],
+                    .Col      = mesh.Colors[keyVert.ColorIdx]
+                };
+            }
+        }
 
         return std::make_shared<TmdAsset>(std::move(asset));
     }

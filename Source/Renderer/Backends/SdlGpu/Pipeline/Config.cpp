@@ -168,16 +168,36 @@ namespace Silent::Renderer::SdlGpu
         // Materials
         // ==========
 
+        // 2D shape.
+        {
+            .Stage                    = RenderStage::Shape2d,
+            .VertShaderName           = "Primitive2d.vert",
+            .FragShaderName           = "Shape2d.frag",
+            .FragShaderSamplerCount   = 1,
+            .FragShaderUniBufferCount = 2,
+            .VertBufferDescs          = BUFFER_VERTEX_2D_DESCS,
+            .VertBufferAttribs        = BUFFER_VERTEX_2D_ATTRIBS,
+            .BlendModes               =
+            {
+                BlendMode::Opaque,
+                BlendMode::Alpha,
+                BlendMode::FastAlpha,
+                BlendMode::Multiply,
+                BlendMode::Add,
+                BlendMode::Subtract,
+                BlendMode::Wireframe
+            }
+        },
         // 2D sprite.
         {
-            .Stage                        = RenderStage::Sprite2d,
-            .VertShaderName               = "Primitive2d.vert",
-            .FragShaderName               = "Sprite2d.frag",
-            .FragShaderSamplerCount       = 1,
-            .FragShaderUniBufferCount     = 1,
-            .VertBufferDescs              = BUFFER_VERTEX_2D_DESCS,
-            .VertBufferAttribs            = BUFFER_VERTEX_2D_ATTRIBS,
-            .BlendModes                   =
+            .Stage                    = RenderStage::Sprite2d,
+            .VertShaderName           = "Primitive2d.vert",
+            .FragShaderName           = "Sprite2d.frag",
+            .FragShaderSamplerCount   = 1,
+            .FragShaderUniBufferCount = 2,
+            .VertBufferDescs          = BUFFER_VERTEX_2D_DESCS,
+            .VertBufferAttribs        = BUFFER_VERTEX_2D_ATTRIBS,
+            .BlendModes               =
             {
                 BlendMode::Opaque,
                 BlendMode::Alpha,
@@ -190,18 +210,40 @@ namespace Silent::Renderer::SdlGpu
         },
         // 2D glyph.
         {
-            .Stage                        = RenderStage::Glyph2d,
-            .VertShaderName               = "Primitive2d.vert",
-            .FragShaderName               = "Glyph2d.frag",
-            .FragShaderSamplerCount       = 1,
-            .FragShaderUniBufferCount     = 1,
-            .VertBufferDescs              = BUFFER_VERTEX_2D_DESCS,
-            .VertBufferAttribs            = BUFFER_VERTEX_2D_ATTRIBS,
-            .BlendModes                   =
+            .Stage                    = RenderStage::Glyph2d,
+            .VertShaderName           = "Primitive2d.vert",
+            .FragShaderName           = "Glyph2d.frag",
+            .FragShaderSamplerCount   = 1,
+            .FragShaderUniBufferCount = 2,
+            .VertBufferDescs          = BUFFER_VERTEX_2D_DESCS,
+            .VertBufferAttribs        = BUFFER_VERTEX_2D_ATTRIBS,
+            .BlendModes               =
             {
                 BlendMode::Alpha,
                 BlendMode::Wireframe
             }
+        },
+        // 3D model.
+        {
+            .Stage                    = RenderStage::Model,
+            .VertShaderName           = "Primitive3d.vert",
+            .VertShaderUniBufferCount = 2,
+            .FragShaderName           = "Model.frag",
+            .FragShaderSamplerCount   = 1,
+            .FragShaderUniBufferCount = 2,
+            .VertBufferDescs          = BUFFER_VERTEX_3D_DESCS,
+            .VertBufferAttribs        = BUFFER_VERTEX_3D_ATTRIBS,
+            .BlendModes               =
+            {
+                BlendMode::Opaque,
+                BlendMode::Alpha,
+                BlendMode::FastAlpha,
+                BlendMode::Multiply,
+                BlendMode::Add,
+                BlendMode::Subtract,
+                BlendMode::Wireframe
+            },
+            .EnableDepthTest = true
         },
 
         // ========

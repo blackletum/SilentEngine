@@ -19,15 +19,17 @@ namespace Silent::Math
         // Constructors
         // =============
 
-        /** @brief Constructs a default `AxisAlignedBoundingRect`. */
-        AxisAlignedBoundingRect() = default;
+        /** @brief Creates a default instance. */
+        constexpr AxisAlignedBoundingRect() = default;
 
-        /** @brief Constructs an `AxisAlignedBoundingRect` from a center and extents.
+        /** @brief Creates an instance from a center and extents.
          *
          * @param center Rectangle center.
          * @param extents Rectangle extents.
          */
-        AxisAlignedBoundingRect(const Vector2& center, const Vector2& extents);
+        constexpr AxisAlignedBoundingRect(const Vector2& center, const Vector2& extents) :
+            Center(center),
+            Extents(extents) {}
 
         // ==========
         // Inquirers

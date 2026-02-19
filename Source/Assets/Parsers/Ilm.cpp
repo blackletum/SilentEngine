@@ -2,9 +2,11 @@
 #include "Assets/Parsers/Ilm.h"
 
 #include "Application.h"
+#include "Renderer/Common/Resources/Buffers.h"
 #include "Utils/Stream.h"
 #include "Utils/Utils.h"
 
+using namespace Silent::Renderer;
 using namespace Silent::Utils;
 
 namespace Silent::Assets
@@ -23,7 +25,7 @@ namespace Silent::Assets
         if (!stream.IsOpen())
         {
             throw std::runtime_error(Fmt("Failed to open ILM `{}`.",
-                                         std::filesystem::relative(fs.GetAssetsDirectory(), filename).string()));
+                                         std::filesystem::relative(filename, fs.GetAssetsDirectory()).string()));
         }
 
         // Read header magic.
@@ -31,10 +33,10 @@ namespace Silent::Assets
         if (magic != HEADER_MAGIC)
         {
             throw std::runtime_error(Fmt("Failed to parse invalid ILM `{}`.",
-                                         std::filesystem::relative(fs.GetAssetsDirectory(), filename).string()));
+                                         std::filesystem::relative(filename, fs.GetAssetsDirectory()).string()));
         }
 
-        uint8 isInitialized = stream.ReadUint8();
+        uint8 isInitialized = stream.ReadUint8(); // Unused.
         stream.Skip(1);
 
         // Read name offset.
@@ -42,7 +44,7 @@ namespace Silent::Assets
         if (nameOffset != HEADER_NAME_OFFSET)
         {
             throw std::runtime_error(Fmt("Attempted to parse ILM `{}` with incongruent name offset.",
-                                         std::filesystem::relative(fs.GetAssetsDirectory(), filename).string()));
+                                         std::filesystem::relative(filename, fs.GetAssetsDirectory()).string()));
         }
 
         // Read header attributes.
@@ -52,15 +54,16 @@ namespace Silent::Assets
         auto   name         = stream.ReadNullString();
 
         // Create asset.
-        auto asset = IlmAsset{};
+        auto asset = IlmAsset
+        {
+            .Name = name
+        };
 
         // Read meshes.
         stream.SetPosition(meshesOffset);
         asset.Meshes.reserve(meshCount);
         for (int i = 0; i < meshCount; i++)
         {
-            auto mesh = IlmMesh{};
-
             // Create UV index lookup.
             auto uvLookup = std::unordered_map<Vector2, int>{}; // Key = UV, value = UV index.
 
@@ -69,6 +72,13 @@ namespace Silent::Assets
             int  boneIdx    = std::stoi(boneIdxStr);
             auto boneName   = stream.ReadNullString(BONE_NAME_STR_SIZE);
             stream.Skip(1);
+
+            // Create bone mesh.
+            auto mesh = IlmMesh
+            {
+                .BoneIdx  = boneIdx,
+                .BoneName = boneName
+            };
 
             // Read base vertex indices.
             uint8 posBaseIdx    = stream.ReadUint8();
@@ -111,8 +121,8 @@ namespace Silent::Assets
                 uint8 uvX1 = stream.ReadInt8();
                 uint8 uvY1 = stream.ReadInt8();
 
-                // Read tpage info. @todo
-                int16 tpageInfo = stream.ReadInt16();
+                // Read tpage.
+                int16 tpage = stream.ReadInt16();
 
                 // Read UV 2.
                 uint8 uvX2 = stream.ReadInt8();
@@ -134,7 +144,7 @@ namespace Silent::Assets
                 uint8 normalIdx2 = stream.ReadUint8();
                 uint8 normalIdx3 = stream.ReadUint8();
 
-                bool isTri     = posIdx3 == UINT_MAX;
+                bool isTri     = posIdx3 == UCHAR_MAX;
                 int  vertCount = isTri ? TRI_VERTEX_COUNT : QUAD_VERTEX_COUNT;
 
                 // Collect vertex indices.
@@ -164,7 +174,12 @@ namespace Silent::Assets
                 }
 
                 // Create primitive.
-                auto prim = IlmPrimitive{};
+                auto prim = IlmPrimitive
+                {
+                    .TPage = tpage
+                };
+
+                // Collect vertices.
                 prim.Vertices.reserve(vertCount);
                 for (int k = 0; k < vertCount; k++)
                 {
@@ -240,6 +255,53 @@ namespace Silent::Assets
 
             // Collect ID.
             asset.Ids.push_back(id);
+        }
+
+        // Convert to linear meshes. @todo Implement render buckets? Sort primitives by CLUT?
+        for (auto& mesh : asset.Meshes)
+        {
+            // Run through primitives.
+            auto vertLookup = std::unordered_map<IlmVertex, int>{};
+            for (const auto& prim : mesh.Primitives)
+            {
+                // Collect primitive vertex indices.
+                auto primIdxs = std::vector<uint16>{};
+                for (const auto& vert : prim.Vertices)
+                {
+                    uint16 newIdx = GetLookupIdx(vertLookup, vert);
+                    primIdxs.push_back(newIdx);
+                }
+
+                // Collect linear vertex indices.
+                if (primIdxs.size() == TRI_IDX_COUNT)
+                {
+                    mesh.Linear.Idxs.insert(mesh.Linear.Idxs.end(),
+                    {
+                        primIdxs[0], primIdxs[1], primIdxs[2]
+                    });
+                }
+                else if (primIdxs.size() == QUAD_IDX_COUNT)
+                {
+                    mesh.Linear.Idxs.insert(mesh.Linear.Idxs.end(),
+                    {
+                        primIdxs[0], primIdxs[1], primIdxs[2], 
+                        primIdxs[0], primIdxs[2], primIdxs[3]
+                    });
+                }
+            }
+
+            // Collect linear indexed vertices.
+            mesh.Linear.Vertices.resize(vertLookup.size());
+            for (const auto& [keyVert, vertIdx] : vertLookup)
+            {
+                mesh.Linear.Vertices[vertIdx] = BufferVertex3d
+                {
+                    .Position = mesh.Positions[keyVert.PositionIdx],
+                    .Normal   = mesh.Normals[keyVert.NormalIdx],
+                    .Uv       = mesh.Uvs[keyVert.UvIdx],
+                    .Col      = Color::White
+                };
+            }
         }
 
         return std::make_shared<IlmAsset>(std::move(asset));

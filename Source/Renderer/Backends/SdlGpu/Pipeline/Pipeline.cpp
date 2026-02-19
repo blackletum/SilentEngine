@@ -34,11 +34,13 @@ namespace Silent::Renderer::SdlGpu
     {
         Debug::Assert(_device != nullptr, "Attempted to bind uninitialized GPU pipeline manager.");
 
-        int   pipelineHash = GetPipelineHash(renderStage, Debug::g_Work.EnableWireframeMode ? BlendMode::Wireframe : blendMode);
+        int   pipelineHash = GetPipelineHash(renderStage, Debug::g_Work.EnableWireframeMode ? BlendMode::Wireframe :
+                                                                                              blendMode);
         auto* pipeline     = Find(_pipelines, pipelineHash);
         if (pipeline == nullptr)
         {
-            throw std::runtime_error(Fmt("Attempted to bind invalid pipeline for render stage {}, blend mode {}.", (int)renderStage, (int)blendMode));
+            throw std::runtime_error(Fmt("Attempted to bind invalid pipeline for render stage {}, blend mode {}.",
+                                         (int)renderStage, (int)blendMode));
         }
 
         SDL_BindGPUGraphicsPipeline(&renderPass, *pipeline);
@@ -90,10 +92,20 @@ namespace Silent::Renderer::SdlGpu
                 {
                     .fill_mode = (blendMode == BlendMode::Wireframe) ? SDL_GPU_FILLMODE_LINE : SDL_GPU_FILLMODE_FILL
                 },
+                .depth_stencil_state = !config.EnableDepthTest ? SDL_GPUDepthStencilState{} :
+                SDL_GPUDepthStencilState
+                {
+                    .compare_op         = SDL_GPU_COMPAREOP_LESS,
+                    .enable_depth_test  = true,
+                    .enable_depth_write = true
+                },
                 .target_info = SDL_GPUGraphicsPipelineTargetInfo
                 {
                     .color_target_descriptions = colorTargetDescs.data(),
-                    .num_color_targets         = (uint)colorTargetDescs.size()
+                    .num_color_targets         = (uint)colorTargetDescs.size(),
+                    .depth_stencil_format      = config.EnableDepthTest ? SDL_GPU_TEXTUREFORMAT_D32_FLOAT :
+                                                                          SDL_GPU_TEXTUREFORMAT_INVALID,
+                    .has_depth_stencil_target  = config.EnableDepthTest
                 }
             };
 
@@ -181,10 +193,10 @@ namespace Silent::Renderer::SdlGpu
             .entrypoint           = entryPoint,
             .format               = activeFormatFlag,
             .stage                = stage,
-            .num_samplers         = (uint)samplerCount,
-            .num_storage_textures = (uint)storageTexCount,
-            .num_storage_buffers  = (uint)storageBufferCount,
-            .num_uniform_buffers  = (uint)uniBufferCount
+            .num_samplers         = (uint32)samplerCount,
+            .num_storage_textures = (uint32)storageTexCount,
+            .num_storage_buffers  = (uint32)storageBufferCount,
+            .num_uniform_buffers  = (uint32)uniBufferCount
         };
         auto* shader = SDL_CreateGPUShader(_device, &shaderInfo);
         if (shader == nullptr)

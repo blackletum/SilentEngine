@@ -48,13 +48,13 @@ namespace Silent::Debug
                                                          0, AlignMode::TopLeft, ScaleMode::ShortEdge, BlendMode::Alpha);
             renderer.SubmitSprite2d(cursorSprite);
 
-            auto sprite0 = Sprite2d::CreateSprite2d("TIM/HERO_PIC.TIM", Vector2::Zero, Vector2::One,
-                                                    Vector2(50.0f, 50.0f), 0.0f, Vector2::One, Color::White,
-                                                    10, AlignMode::Center, ScaleMode::ShortEdge, BlendMode::Opaque);
-            renderer.SubmitSprite2d(sprite0);
+            //auto sprite0 = Sprite2d::CreateSprite2d("TIM/HERO_PIC.TIM", Vector2::Zero, Vector2::One,
+            //                                        Vector2(50.0f, 50.0f), 0.0f, Vector2::One, Color::White,
+            //                                        10, AlignMode::Center, ScaleMode::ShortEdge, BlendMode::Opaque);
+            //renderer.SubmitSprite2d(sprite0);
 
             // Text.
-            auto text = Text2d::CreateText2d("Śliwka", "RetroSerif",
+            auto text = Text2d::CreateText2d("Śliwka", "SmoothSerif",
                                              input.GetCursorPosition(), 0.0f, 1.0f / 14.0f, 1.0f, 0.0f, 
                                              TextStyle::Gradient, true,
                                              1, AlignMode::BottomLeft);
@@ -73,7 +73,7 @@ namespace Silent::Debug
                                      [&]()
                                      {
                                         auto& renderer2 = g_App.GetRenderer();
-                                        auto  res    = renderer.GetScreenResolution().ToVector2();
+                                        auto  res    = renderer.GetViewportResolution().ToVector2();
                                         float aspect = res.x / res.y;
                                         auto aspectCorrection = Vector2::One;
                                         if (aspect >= 1.0f)
@@ -100,7 +100,7 @@ namespace Silent::Debug
                                      [&]()
                                      {
                                         auto& renderer2 = g_App.GetRenderer();
-                                        auto  res    = renderer.GetScreenResolution().ToVector2();
+                                        auto  res    = renderer.GetViewportResolution().ToVector2();
                                         float aspect = res.x / res.y;
                                         auto aspectCorrection = Vector2::One;
                                         if (aspect >= 1.0f)

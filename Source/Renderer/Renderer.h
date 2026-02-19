@@ -7,7 +7,8 @@
 #include "Renderer/Common/Resources/Scene/Shape2d.h"
 #include "Renderer/Common/Resources/Scene/Sprite2d.h"
 #include "Renderer/Common/Resources/Scene/Text2d.h"
-#include "Renderer/Common/Texture.h"
+#include "Renderer/Common/Resources/MeshCache.h"
+#include "Renderer/Common/Resources/TextureCache.h"
 #include "Renderer/Common/View.h"
 
 namespace Silent::Renderer
@@ -50,8 +51,9 @@ namespace Silent::Renderer
         Color        _clearColor = Color::Clear;
         bool         _isResized  = false;
 
-        DoubleBuffer                        _doubleBuffer = {};
+        DoubleBuffer                      _doubleBuffer = {};
         std::unique_ptr<TextureCacheBase> _textures     = nullptr;
+        std::unique_ptr<MeshCacheBase>    _meshes       = nullptr;
 
         std::mutex _primitives2dMutex = {};
 
@@ -64,7 +66,7 @@ namespace Silent::Renderer
         // Constructors
         // =============
 
-        /** @brief Constructs an uninitialized default `RendererBase`. @todo Not needed? */
+        /** @brief Creates a default uninitialized instance. @todo Not needed? */
         RendererBase() = default;
 
         // ========
@@ -77,23 +79,26 @@ namespace Silent::Renderer
          */
         RendererType GetType() const;
 
-        /** @brief Gets the screen render resolution in pixels.
-         *
-         * @return Render resolution.
-         */
-        Vector2i GetScreenResolution() const;
-
-        /** @brief Gets the screen aspect ratio.
-         *
-         * @return Screen aspect ratio.
-         */
-        float GetScreenAspectRatio() const;
-
         /** @brief Gets the draw call count for the previous render tick.
          *
          * @return Draw call count.
          */
         int GetDrawCallCount() const;
+
+        /** @brief Gets the screen render resolution in pixels.
+         *
+         * @return Render resolution.
+         */
+        Vector2i GetViewportResolution() const;
+
+        /** @brief Gets the screen aspect ratio.
+         *
+         * @return Screen aspect ratio.
+         */
+        float GetViewportAspectRatio() const;
+
+        // @todo Shouldn't use outside the renderer?
+        const BoundingFrustum& GetViewFrustum() const;
 
         // ========
         // Setters
@@ -108,6 +113,9 @@ namespace Silent::Renderer
         // ==========
         // Utilities
         // ==========
+
+        /** @brief Updates the render view. */
+        void UpdateView();
 
         /** @brief Processes high-level object data and swaps the double buffer.. */
         void PrepareRenderBuffer();
@@ -227,6 +235,7 @@ namespace Silent::Renderer
          */
         void SortRenderBufferData();
 
+        /** @brief Draws the current frame according to a hardcoded render graph. */
         void DrawFrame();
 
         /** @brief Draws a 3D scene to a cleared off-screen render texture.

@@ -4,12 +4,12 @@
 #include "Application.h"
 #include "Assets/Fonts.h"
 #include "Renderer/Backends/SdlGpu/Pipeline/Pipeline.h"
-#include "Renderer/Backends/SdlGpu/Resources/Texture.h"
+#include "Renderer/Backends/SdlGpu/Resources/MeshCache.h"
+#include "Renderer/Backends/SdlGpu/Resources/TextureCache.h"
 #include "Renderer/Common/Resources/Buffers.h"
 #include "Renderer/Common/Resources/Uniforms.h"
-#include "Renderer/Common/Texture.h"
 #include "Renderer/Common/Utils.h"
-#include "Renderer/Common/View.h" // @todo Not used yet.
+#include "Renderer/Common/View.h"
 #include "Renderer/Renderer.h"
 #include "Services/Filesystem.h"
 #include "Services/Options.h"
@@ -66,11 +66,16 @@ namespace Silent::Renderer::SdlGpu
             throw std::runtime_error(Fmt("Failed to claim window for GPU device: {}", SDL_GetError()));
         }
 
+        // Enable VSync.
+        bool supportsMailbox = SDL_WindowSupportsGPUPresentMode(_device, _window, SDL_GPU_PRESENTMODE_MAILBOX);
+        SDL_SetGPUSwapchainParameters(_device, _window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR,
+                                      supportsMailbox ? SDL_GPU_PRESENTMODE_MAILBOX : SDL_GPU_PRESENTMODE_VSYNC);
+
         // Initialize buffers.
         InitializeDoubleBuffer();
         InitializeGpuBuffers();
 
-        // Initialize texture manager.
+        // Initialize GPU texture cache.
         _textures = std::make_unique<TextureCache>(*_device);
 
         // Initialize pipelines.
@@ -117,6 +122,33 @@ namespace Silent::Renderer::SdlGpu
         // Upload transfer data to GPU resources.
         auto* uploadCmdBuffer = SDL_AcquireGPUCommandBuffer(_device);
         auto* copyPass        = SDL_BeginGPUCopyPass(uploadCmdBuffer);
+
+        // @temp
+        auto bufferVertsTest = std::vector<BufferVertex3d>
+        {
+            // Front Face (Z = 5.0)
+            { Vector3(-1.0f, -1.0f,  1.0f) * 5.0f, Vector3( 0,  0,  1), Vector2(0, 1), Color::White }, // 0
+            { Vector3( 1.0f, -1.0f,  1.0f) * 5.0f, Vector3( 0,  0,  1), Vector2(1, 1), Color::White }, // 1
+            { Vector3( 1.0f,  1.0f,  1.0f) * 5.0f, Vector3( 0,  0,  1), Vector2(1, 0), Color::White }, // 2
+            { Vector3(-1.0f,  1.0f,  1.0f) * 5.0f, Vector3( 0,  0,  1), Vector2(0, 0), Color::White }, // 3
+            // Back Face (Z = -5.0)
+            { Vector3(-1.0f, -1.0f, -1.0f) * 5.0f, Vector3( 0,  0, -1), Vector2(1, 1), Color::White }, // 4
+            { Vector3( 1.0f, -1.0f, -1.0f) * 5.0f, Vector3( 0,  0, -1), Vector2(0, 1), Color::White }, // 5
+            { Vector3( 1.0f,  1.0f, -1.0f) * 5.0f, Vector3( 0,  0, -1), Vector2(0, 0), Color::White }, // 6
+            { Vector3(-1.0f,  1.0f, -1.0f) * 5.0f, Vector3( 0,  0, -1), Vector2(1, 0), Color::White }  // 7
+        };
+        auto bufferIdxsTest = std::vector<uint16>
+        {
+            0, 1, 2, 2, 3, 0, // Front
+            1, 5, 6, 6, 2, 1, // Right
+            5, 4, 7, 7, 6, 5, // Back
+            4, 0, 3, 3, 7, 4, // Left
+            3, 2, 6, 6, 7, 3, // Top
+            4, 5, 1, 1, 0, 4  // Bottom
+        };
+        GetMeshes().Load(*copyPass, "CHARA/DOC.ILM");
+        GetMeshes().Load(*copyPass, "ITEM/UNQE1.TMD");
+        GetMeshes().Load(*copyPass, bufferVertsTest, bufferIdxsTest, "TestCube");
 
         // @todo If this isn't called and the texture is missing, for some reason
         // the app hangs instead of crashing like it's supposed to. Why isn't such an error
@@ -170,6 +202,13 @@ namespace Silent::Renderer::SdlGpu
             return;
         }
 
+        // Acquire depth stencil texture.
+        _depthTexture = GetDepthTexture();
+        if (_depthTexture == nullptr)
+        {
+            return;
+        }
+
         // Acquire swapchain texture.
         _swapchainTexture = nullptr;
         if (!SDL_WaitAndAcquireGPUSwapchainTexture(_commandBuffer, _window, &_swapchainTexture, nullptr, nullptr))
@@ -206,7 +245,7 @@ namespace Silent::Renderer::SdlGpu
         const auto& fs = g_App.GetFilesystem();
 
         // Get window size.
-        auto res = GetScreenResolution();
+        auto res = GetViewportResolution();
 
         // Ensure directory exists.
         auto timestamp = GetCurrentDateString() + "_" + GetCurrentTimeString();
@@ -242,35 +281,66 @@ namespace Silent::Renderer::SdlGpu
         SDL_UnlockSurface(surface);
     }
 
-    SDL_GPUTexture* Renderer::GetRenderTexture()
-    {
-        // @todo Entering fullscreen mode doesn't signal a resize?
-        if (_renderTexture == nullptr || _isResized)
-        {
-            SDL_ReleaseGPUTexture(_device, _renderTexture);
-
-            // @todo Size should depend on aspect ratio: 4:3, 16:9, or native.
-
-            auto screenRes     = GetScreenResolution();
-            auto renderTexInfo = SDL_GPUTextureCreateInfo
-            {
-                .type                 = SDL_GPU_TEXTURETYPE_2D,
-                .format               = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
-                .usage                = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER,
-                .width                = screenRes.x,
-                .height               = screenRes.y,
-                .layer_count_or_depth = 1,
-                .num_levels           = 1
-            };
-            _renderTexture = SDL_CreateGPUTexture(_device, &renderTexInfo);
-        }
-
-        return _renderTexture;
-    }
-
     TextureCache& Renderer::GetTextures()
     {
         return *(TextureCache*)_textures.get();
+    }
+
+    MeshCache& Renderer::GetMeshes()
+    {
+        return *(MeshCache*)_meshes.get();
+    }
+
+    SDL_GPUTexture* Renderer::GetRenderTexture()
+    {
+        // @todo Entering fullscreen mode doesn't signal a resize?
+        if (_depthTexture != nullptr && !_isResized)
+        {
+            return _renderTexture;
+        }
+
+        SDL_ReleaseGPUTexture(_device, _renderTexture);
+
+        // @todo Size should depend on aspect ratio: 4:3, 16:9, or native.
+
+        auto viewportRes   = GetViewportResolution();
+        auto renderTexInfo = SDL_GPUTextureCreateInfo
+        {
+            .type                 = SDL_GPU_TEXTURETYPE_2D,
+            .format               = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+            .usage                = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER,
+            .width                = viewportRes.x,
+            .height               = viewportRes.y,
+            .layer_count_or_depth = 1,
+            .num_levels           = 1
+        };
+        return SDL_CreateGPUTexture(_device, &renderTexInfo);
+    }
+
+    SDL_GPUTexture* Renderer::GetDepthTexture()
+    {
+        if (_depthTexture != nullptr && !_isResized)
+        {
+            return _depthTexture;
+        }
+
+        if (_depthTexture != nullptr)
+        {
+            SDL_ReleaseGPUTexture(_device, _depthTexture);
+        }
+
+        auto viewportRes  = GetViewportResolution();
+        auto depthTexInfo = SDL_GPUTextureCreateInfo
+        {
+            .type                 = SDL_GPU_TEXTURETYPE_2D,
+            .format               = SDL_GPU_TEXTUREFORMAT_D32_FLOAT,
+            .usage                = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET,
+            .width                = viewportRes.x,
+            .height               = viewportRes.y,
+            .layer_count_or_depth = 1,
+            .num_levels           = 1
+        };
+        return SDL_CreateGPUTexture(_device, &depthTexInfo);
     }
 
     SDL_GPUSampler& Renderer::GetActiveSampler()
@@ -282,6 +352,11 @@ namespace Silent::Renderer::SdlGpu
 
     void Renderer::Draw3dScene()
     {
+        // Process copy pass.
+        auto* copyPass = SDL_BeginGPUCopyPass(_commandBuffer);
+
+        SDL_EndGPUCopyPass(copyPass);
+
         // Begin render pass.
         auto colorTargetInfo = SDL_GPUColorTargetInfo
         {
@@ -290,9 +365,53 @@ namespace Silent::Renderer::SdlGpu
             .load_op     = SDL_GPU_LOADOP_CLEAR,
             .store_op    = SDL_GPU_STOREOP_STORE
         };
-        auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, nullptr);
+        auto depthTargetInfo = SDL_GPUDepthStencilTargetInfo
+        {
+            .texture     = _depthTexture,
+            .clear_depth = 1.0f,
+            .load_op     = SDL_GPU_LOADOP_CLEAR,
+            .store_op    = SDL_GPU_STOREOP_DONT_CARE
+        };
+        auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, &depthTargetInfo);
 
-        // @todo
+        _gpuBuffers.Vertices3d.Bind(renderPass, 0, 0);
+        _pipelines.Bind(renderPass, RenderStage::Model, BlendMode::Opaque);
+
+        // @temp
+        //---------------------------
+
+        auto* tex = GetTextures()["TIM/BG_ETC.TIM"];
+        if (tex != nullptr)
+        {
+            tex->Bind(renderPass, GetActiveSampler());
+        }
+
+        _view.Move();
+
+        auto model = Matrix::Identity;
+        model.Rotate(DEG_TO_RAD(45.0f), Vector3::UnitX);
+
+        auto viewProj = _view.GetMatrix(glm::radians(45.0f), GetViewportAspectRatio(), 0.1f, 100.0f);
+
+        auto uni0 = UniformView{};
+        auto uni1 = UniformPrimitive3d{};
+        memcpy(&uni0.ViewProjMat, &viewProj[0][0], 64);
+        memcpy(&uni1.ModelMat, &model[0][0], 64);
+        PushVertexUniform(uni0, UniformSlot::PerFrame);
+        PushVertexUniform(uni1, UniformSlot::PerObject);
+
+        PushFragmentUniform(UniformModel{ false }, UniformSlot::PerObject);
+
+        //const auto* mesh = GetMeshes()["Test"];
+        //const auto* mesh = GetMeshes()["ITEM/UNQE1.TMD_1"];
+        const auto* mesh = GetMeshes()["TestCube"];
+        if (mesh != nullptr && mesh->IsValid())
+        {
+            SDL_DrawGPUIndexedPrimitives(&renderPass, mesh->IdxCount, 1, mesh->IdxOffset, mesh->VertexOffset, 0);
+            _doubleBuffer.Active.DrawCallCount++;
+        }
+
+        //---------------------------
 
         // Process render pass.
         SDL_EndGPURenderPass(&renderPass);
@@ -371,12 +490,12 @@ namespace Silent::Renderer::SdlGpu
         };
         auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, nullptr);
 
-        // 2D primitives.
+        // Draw 2D primitives.
         _gpuBuffers.Vertices2d.Bind(renderPass, 0, 0);
         for (const auto& batch : _drawBatches.Primitives2d)
         {
             _pipelines.Bind(renderPass, batch.RenderStg, batch.BlendMd);
-            PushFragmentUniform(batch.Uniform, 0);
+            PushFragmentUniform(batch.Uniform, UniformSlot::PerObject);
 
             if (!batch.TextureName.empty())
             {
@@ -387,7 +506,7 @@ namespace Silent::Renderer::SdlGpu
                 }
             }
 
-            SDL_DrawGPUIndexedPrimitives(&renderPass, batch.BufferStride, 1, 0, batch.BufferOffset, 0);
+            SDL_DrawGPUIndexedPrimitives(&renderPass, batch.VertexCount, 1, batch.IdxOffset, batch.VertexOffset, 0);
             _doubleBuffer.Active.DrawCallCount++;
         }
 
@@ -445,7 +564,7 @@ namespace Silent::Renderer::SdlGpu
         // Luma-based fade.
         {
             _pipelines.Bind(renderPass, RenderStage::Fade, BlendMode::Opaque);
-            PushFragmentUniform(UniformLumaFade{ .FadeAlpha = Debug::g_Work.BlendAlpha }, 0);
+            PushFragmentUniform(UniformLumaFade{ .FadeAlpha = Debug::g_Work.BlendAlpha }, UniformSlot::PerFrame);
 
             // Bind render texture.
             auto binding = SDL_GPUTextureSamplerBinding
@@ -464,7 +583,7 @@ namespace Silent::Renderer::SdlGpu
         if (options->EnableCrtFilter)
         {
             _pipelines.Bind(renderPass, RenderStage::Crt, BlendMode::Opaque);
-            PushFragmentUniform(UniformCrt{ .Resolution = GetScreenResolution().ToVector2(), .Time = 0.0f }, 0);
+            PushFragmentUniform(UniformCrt{ .Resolution = GetViewportResolution().ToVector2(), .Time = 0.0f }, UniformSlot::PerFrame);
 
             // Bind render texture.
             auto binding = SDL_GPUTextureSamplerBinding
@@ -483,7 +602,7 @@ namespace Silent::Renderer::SdlGpu
         if (options->EnableVignette)
         {
             _pipelines.Bind(renderPass, RenderStage::Vignette, BlendMode::Opaque);
-            PushFragmentUniform(UniformCrt{ .Resolution = GetScreenResolution().ToVector2(), .Time = 0.0f }, 0);
+            PushFragmentUniform(UniformCrt{ .Resolution = GetViewportResolution().ToVector2(), .Time = 0.0f }, UniformSlot::PerFrame);
 
             // Bind render texture.
             auto binding = SDL_GPUTextureSamplerBinding
@@ -528,7 +647,7 @@ namespace Silent::Renderer::SdlGpu
         {
             .Brightness = brightness
         };
-        PushFragmentUniform(uni, 0);
+        PushFragmentUniform(uni, UniformSlot::PerFrame);
 
         // Bind render texture.
         auto binding = SDL_GPUTextureSamplerBinding
@@ -590,18 +709,33 @@ namespace Silent::Renderer::SdlGpu
         constexpr int SPRITE_2D_IDX_COUNT_MAX  = SPRITE_2D_COUNT_MAX * QUAD_IDX_COUNT;
         constexpr int SHAPE_2D_VERT_COUNT_MAX  = (SHAPE_2D_COUNT_MAX * 2) * TRI_VERTEX_COUNT;
         constexpr int SHAPE_2D_IDX_COUNT_MAX   = SHAPE_2D_VERT_COUNT_MAX;
-        constexpr int TRI_BATCH_COUNT_MAX      = SPRITE_2D_COUNT_MAX +
-                                                 SHAPE_2D_COUNT_MAX;
-        constexpr int TRI_VERT_COUNT_MAX       = SPRITE_2D_VERT_COUNT_MAX +
-                                                 SHAPE_2D_VERT_COUNT_MAX;
-        constexpr int TRI_IDX_COUNT_MAX        = SPRITE_2D_IDX_COUNT_MAX;
+        constexpr int GLYPH_2D_VERT_COUNT_MAX  = GLYPH_2D_COUNT_MAX * QUAD_VERTEX_COUNT;
+        constexpr int GLYPH_2D_IDX_COUNT_MAX   = GLYPH_2D_COUNT_MAX * QUAD_IDX_COUNT;
 
-        // Reserve draw batches.
-        _drawBatches.Primitives2d.reserve(TRI_BATCH_COUNT_MAX);
+        constexpr int VERT_2D_COUNT_MAX       = SPRITE_2D_VERT_COUNT_MAX +
+                                                SHAPE_2D_VERT_COUNT_MAX +
+                                                GLYPH_2D_VERT_COUNT_MAX;
+        constexpr int VERT_2D_IDX_COUNT_MAX   = SPRITE_2D_IDX_COUNT_MAX +
+                                                SHAPE_2D_IDX_COUNT_MAX +
+                                                GLYPH_2D_IDX_COUNT_MAX;
+        constexpr int PRIM_2D_BATCH_COUNT_MAX = SPRITE_2D_COUNT_MAX +
+                                                SHAPE_2D_COUNT_MAX +
+                                                GLYPH_2D_COUNT_MAX;
+
+        constexpr int VERT_3D_COUNT_MAX       = SHRT_MAX - 1;
+        constexpr int VERT_3D_IDX_COUNT_MAX   = VERT_3D_COUNT_MAX;
+        constexpr int PRIM_3D_BATCH_COUNT_MAX = VERT_3D_IDX_COUNT_MAX / 3;
 
         // Initialize GPU buffers.
-        _gpuBuffers.ViewportVertices2d.Initialize(*_device, QUAD_VERTEX_COUNT, QUAD_IDX_COUNT, "2D screen vertices");
-        _gpuBuffers.Vertices2d.Initialize(*_device, TRI_VERT_COUNT_MAX, TRI_IDX_COUNT_MAX, "2D vertices");
+        _gpuBuffers.ViewportVertices2d.Initialize(*_device, QUAD_VERTEX_COUNT, QUAD_IDX_COUNT, "2D viewport vertices");
+        _gpuBuffers.Vertices2d.Initialize(*_device, VERT_2D_COUNT_MAX, VERT_2D_IDX_COUNT_MAX, "2D vertices");
+        _gpuBuffers.Vertices3d.Initialize(*_device, VERT_3D_COUNT_MAX, VERT_3D_IDX_COUNT_MAX, "3D vertices");
+
+        _meshes = std::make_unique<MeshCache>(_gpuBuffers.Vertices3d);
+
+        // Reserve draw batches.
+        _drawBatches.Primitives2d.reserve(PRIM_2D_BATCH_COUNT_MAX);
+        _drawBatches.Primitives3d.reserve(PRIM_3D_BATCH_COUNT_MAX);
     }
 
     void Renderer::UpdateFontAtlasTextures(SDL_GPUCopyPass& copyPass)
@@ -649,12 +783,13 @@ namespace Silent::Renderer::SdlGpu
 
         // Create batched GPU buffer data.
         int vertOffset = 0;
+        int idxOffset  = 0;
         for (const auto& prim : _doubleBuffer.Render.Primitives2d)
         {
             // Add vertices.
             for (int i = 0; i < prim.Vertices.size(); i++)
             {
-                // @todo Z depth oesn't seem to have any effect and primitives still need manual depth sorting.
+                // @todo Need depth texture.
                 float depthZ = std::clamp((float)prim.Depth / (float)DEPTH_MAX, 0.0f, 1.0f);
                 auto  pos    = Vector3(prim.Vertices[i].Position.x, prim.Vertices[i].Position.y, depthZ);
                 bufferVerts.push_back(BufferVertex2d{ pos, prim.Vertices[i].Uv, prim.Vertices[i].Col });
@@ -669,7 +804,7 @@ namespace Silent::Renderer::SdlGpu
                 // Add indices.
                 for (int i = 0; i < TRI_IDX_COUNT; i++)
                 {
-                    bufferIdxs.push_back(vertOffset + i);
+                    bufferIdxs.push_back(i);
                 }
 
                 curVertCount = TRI_VERTEX_COUNT;
@@ -679,15 +814,15 @@ namespace Silent::Renderer::SdlGpu
             else if (prim.Vertices.size() == QUAD_VERTEX_COUNT)
             {
                 // Add indices.
-                for (int quadTriIdx : QUAD_TRI_IDXS)
+                for (int i : QUAD_TRI_IDXS)
                 {
-                    bufferIdxs.push_back(vertOffset + quadTriIdx);
+                    bufferIdxs.push_back(i);
                 }
 
                 curVertCount = QUAD_VERTEX_COUNT;
                 curIdxCount  = QUAD_IDX_COUNT;
             }
-    
+
             // Add batch.
             // @todo Smarter way that strings together primitives with the same render stage, blend mode, and texture. What to do with uniforms?
             // For now, collect each as its own batch of 2 triangles.
@@ -697,11 +832,13 @@ namespace Silent::Renderer::SdlGpu
                 .RenderStg    = prim.RenderStg,
                 .BlendMd      = prim.BlendMd,
                 .Uniform      = prim.Uniform,
-                .BufferOffset = vertOffset,
-                .BufferStride = curIdxCount
+                .VertexCount  = curIdxCount,
+                .VertexOffset = vertOffset,
+                .IdxOffset    = idxOffset
             });
 
             vertOffset += curVertCount;
+            idxOffset  += curIdxCount;
         }
 
         // Update GPU buffer.
@@ -716,29 +853,25 @@ namespace Silent::Renderer::SdlGpu
         // @todo Compute aspect-correct vertex positions.
         auto bufferVerts = std::vector<BufferVertex2d>
         {
-            BufferVertex2d
             {
-                Vector3(-1.0f, 1.0f, 0.0f),
-                Vector2(0.0f, 0.0f),
-                Color::White
+                .Position = Vector3(-1.0f, 1.0f, 0.0f),
+                .Uv       = Vector2(0.0f, 0.0f),
+                .Col      = Color::White
             },
-            BufferVertex2d
             {
-                Vector3(1.0f, 1.0f, 0.0f),
-                Vector2(1.0f, 0.0f),
-                Color::White
+                .Position = Vector3(1.0f, 1.0f, 0.0f),
+                .Uv       = Vector2(1.0f, 0.0f),
+                .Col      = Color::White
             },
-            BufferVertex2d
             {
-                Vector3(-1.0f, -1.0f, 0.0f),
-                Vector2(0.0f, 1.0f),
-                Color::White
+                .Position = Vector3(-1.0f, -1.0f, 0.0f),
+                .Uv       = Vector2(0.0f, 1.0f),
+                .Col      = Color::White
             },
-            BufferVertex2d
             {
-                Vector3(1.0f, -1.0f, 0.0f),
-                Vector2(1.0f, 1.0f),
-                Color::White
+                .Position = Vector3(1.0f, -1.0f, 0.0f),
+                .Uv       = Vector2(1.0f, 1.0f),
+                .Col      = Color::White
             }
         };
 
@@ -747,19 +880,19 @@ namespace Silent::Renderer::SdlGpu
         _gpuBuffers.ViewportVertices2d.UpdateIdxs(copyPass, ToSpan(BUFFER_IDXS), 0);
     }
 
-    void Renderer::PushVertexUniform(const UniformType& uni, int slotIdx)
+    void Renderer::PushVertexUniform(const UniformType& uni, UniformSlot slot)
     {
         std::visit([&](auto&& arg)
         {
-            SDL_PushGPUVertexUniformData(_commandBuffer, slotIdx, &arg, sizeof(arg));
+            SDL_PushGPUVertexUniformData(_commandBuffer, (int)slot, &arg, sizeof(arg));
         }, uni);
     }
 
-    void Renderer::PushFragmentUniform(const UniformType& uni, int slotIdx)
+    void Renderer::PushFragmentUniform(const UniformType& uni, UniformSlot slot)
     {
         std::visit([&](auto&& arg)
         {
-            SDL_PushGPUFragmentUniformData(_commandBuffer, slotIdx, &arg, sizeof(arg));
+            SDL_PushGPUFragmentUniformData(_commandBuffer, (int)slot, &arg, sizeof(arg));
         }, uni);
     }
 

@@ -1,7 +1,9 @@
 #pragma once
 
-#include "Assets/Parsers/Anm.h"
 #include "Assets/Parsers/Ilm.h"
+#include "Assets/Parsers/Ipd.h"
+#include "Assets/Parsers/Plm.h"
+#include "Assets/Parsers/Png.h"
 #include "Assets/Parsers/Tim.h"
 #include "Assets/Parsers/Tmd.h"
 
@@ -10,19 +12,21 @@ namespace Silent::Assets
     /** @brief Streamable asset types. Used in `Asset`. */
     enum class AssetType
     {
-        Tim, /** "Texture IMage"                | PsyQ SDK texture data. */
-        Vab, /** "Voice Audio Bank"             | PsyQ SDK audio container data. */
-        Bin, /** "BINary"                       | Original compiled logic overlay data. */ // @todo Only tracked for 1:1 legacy index registration. All instances of asset access should be refactored to use names instead of indices.
-        Dms, /** "Demo Motion Sequence"?        | Cutscene keyframe data. */
-        Anm, /** "ANiMation"                    | Animation data. */
-        Plm, /** "Polygon List Model"?          | Global static model data. */
-        Ipd, /** "Instance Polygon Data"?       | Local static model data. */
-        Ilm, /** "Indexed List Model"?          | Linked model data. */
-        Tmd, /** "Three-dimensional Model Data" | PsyQ SDK 3D model data. Only used for inventory items. */
-        Dat, /** "Demo dATa"?                   | Demo playback data. */
-        Kdt, /** "Key Data Tracker"?            | Konami MIDI tracker data. */
-        Cmp, /** "CoMPressed" or "CoMPiled"?    | Unknown. */
-        Xa   /** "eXtended Audio"               | PSX XA audio stream. */
+        Tim, /** "Texture IMage"                 | PsyQ SDK texture data. */
+        Vab, /** "Voice Audio Bank"              | PsyQ SDK audio container data. */
+        Bin, /** "BINary"                        | Original compiled logic overlay data. */
+        Dms, /** "Demo Motion Sequence"?         | Cutscene keyframe data. */
+        Anm, /** "ANiMation"                     | Animation data. */
+        Plm, /** "PoLygon Model"?                | Model data. */
+        Ipd, /** "Instanced Polygon model Data"? | Map model and collision data. Used for environment streaming. */
+        Ilm, /** "Instanced Linked Model"?       | Skeletal model data. Used for characters. */
+        Tmd, /** "Three-dimensional Model Data"  | PsyQ SDK 3D model data. Used for inventory items. */
+        Dat, /** "Demo dATa"?                    | Demo playback data. */
+        Kdt, /** "Key Data Tracker"?             | Konami MIDI tracker data. */
+        Cmp, /** "CoMPressed" or "CoMPiled"?     | Unknown. */
+        Xa,  /** "eXtended Audio"                | PSX XA audio stream. */
+
+        Png
     };
 
     /** @brief Streamable asset states. Used in `Asset`. */
@@ -34,25 +38,24 @@ namespace Silent::Assets
         Error
     };
 
-    /** @brief Streamable asset data and metadata. */
+    /** @brief Streamable asset. */
     struct Asset
     {
         std::string             Name = {};                    /** Filename relative to assets folder. */
         AssetType               Type = AssetType::Tim;        /** File type. */
         std::filesystem::path   File = {};                    /** Absolute system file path. */
         uint64                  Size = 0;                     /** Raw file size in bytes. */
-
         std::atomic<AssetState> State = AssetState::Unloaded; /** Thread-safe load state. */
-        std::shared_ptr<void>   Data  = nullptr;              /** Parsed data. */
+        std::shared_ptr<void>   Data  = nullptr;              /** Thread-safe parsed data. */
 
         /** @brief Gets the typed asset data. The asset must be loaded before calling.
          *
          * @tparam T Loaded asset type to cast the asset data to.
          * @return Typed loaded asset data.
-         * @throws `std::runtime_error` if `data` is `nullptr`.
+         * @throws `std::runtime_error` if `Data` is `nullptr`.
          */
         template <typename T>
-        std::shared_ptr<T> GetData() const
+        std::shared_ptr<const T> GetData() const
         {
             if (Data == nullptr)
             {
@@ -71,7 +74,7 @@ namespace Silent::Assets
         // Fields
         // =======
 
-        std::vector<std::shared_ptr<Asset>>        _assets       = {}; /** Registered assets. */
+        std::vector<std::unique_ptr<Asset>>        _assets       = {}; /** Registered assets. */
         std::unordered_map<int, std::string>       _names        = {}; /** Key = asset index, value = asset name. */
         std::unordered_map<std::string, int>       _idxs         = {}; /** Key = asset name, value = asset index. */
         std::unordered_map<int, std::future<void>> _loadFutures  = {}; /** Key = asset index, value = load future. */
@@ -106,14 +109,14 @@ namespace Silent::Assets
          * @param assetIdx Asset file index.
          * @return Pointer to an `Asset` object if the asset is loaded, `nullptr` otherwise.
          */
-        const std::shared_ptr<Asset> GetAsset(int assetIdx);
+        const Asset* GetAsset(int assetIdx);
 
         /** @brief Gets a loaded asset via a filename.
          *
          * @param assetName Asset filename.
          * @return Pointer to an `Asset` object if the asset is loaded, `nullptr` otherwise.
          */
-        const std::shared_ptr<Asset> GetAsset(const std::string& assetName);
+        const Asset* GetAsset(const std::string& assetName);
 
         // ==========
         // Inquirers

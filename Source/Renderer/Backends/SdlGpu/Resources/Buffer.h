@@ -12,7 +12,7 @@ namespace Silent::Renderer::SdlGpu
         // =======
 
         std::string             _name           = {};
-        int                     _size           = 0;
+        int                     _capacity       = 0;
         SDL_GPUDevice*          _device         = nullptr;
         SDL_GPUBuffer*          _resourceBuffer = nullptr;
         SDL_GPUTransferBuffer*  _transferBuffer = nullptr;
@@ -23,10 +23,10 @@ namespace Silent::Renderer::SdlGpu
         // Constructors
         // =============
 
-        /** @brief Constructs an uninitialized default `Buffer`. */
+        /** @brief Creates a default uninitialized instance. */
         Buffer() = default;
 
-        /** @brief Gracefully destroys the `Buffer` and releases GPU resources. */
+        /** @brief Gracefully destroys the instance and releases GPU resources. */
         ~Buffer();
 
         // ========
@@ -39,11 +39,11 @@ namespace Silent::Renderer::SdlGpu
          */
         const std::string& GetName() const;
 
-        /** @brief Gets the number of elements in the GPU buffer.
+        /** @brief Gets the capacity the GPU buffer.
          *
-         * @return Element count.
+         * @return Capacity in number of elements.
          */
-        int GetSize() const;
+        int GetCapacity() const;
 
         // ==========
         // Utilities
@@ -53,24 +53,24 @@ namespace Silent::Renderer::SdlGpu
          *
          * @param device GPU device.
          * @param usageFlags Buffer usage flags.
-         * @param sizeMax Max number of elements.
+         * @param capacity Max number of elements.
          * @param name Buffer name.
          */
-        void Initialize(SDL_GPUDevice& device, SDL_GPUBufferUsageFlags usageFlags, int sizeMax, const std::string& name = {});
+        void Initialize(SDL_GPUDevice& device, SDL_GPUBufferUsageFlags usageFlags, int capacity, const std::string& name = {});
 
         /** @brief Uploads data to the GPU buffer.
          *
          * @param data New data to transfer to the buffer.
-         * @param startIdx Start index in the buffer at which to insert the new data.
+         * @param offset Start index in the buffer at which to insert the new data.
          */
-        void Update(SDL_GPUCopyPass& copyPass, std::span<const T> data, int startIdx);
+        void Update(SDL_GPUCopyPass& copyPass, std::span<const T> data, int offset);
 
         /** @brief Binds the GPU buffer for drawing.
          *
          * @param renderPass Render pass.
-         * @param startIdx Data start index.
+         * @param offset Data start index.
          */
-        void Bind(SDL_GPURenderPass& renderPass, int startIdx);
+        void Bind(SDL_GPURenderPass& renderPass, int offset);
 
     private:
         // ========
@@ -91,9 +91,9 @@ namespace Silent::Renderer::SdlGpu
     }
 
     template <typename T>
-    int Buffer<T>::GetSize() const
+    int Buffer<T>::GetCapacity() const
     {
-        return _size;
+        return _capacity;
     }
 
     template <typename T>
@@ -111,7 +111,7 @@ namespace Silent::Renderer::SdlGpu
     }
 
     template <typename T>
-    void Buffer<T>::Initialize(SDL_GPUDevice& device, SDL_GPUBufferUsageFlags usageFlags, int sizeMax, const std::string& name)
+    void Buffer<T>::Initialize(SDL_GPUDevice& device, SDL_GPUBufferUsageFlags usageFlags, int capacity, const std::string& name)
     {
         if (IsValid())
         {
@@ -125,14 +125,14 @@ namespace Silent::Renderer::SdlGpu
             throw std::runtime_error("Attempted to create GPU buffer with invalid usage flags.");
         }
 
-        _name   = name;
-        _size   = 0;
-        _device = &device;
+        _name     = name;
+        _capacity = capacity;
+        _device   = &device;
 
         auto bufferInfo = SDL_GPUBufferCreateInfo
         {
             .usage = _usageFlags,
-            .size  = sizeMax * sizeof(T)
+            .size  = capacity * sizeof(T)
         };
 
         // Create buffer.
@@ -145,14 +145,13 @@ namespace Silent::Renderer::SdlGpu
         {
             SDL_SetGPUBufferName(_device, _resourceBuffer, name.c_str());
         }
-
+        
+        // Create transfer buffer.
         auto transferBufferInfo = SDL_GPUTransferBufferCreateInfo
         {
             .usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
-            .size  = sizeMax * sizeof(T)
+            .size  = capacity * sizeof(T)
         };
-
-        // Create transfer buffer.
         _transferBuffer = SDL_CreateGPUTransferBuffer(_device, &transferBufferInfo);
         if (_transferBuffer == nullptr)
         {
@@ -161,15 +160,13 @@ namespace Silent::Renderer::SdlGpu
     }
 
     template <typename T>
-    void Buffer<T>::Update(SDL_GPUCopyPass& copyPass, std::span<const T> data, int startIdx)
+    void Buffer<T>::Update(SDL_GPUCopyPass& copyPass, std::span<const T> data, int offset)
     {
         if (!IsValid())
         {
             Debug::Log(Fmt("Attempted to update invalid GPU buffer `{}`.", _name), Debug::LogLevel::Warning);
             return;
         }
-
-        _size = data.size();
 
         // Map transfer data.
         auto* mappedTransferData = (T*)SDL_MapGPUTransferBuffer(_device, _transferBuffer, false);
@@ -184,14 +181,14 @@ namespace Silent::Renderer::SdlGpu
         auto bufferRegion = SDL_GPUBufferRegion
         {
             .buffer = _resourceBuffer,
-            .offset = startIdx * sizeof(T),
+            .offset = offset * sizeof(T),
             .size   = (uint)data.size_bytes()
         };
         SDL_UploadToGPUBuffer(&copyPass, &transferBufferLoc, &bufferRegion, true);
     }
 
     template <typename T>
-    void Buffer<T>::Bind(SDL_GPURenderPass& renderPass, int startIdx)
+    void Buffer<T>::Bind(SDL_GPURenderPass& renderPass, int offset)
     {
         if (!IsValid())
         {
@@ -202,7 +199,7 @@ namespace Silent::Renderer::SdlGpu
         auto bufferBindings = SDL_GPUBufferBinding
         {
             .buffer = _resourceBuffer,
-            .offset = startIdx * sizeof(T)
+            .offset = offset * sizeof(T)
         };
 
         if (_usageFlags & SDL_GPU_BUFFERUSAGE_VERTEX)

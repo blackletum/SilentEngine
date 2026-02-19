@@ -58,7 +58,7 @@ namespace Silent::Renderer
     {
         const auto& renderer = g_App.GetRenderer();
 
-        float aspect = renderer.GetScreenAspectRatio();
+        float aspect = renderer.GetViewportAspectRatio();
 
         auto aspectCorrection = Vector2::One;
         switch(scaleMode)
@@ -87,6 +87,16 @@ namespace Silent::Renderer
                 }
                 break;
             }
+            case ScaleMode::HorizontalEdge:
+            {
+                aspectCorrection.x = 1.0f / aspect;
+                break;
+            }
+            case ScaleMode::VerticalEdge:
+            {
+                aspectCorrection.y = 1.0f / (1.0f / aspect);
+                break;
+            }
             default:
             case ScaleMode::Stretch:
             {
@@ -106,8 +116,7 @@ namespace Silent::Renderer
 
         const auto& renderer = g_App.GetRenderer();
 
-        auto  screenRes       = renderer.GetScreenResolution().ToVector2();
-        float screenResAspect = screenRes.x / screenRes.y;
+        float aspect = renderer.GetViewportAspectRatio();
         
         // @todo Needs another adjustment.
         return pos * GetScreenAspectCorrection(scaleMode);
@@ -125,14 +134,14 @@ namespace Silent::Renderer
 
     Vector2 ConvertScreenPercentToNdc(const Vector2& pos)
     {
-        return Vector2(((pos.x * 2) / SCREEN_SPACE_RES.x) - 1.0f,
-                       1.0f - ((pos.y * 2) / SCREEN_SPACE_RES.y));
+        return Vector2(((pos.x * 2.0f) / SCREEN_SPACE_RES.x) - 1.0f,
+                       1.0f - ((pos.y * 2.0f) / SCREEN_SPACE_RES.y));
     }
 
     Vector2 ConvertNdcToScreenPercent(const Vector2& ndc)
     {
-        return Vector2(((ndc.x + 1.0f) * SCREEN_SPACE_RES.x) / 2,
-                       ((1.0f - ndc.y) * SCREEN_SPACE_RES.y) / 2);
+        return Vector2(((ndc.x + 1.0f) * SCREEN_SPACE_RES.x) / 2.0f,
+                       ((1.0f - ndc.y) * SCREEN_SPACE_RES.y) / 2.0f);
     }
 
     Vector2i NormalizeRetroScreenPosition(const Vector2i pos)

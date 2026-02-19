@@ -33,11 +33,17 @@ namespace Silent::Renderer::SdlGpu
          */
         const std::string& GetName() const;
 
-        /** @brief Gets the number of vertices currently in the GPU vertex buffer.
+        /** @brief Gets the vertex capacity in the GPU vertex buffer.
          *
-         * @return vertices count.
+         * @return Vertex capacity.
          */
-        int GetSize() const;
+        int GetVertexCapacity() const;
+
+        /** @brief Gets the vertex index capacity in the GPU vertex buffer.
+         *
+         * @return Vertex index capacity.
+         */
+        int GetIdxCapacity() const;
 
         // ==========
         // Utilities
@@ -55,24 +61,24 @@ namespace Silent::Renderer::SdlGpu
         /** @brief Uploads vertices to the internal GPU vertex buffer.
          *
          * @param verts New vertices to transfer to the vertex buffer.
-         * @param startIdx Start index in the vertex buffer at which to insert the new vertices.
+         * @param offset Start index in the vertex buffer at which to insert the new vertices.
          */
-        void UpdateVertices(SDL_GPUCopyPass& copyPass, std::span<const T> verts, int startIdx);
+        void UpdateVertices(SDL_GPUCopyPass& copyPass, std::span<const T> verts, int offset);
 
         /** @brief Uploads indices to the internal GPU index buffer.
          *
          * @param idxs New indices to transfer to the index buffer.
-         * @param startIdx Start index in the index buffer at which to insert the new indices.
+         * @param offset Start index in the index buffer at which to insert the new indices.
          */
-        void UpdateIdxs(SDL_GPUCopyPass& copyPass, std::span<const uint16> idxs, int startIdx);
+        void UpdateIdxs(SDL_GPUCopyPass& copyPass, std::span<const uint16> idxs, int offset);
 
         /** @brief Binds the indexed GPU vertex buffer for drawing.
          *
          * @param renderPass Render pass.
-         * @param vertsStartIdx Vertices start index.
-         * @param idxsStartIdx Indices start index.
+         * @param vertOffset Vertices start index.
+         * @param idxOffset Indices start index.
          */
-        void Bind(SDL_GPURenderPass& renderPass, int vertsStartIdx, int idxsStartIdx);
+        void Bind(SDL_GPURenderPass& renderPass, int vertOffset, int idxOffset);
     };
 
     template <typename T>
@@ -82,9 +88,15 @@ namespace Silent::Renderer::SdlGpu
     }
 
     template <typename T>
-    int VertexBuffer<T>::GetSize() const
+    int VertexBuffer<T>::GetVertexCapacity() const
     {
-        return _vertexBuffer.GetSize();
+        return _vertexBuffer.GetCapacity();
+    }
+
+    template <typename T>
+    int VertexBuffer<T>::GetIdxCapacity() const
+    {
+        return _idxBuffer.GetCapacity();
     }
 
     template <typename T>
@@ -95,21 +107,21 @@ namespace Silent::Renderer::SdlGpu
     }
 
     template <typename T>
-    void VertexBuffer<T>::UpdateVertices(SDL_GPUCopyPass& copyPass, std::span<const T> verts, int startIdx)
+    void VertexBuffer<T>::UpdateVertices(SDL_GPUCopyPass& copyPass, std::span<const T> verts, int offset)
     {
-        _vertexBuffer.Update(copyPass, verts, startIdx);
+        _vertexBuffer.Update(copyPass, verts, offset);
     }
 
     template <typename T>
-    void VertexBuffer<T>::UpdateIdxs(SDL_GPUCopyPass& copyPass, std::span<const uint16> idxs, int startIdx)
+    void VertexBuffer<T>::UpdateIdxs(SDL_GPUCopyPass& copyPass, std::span<const uint16> idxs, int offset)
     {
-        _idxBuffer.Update(copyPass, idxs, startIdx);
+        _idxBuffer.Update(copyPass, idxs, offset);
     }
 
     template <typename T>
-    void VertexBuffer<T>::Bind(SDL_GPURenderPass& renderPass, int vertsStartIdx, int idxsStartIdx)
+    void VertexBuffer<T>::Bind(SDL_GPURenderPass& renderPass, int vertOffset, int idxOffset)
     {
-        _vertexBuffer.Bind(renderPass, vertsStartIdx);
-        _idxBuffer.Bind(renderPass, idxsStartIdx);
+        _vertexBuffer.Bind(renderPass, vertOffset);
+        _idxBuffer.Bind(renderPass, idxOffset);
     }
 }

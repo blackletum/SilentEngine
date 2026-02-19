@@ -2,7 +2,8 @@
 
 #include "Renderer/Backends/SdlGpu/Pipeline/Pipeline.h"
 #include "Renderer/Backends/SdlGpu/Resources/Buffer.h"
-#include "Renderer/Backends/SdlGpu/Resources/Texture.h"
+#include "Renderer/Backends/SdlGpu/Resources/MeshCache.h"
+#include "Renderer/Backends/SdlGpu/Resources/TextureCache.h"
 #include "Renderer/Backends/SdlGpu/Resources/VertexBuffer.h"
 #include "Renderer/Common/Resources/Buffers.h"
 #include "Renderer/Common/Resources/Primitive/Vertex2d.h"
@@ -19,14 +20,16 @@ namespace Silent::Renderer::SdlGpu
         RenderStage RenderStg    = RenderStage::Sprite2d;
         BlendMode   BlendMd      = BlendMode::Opaque;
         UniformType Uniform      = {};
-        int         BufferOffset = 0;
-        int         BufferStride = 0;
+        int         VertexCount  = 0;
+        int         VertexOffset = 0;
+        int         IdxOffset    = 0;
     };
 
     /** @brief Sorted GPU buffer draw batches. */
     struct DrawBatches
     {
         std::vector<DrawBatch> Primitives2d = {};
+        std::vector<DrawBatch> Primitives3d = {};
     };
 
     /** @brief GPU buffers. */
@@ -35,6 +38,7 @@ namespace Silent::Renderer::SdlGpu
         VertexBuffer<BufferVertex2d> ViewportVertices2d = {};
 
         VertexBuffer<BufferVertex2d> Vertices2d = {};
+        VertexBuffer<BufferVertex3d> Vertices3d = {};
     };
 
     /** @brief SDL_gpu renderer backend. */
@@ -50,6 +54,7 @@ namespace Silent::Renderer::SdlGpu
         PipelineManager              _pipelines = PipelineManager();
         
         SDL_GPUTexture*       _renderTexture    = nullptr;
+        SDL_GPUTexture*       _depthTexture     = nullptr;
         SDL_GPUTexture*       _swapchainTexture = nullptr;
         SDL_GPUCommandBuffer* _commandBuffer    = nullptr;
         DrawBatches           _drawBatches      = {};
@@ -60,7 +65,7 @@ namespace Silent::Renderer::SdlGpu
         // Constructors
         // =============
 
-        /** @brief Constructs an uninitialized default `Renderer`. */
+        /** @brief Creates a default uninitialized instance. */
         Renderer() = default;
 
         // ==========
@@ -77,17 +82,29 @@ namespace Silent::Renderer::SdlGpu
         // Helpers
         // ========
 
+        /** @brief Gets the GPU texture cache.
+         *
+         * @return GPU texture cache.
+         */
+        TextureCache& GetTextures();
+
+        /** @brief Gets the GPU mesh cache.
+         *
+         * @return GPU mesh cache.
+         */
+        MeshCache& GetMeshes();
+
         /** @brief Gets the offscreen render texture.
          *
          * @return Offscreen render texture.
          */
         SDL_GPUTexture* GetRenderTexture();
 
-        /** @brief Gets the texture cache.
+        /** @brief Gets the offscreen depth stencil texture.
          *
-         * @return Texture cache.
+         * @return Offscreen depth stencil texture.
          */
-        TextureCache& GetTextures();
+        SDL_GPUTexture* GetDepthTexture();
 
         /** @brief Gets the active texture sampler according to user options.
          *
@@ -126,16 +143,16 @@ namespace Silent::Renderer::SdlGpu
         /** @brief Pushes uniform data to the GPU for the vertex shader.
          *
          * @param uni Uniform buffer to push.
-         * @param slotIdx Index of the vertex uniform slot to push data to.
+         * @param slot Vertex uniform shader slot to push data to.
          */
-        void PushVertexUniform(const UniformType& uni, int slotIdx);
+        void PushVertexUniform(const UniformType& uni, UniformSlot slot);
 
         /** @brief Pushes uniform data to the GPU for the fragment shader.
          *
          * @param uni Uniform buffer to push.
-         * @param slotIdx Index of the fragment uniform slot to push data to.
+         * @param slot Fragment uniform shader slot to push data to.
          */
-        void PushFragmentUniform(const UniformType& uni, int slotIdx);
+        void PushFragmentUniform(const UniformType& uni, UniformSlot slot);
 
         /** @brief Clears draw batches for reuse. */
         void ClearDrawBatches();

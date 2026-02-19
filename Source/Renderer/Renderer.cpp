@@ -10,6 +10,7 @@
 #include "Renderer/Common/Resources/Scene/Sprite2d.h"
 #include "Renderer/Common/Resources/Scene/Text2d.h"
 #include "Renderer/Common/Utils.h"
+#include "Renderer/Common/View.h"
 #include "Utils/Parallel.h"
 #include "Utils/Utils.h"
 
@@ -32,7 +33,7 @@ namespace Silent::Renderer
         _clearColor = color;
     }
 
-    Vector2i RendererBase::GetScreenResolution() const
+    Vector2i RendererBase::GetViewportResolution() const
     {
         const auto& options = g_App.GetOptions();
 
@@ -42,13 +43,18 @@ namespace Silent::Renderer
         // @todo Render scale should be a post-process instead?
         switch (options->RenderScale)
         {
-            case RenderScaleType::Native:
-            {
-                break;
-            }
-            case RenderScaleType::Retro:
+            case RenderScaleType::Original:
             {
                 res = RETRO_SCREEN_SPACE_RES.ToVector2i();
+                break;
+            }
+            case RenderScaleType::DoubleOriginal:
+            {
+                res = RETRO_SCREEN_SPACE_RES.ToVector2i() * 2.0f;
+                break;
+            }
+            case RenderScaleType::Native:
+            {
                 break;
             }
         }
@@ -56,10 +62,20 @@ namespace Silent::Renderer
         return res;
     }
 
-    float RendererBase::GetScreenAspectRatio() const
+    float RendererBase::GetViewportAspectRatio() const
     {
-        auto res = GetScreenResolution().ToVector2();
+        auto res = GetViewportResolution().ToVector2();
         return res.x / res.y;
+    }
+
+    const BoundingFrustum& RendererBase::GetViewFrustum() const
+    {
+        return _view.Frustum;
+    }
+
+    void RendererBase::UpdateView()
+    {
+        // @todo
     }
 
     void RendererBase::PrepareRenderBuffer()
@@ -126,7 +142,7 @@ namespace Silent::Renderer
 
         // @todo Handle this somehow somewhere, but not here. Sprite textures don't
         // have to come from streamable assets, e.g. font atlases.
-        //const auto asset = assets.GetAsset(sprite.TextureName);
+        //const auto* asset = assets.GetAsset(sprite.TextureName);
         //if (asset->Type != AssetType::Tim)
         //{
         //    Debug::Log("Attempted to submit non-image asset as screen sprite.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
@@ -140,7 +156,8 @@ namespace Silent::Renderer
     bool RendererBase::SubmitText2d(const Text2d& text)
     {
         constexpr auto SHADOW_COLOR  = Color::From8Bit(16, 16, 16);
-        static const auto SHADOW_OFFSET = SCREEN_SPACE_RES * (1.0f / RETRO_SCREEN_SPACE_RES.y); // @todo Make `constexpr`.
+        constexpr auto SHADOW_OFFSET = Vector2(SCREEN_SPACE_RES.x * (1.0f / RETRO_SCREEN_SPACE_RES.y),
+                                               SCREEN_SPACE_RES.y * (1.0f / RETRO_SCREEN_SPACE_RES.y));
 
         auto& fonts = g_App.GetFonts();
 
@@ -156,9 +173,10 @@ namespace Silent::Renderer
         auto shapedText = font->GetShapedText(text.Message);
 
         // Compute trasformation parameters.
-        auto rotMat          = Matrix::CreateRotationZ(text.Rotation);
-        auto fontScaleFactor = SCREEN_SPACE_RES / (float)font->GetPointSize();
-        auto textSize        = (Vector2(shapedText.Width, (float)font->GetPointSize()) * fontScaleFactor) * text.Scale;
+        auto rotMat           = Matrix::CreateRotationZ(text.Rotation);
+        auto fontScaleFactor  = SCREEN_SPACE_RES / (float)font->GetPointSize();
+        auto textSize         = (Vector2(shapedText.Width, (float)font->GetPointSize()) * fontScaleFactor) * text.Scale;
+        auto aspectCorrection = GetScreenAspectCorrection(text.ScaleMd);
 
         // @todo Derive colour from markup.
         auto color = Color::White;
@@ -235,7 +253,7 @@ namespace Silent::Renderer
             // Compute screen position.
             auto relPixelPos = adjPixelOffset + adjPixelBearing;
             auto relPos      = (relPixelPos * fontScaleFactor) * text.Scale;
-            auto pos         = adjTextPos + relPos;
+            auto pos         = adjTextPos + (relPos * aspectCorrection);
 
             // Compute scale.
             auto relScale = Vector2((float)(shapedGlyph.Attribs.AtlasSize.x) / (float)(shapedGlyph.Attribs.AtlasSize.y), 1.0f) *
@@ -256,7 +274,7 @@ namespace Silent::Renderer
                 auto glyph = Glyph2d::CreateGlyph2d(shapedGlyph, hasGradient,
                                                     atlasName, uvMin, uvMax,
                                                     pos + offset, text.Rotation, scale, color,
-                                                    depth, ScaleMode::ShortEdge);
+                                                    depth, text.ScaleMd);
                 _glyphs2d.push_back(glyph);
 
                 return true;
@@ -365,6 +383,70 @@ namespace Silent::Renderer
         _glyphs2d.reserve(GLYPH_2D_COUNT_MAX);
     }
 
+    void RendererBase::ProcessShapes2d()
+    {
+        // @todo How to apply this?
+        // Compute aspect correction.
+        auto aspectCorrection = GetScreenAspectCorrection(ScaleMode::ShortEdge);
+
+        for (const auto& shape : _shapes2d)
+        {
+            auto posArr = std::vector<Vector2>{};
+            posArr.reserve(shape.Vertices.size());
+
+            // Triangle.
+            if (shape.Vertices.size() == TRI_VERTEX_COUNT)
+            {
+                // Compute vertex positions.
+                posArr =
+                {
+                    ConvertScreenPercentToNdc(Vector2(shape.Vertices[0].Position.x, shape.Vertices[0].Position.y)),
+                    ConvertScreenPercentToNdc(Vector2(shape.Vertices[1].Position.x, shape.Vertices[1].Position.y)),
+                    ConvertScreenPercentToNdc(Vector2(shape.Vertices[2].Position.x, shape.Vertices[2].Position.y))
+                };
+            }
+            // Line or quad.
+            else if (shape.Vertices.size() == QUAD_VERTEX_COUNT)
+            {
+                // Compute vertex positions.
+                posArr =
+                {
+                    ConvertScreenPercentToNdc(Vector2(shape.Vertices[0].Position.x, shape.Vertices[0].Position.y)),
+                    ConvertScreenPercentToNdc(Vector2(shape.Vertices[1].Position.x, shape.Vertices[1].Position.y)),
+                    ConvertScreenPercentToNdc(Vector2(shape.Vertices[2].Position.x, shape.Vertices[2].Position.y)),
+                    ConvertScreenPercentToNdc(Vector2(shape.Vertices[3].Position.x, shape.Vertices[3].Position.y))
+                };
+            }
+
+            // Create vertices.
+            auto verts = std::vector<Vertex2d>{};
+            verts.reserve(shape.Vertices.size());
+            for (int i = 0; i < shape.Vertices.size(); i++)
+            {
+                verts.push_back(Vertex2d{ posArr[i], shape.Vertices[i].Col, Vector2::Zero });
+            }
+
+            // Add 2D primitive.
+            // @lock Restrict 2D primitives access.
+            {
+                auto lock = ParallelLock(_primitives2dMutex);
+
+                _doubleBuffer.Active.Primitives2d.push_back(Primitive2d
+                {
+                    .Vertices    = std::move(verts),
+                    .Depth       = shape.Depth,
+                    .TextureName = {},
+                    .RenderStg   = RenderStage::Shape2d,
+                    .BlendMd     = shape.BlendMd,
+                    .Uniform     = UniformSprite2d
+                    {
+                        .IsFastAlpha = shape.BlendMd == BlendMode::FastAlpha
+                    }
+                });
+            }
+        }
+    }
+
     void RendererBase::ProcessSprites2d()
     {
         for (const auto& sprite : _sprites2d)
@@ -424,12 +506,15 @@ namespace Silent::Renderer
                 }
             }
 
+            // Compute aspect correction.
+            auto aspectCorrection = GetScreenAspectCorrection(ScaleMode::ShortEdge);
+
             // Compute relative vertex positions.
             auto rotMat  = Matrix::CreateRotationZ(-sprite.Rotation);
-            auto relPos0 = Vector2::Transform(Vector2(-sprite.Scale.x, sprite.Scale.y) + offset, rotMat);
-            auto relPos1 = Vector2::Transform(sprite.Scale                             + offset, rotMat);
-            auto relPos2 = Vector2::Transform(Vector2(sprite.Scale.x, -sprite.Scale.y) + offset, rotMat);
-            auto relPos3 = Vector2::Transform(-sprite.Scale                            + offset, rotMat);
+            auto relPos0 = Vector2::Transform(Vector2(-sprite.Scale.x, sprite.Scale.y) + offset, rotMat) * aspectCorrection;
+            auto relPos1 = Vector2::Transform(sprite.Scale                             + offset, rotMat) * aspectCorrection;
+            auto relPos2 = Vector2::Transform(Vector2(sprite.Scale.x, -sprite.Scale.y) + offset, rotMat) * aspectCorrection;
+            auto relPos3 = Vector2::Transform(-sprite.Scale                            + offset, rotMat) * aspectCorrection;
 
             // Compute vertex positions.
             auto pos0 = Vector2(ndc.x + relPos0.x, ndc.y + relPos0.y);
@@ -452,10 +537,10 @@ namespace Silent::Renderer
                 {
                     .Vertices =
                     {
-                        { pos0, sprite.Col0, uv0 },
-                        { pos1, sprite.Col1, uv1 },
-                        { pos2, sprite.Col2, uv2 },
-                        { pos3, sprite.Col3, uv3 }
+                        Vertex2d{ pos0, sprite.Col0, uv0 },
+                        Vertex2d{ pos1, sprite.Col1, uv1 },
+                        Vertex2d{ pos2, sprite.Col2, uv2 },
+                        Vertex2d{ pos3, sprite.Col3, uv3 }
                     },
                     .Depth       = sprite.Depth,
                     .TextureName = sprite.TextureName,
@@ -463,85 +548,9 @@ namespace Silent::Renderer
                     .BlendMd     = sprite.BlendMd,
                     .Uniform     = UniformSprite2d
                     {
-                        .UseTexture  = true, 
                         .IsFastAlpha = sprite.BlendMd == BlendMode::FastAlpha
                     }
                 });
-            }
-        }
-    }
-
-    void RendererBase::ProcessShapes2d()
-    {
-        for (const auto& shape : _shapes2d)
-        {
-            // Triangle.
-            if (shape.Vertices.size() == TRI_VERTEX_COUNT)
-            {
-                // Compute vertex positions.
-                auto pos0 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[0].Position.x, shape.Vertices[0].Position.y));
-                auto pos1 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[1].Position.x, shape.Vertices[1].Position.y));
-                auto pos2 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[2].Position.x, shape.Vertices[2].Position.y));
-
-                // Add 2D primitive.
-                // @lock Restrict 2D primitives access.
-                {
-                    auto lock = ParallelLock(_primitives2dMutex);
-
-                    _doubleBuffer.Active.Primitives2d.push_back(Primitive2d
-                    {
-                        .Vertices =
-                        {
-                            Vertex2d{ pos0, shape.Vertices[0].Col, Vector2::Zero },
-                            Vertex2d{ pos1, shape.Vertices[1].Col, Vector2::Zero },
-                            Vertex2d{ pos2, shape.Vertices[2].Col, Vector2::Zero },
-                        },
-                        .Depth       = shape.Depth,
-                        .TextureName = {},
-                        .RenderStg   = RenderStage::Sprite2d,
-                        .BlendMd     = shape.BlendMd,
-                        .Uniform     = UniformSprite2d
-                        {
-                            .UseTexture  = false, 
-                            .IsFastAlpha = shape.BlendMd == BlendMode::FastAlpha
-                        }
-                    });
-                }
-            }
-            // Line or quad.
-            else if (shape.Vertices.size() == QUAD_VERTEX_COUNT)
-            {
-                // Compute vertex positions.
-                auto pos0 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[0].Position.x, shape.Vertices[0].Position.y));
-                auto pos1 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[1].Position.x, shape.Vertices[1].Position.y));
-                auto pos2 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[2].Position.x, shape.Vertices[2].Position.y));
-                auto pos3 = ConvertScreenPercentToNdc(Vector2(shape.Vertices[3].Position.x, shape.Vertices[3].Position.y));
-
-                // Add 2D primitive.
-                // @lock Restrict 2D primitives access.
-                {
-                    auto lock = ParallelLock(_primitives2dMutex);
-
-                    _doubleBuffer.Active.Primitives2d.push_back(Primitive2d
-                    {
-                        .Vertices =
-                        {
-                            Vertex2d{ pos0, shape.Vertices[0].Col, Vector2::Zero },
-                            Vertex2d{ pos1, shape.Vertices[1].Col, Vector2::Zero },
-                            Vertex2d{ pos2, shape.Vertices[2].Col, Vector2::Zero },
-                            Vertex2d{ pos3, shape.Vertices[3].Col, Vector2::Zero }
-                        },
-                        .Depth       = shape.Depth,
-                        .TextureName = {},
-                        .RenderStg   = RenderStage::Sprite2d,
-                        .BlendMd     = shape.BlendMd,
-                        .Uniform     = UniformSprite2d
-                        {
-                            .UseTexture  = false, 
-                            .IsFastAlpha = shape.BlendMd == BlendMode::FastAlpha
-                        }
-                    });
-                }
             }
         }
     }
@@ -550,19 +559,19 @@ namespace Silent::Renderer
     {
         for (const auto& glyph : _glyphs2d)
         {
-            // @todo Apply scale mode later.
             //auto pos = GetAspectCorrectScreenPosition(Vector2(vert.Position.x, vert.Position.y), sprite.ScaleMd);
             auto ndc = ConvertScreenPercentToNdc(glyph.Position);
 
-            // Set alignment offset.
-            auto offset = Vector2(glyph.Scale.x, glyph.Scale.y);
+            // Set alignment offset and aspect correction.
+            auto offset           = Vector2(glyph.Scale.x, glyph.Scale.y);
+            auto aspectCorrection = GetScreenAspectCorrection(glyph.ScaleMd);
 
             // Compute relative vertex positions.
             auto rotMat  = Matrix::CreateRotationZ(-glyph.Rotation);
-            auto relPos0 = Vector2::Transform(Vector2(-glyph.Scale.x, glyph.Scale.y) + offset, rotMat);
-            auto relPos1 = Vector2::Transform(glyph.Scale                            + offset, rotMat);
-            auto relPos2 = Vector2::Transform(Vector2(glyph.Scale.x, -glyph.Scale.y) + offset, rotMat);
-            auto relPos3 = Vector2::Transform(-glyph.Scale                           + offset, rotMat);
+            auto relPos0 = Vector2::Transform(Vector2(-glyph.Scale.x, glyph.Scale.y) + offset, rotMat) * aspectCorrection;
+            auto relPos1 = Vector2::Transform(glyph.Scale                            + offset, rotMat) * aspectCorrection;
+            auto relPos2 = Vector2::Transform(Vector2(glyph.Scale.x, -glyph.Scale.y) + offset, rotMat) * aspectCorrection;
+            auto relPos3 = Vector2::Transform(-glyph.Scale                           + offset, rotMat) * aspectCorrection;
 
             // Compute vertex positions.
             auto pos0 = ndc + relPos0;

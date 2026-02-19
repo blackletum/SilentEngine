@@ -9,8 +9,10 @@ namespace Silent::Renderer
         // Materials
         // ==========
 
+        Shape2d,
         Sprite2d,
         Glyph2d,
+        Model,
 
         // ========
         // Effects
@@ -63,8 +65,8 @@ namespace Silent::Renderer
     {
         ShortEdge,
         LongEdge,
-        HorizontalEdge, // } Might implement this, not sure.
-        VerticalEdge,   // }
+        HorizontalEdge,
+        VerticalEdge,
         Stretch
     };
 }

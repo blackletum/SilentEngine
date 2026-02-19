@@ -1,6 +1,9 @@
 #pragma once
 
-#include "Renderer/Common/Texture.h"
+#include "Assets/AssetStreamer.h"
+#include "Renderer/Common/Resources/TextureCache.h"
+
+using namespace Silent::Assets;
 
 namespace Silent::Renderer::SdlGpu
 {
@@ -21,10 +24,10 @@ namespace Silent::Renderer::SdlGpu
         // =============
 
         // @todo Deprecated.
-        /** @brief Constructs an uninitialized default `Texture`. */
+        /** @brief Creates a default uninitialized instance. */
         Texture() = default;
 
-        /** @brief Constructs a `Texture` and uploads data to the GPU.
+        /** @brief Creates an instance and uploads data to the GPU.
          *
          * @param device GPU device.
          * @param copyPass Copy pass.
@@ -36,7 +39,7 @@ namespace Silent::Renderer::SdlGpu
         Texture(SDL_GPUDevice& device, SDL_GPUCopyPass& copyPass,
                 SDL_GPUTextureUsageFlags usageFlags, std::span<const byte> pixels, const Vector2i& res, const std::string& name);
 
-        /** @brief Gracefully destroys the `Texture` and frees GPU resources. */
+        /** @brief Gracefully destroys the instance and frees GPU resources. */
         ~Texture();
 
         // ========
@@ -72,8 +75,9 @@ namespace Silent::Renderer::SdlGpu
          *
          * @param renderPass Render pass.
          * @param sampler Texture sampler.
+         * @param slotIdx Shader sampler slot index.
          */
-        void Bind(SDL_GPURenderPass& renderPass, SDL_GPUSampler& sampler);
+        void Bind(SDL_GPURenderPass& renderPass, SDL_GPUSampler& sampler, int slotIdx = 0);
     };
 
     /** @brief GPU texture cache. */
@@ -91,7 +95,7 @@ namespace Silent::Renderer::SdlGpu
         // Constructors
         // =============
 
-        /** @brief Constructs an `TextureCache` with a device reference.
+        /** @brief Creates an instance with a device reference.
          *
          * @param device GPU device.
          */
@@ -110,13 +114,38 @@ namespace Silent::Renderer::SdlGpu
          */
         void Load(SDL_GPUCopyPass& copyPass, std::span<const byte> pixels, const Vector2i res, const std::string& name);
 
-        /** @brief Loads a texture from a TIM asset.
+        /** @brief Loads a texture from a streamable asset.
          *
          * @param copyPass Copy pass.
-         * @param assetIdx TIM asset name.
+         * @param assetName Streamable asset name.
          */
         void Load(SDL_GPUCopyPass& copyPass, const std::string& assetName);
 
+        /** @brief Unloads */
+        void Unload(const std::string& name);
+
+        /** @brief Clears all textures in the cache. */
+        void Clear();
+
         Texture* operator[](const std::string& name);
+
+    private:
+        // ========
+        // Helpers
+        // ========
+
+        /** @brief Loads a texture from a PNG asset.
+         *
+         * @param copyPass Copy pass.
+         * @param asset PNG asset.
+         */
+        void LoadPng(SDL_GPUCopyPass& copyPass, const Asset& asset);
+
+        /** @brief Loads a texture from a TIM asset.
+         *
+         * @param copyPass Copy pass.
+         * @param asset TIM asset.
+         */
+        void LoadTim(SDL_GPUCopyPass& copyPass, const Asset& asset);
     };
 }

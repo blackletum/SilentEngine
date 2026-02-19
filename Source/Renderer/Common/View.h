@@ -2,6 +2,7 @@
 
 namespace Silent::Renderer
 {
+    /** @brief 3D render view. */
     class View
     {
     public:
@@ -9,23 +10,25 @@ namespace Silent::Renderer
         // Fields
         // =======
 
-        Vector3 Position  = Vector3::Zero;
-        Vector3 Direction = -Vector3::UnitZ;
-        Vector3 Up        = Vector3::UnitY;
-
-        Vector2i Size = Vector2i::Zero;  
-        float    Fov  = 45.0f;
-
-        float Speed = 0.02f;
+        Vector3         Position  = Vector3::Zero;
+        Vector3         Direction = Vector3::UnitZ;
+        Vector3         Up        = Vector3::UnitY;
+        Vector2i        Size      = Vector2i::Zero;  
+        float           Fov       = DEG_TO_RAD(45.0f);
+        BoundingFrustum Frustum   = BoundingFrustum{};
 
         // =============
         // Constructors
         // =============
 
-        /** @brief Constructs an uninitialized default `View`. */
+        /** @brief Creates a default uninitialized instance. */
         View() = default;
 
-        /** @brief  */
+        /** @brief Creates an instance from a position and size.
+         *
+         * @param pos World position.
+         * @param size Screen size.
+         */
         View(const Vector3& pos, const Vector2i& size);
 
         // ==========

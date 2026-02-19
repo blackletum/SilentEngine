@@ -34,16 +34,19 @@ namespace Silent::Math
         // Constructors
         // =============
 
-        /** @brief Constructs a default `OrientedBoundingBox`. */
+        /** @brief Creates a default instance. */
         constexpr OrientedBoundingBox() = default;
 
-        /** @brief Constructs a `OrientedBoundingBox` from a center, extents, and rotation.
+        /** @brief Creates an instance from a center, extents, and rotation.
          *
          * @param center Center.
          * @param extents Extents.
          * @param rot Rotation.
          */
-        constexpr OrientedBoundingBox(const Vector3& center, const Vector3& extents, const Quaternion rot) : Center(center), Extents(extents), Rotation(rot) {}
+        constexpr OrientedBoundingBox(const Vector3& center, const Vector3& extents, const Quaternion rot) :
+            Center(center),
+            Extents(extents),
+            Rotation(rot) {}
 
         // ========
         // Getters
