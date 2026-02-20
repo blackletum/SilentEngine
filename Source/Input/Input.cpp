@@ -410,8 +410,10 @@ namespace Silent::Input
         float intensity = std::lerp(_rumble.IntensityFrom, _rumble.IntensityTo, alpha);
 
         // Compute frequencies.
-        ushort freqLow  = (_rumble.Mode == RumbleMode::Low  || _rumble.Mode == RumbleMode::LowAndHigh) ? (ushort)(intensity * USHRT_MAX) : 0;
-        ushort freqHigh = (_rumble.Mode == RumbleMode::High || _rumble.Mode == RumbleMode::LowAndHigh) ? (ushort)(intensity * USHRT_MAX) : 0;
+        bool   hasLowFreq  = _rumble.Mode == RumbleMode::Low  || _rumble.Mode == RumbleMode::LowAndHigh;
+        bool   hasHighFreq = _rumble.Mode == RumbleMode::High || _rumble.Mode == RumbleMode::LowAndHigh;
+        ushort freqLow     = hasLowFreq  ? (ushort)(intensity * USHRT_MAX) : 0;
+        ushort freqHigh    = hasHighFreq ? (ushort)(intensity * USHRT_MAX) : 0;
 
         // Compute duration.
         int durationMs = (int)round(TICK_TO_SEC(_rumble.DurationTicks) * 1000);
@@ -516,7 +518,8 @@ namespace Silent::Input
         }
 
         float sensitivity = (options->MouseSensitivity * 0.1f) + 0.4f;
-        auto  moveAxis    = (((_deviceStates.CursorPosition - prevCursorPos) / SCREEN_SPACE_RES) * (res.ToVector2() / SCREEN_SPACE_RES)) * sensitivity;
+        auto  moveAxis    = (((_deviceStates.CursorPosition - prevCursorPos) / SCREEN_SPACE_RES) *
+                             (res.ToVector2() / SCREEN_SPACE_RES)) * sensitivity;
         if (moveAxis != Vector2::Zero)
         {
             _deviceStates.HasMouseInput = true;
@@ -649,11 +652,13 @@ namespace Silent::Input
 
         // Toggle fullscreen.
         static bool dbFullscreen = true;
-        if (((GetRawEventState(EventId::Alt) && GetRawEventState(EventId::Return)) || GetRawEventState(EventId::F11)) && dbFullscreen)
+        if (((GetRawEventState(EventId::Alt) && GetRawEventState(EventId::Return)) || GetRawEventState(EventId::F11)) &&
+            dbFullscreen)
         {
             g_App.ToggleFullscreen();
         }
-        dbFullscreen = !((GetRawEventState(EventId::Alt) && GetRawEventState(EventId::Return)) || GetRawEventState(EventId::F11));
+        dbFullscreen = !((GetRawEventState(EventId::Alt) && GetRawEventState(EventId::Return)) ||
+                         GetRawEventState(EventId::F11));
 
         auto& options = g_App.GetOptions();
         if (options->EnablePowerMode)
