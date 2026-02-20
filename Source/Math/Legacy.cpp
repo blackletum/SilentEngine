@@ -1,5 +1,5 @@
 #include "Framework.h"
-#include "Math/Legacy/Math.h"
+#include "Math/Legacy.h"
 
 namespace Silent::Math
 {

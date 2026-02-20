@@ -33,6 +33,16 @@ namespace Silent::Math
         return x * x;
     };
 
+    /** @brief Cubes a value.
+     *
+     * @param x Value to be cubed.
+     * @return `x` cubed.
+     */
+    constexpr auto CUBE = [](auto x)
+    {
+        return x * x * x;
+    };
+
     /** @brief Determines the smaller of two values.
      *
      * @param a First value.
@@ -67,6 +77,73 @@ namespace Silent::Math
         return (x < min) ? min : ((x > max) ? max : x);
     };
 
+    /** @brief Clamps a value to be not less than a given lower bound.
+     *
+     * @param x Value to clamp.
+     * @param min Lower bound.
+     * @return `x` if `x >= min`, otherwise `min`.
+     */
+    constexpr auto CLAMP_LOW = [](auto x, auto min)
+    {
+        return (x < min) ? min : x;
+    };
+
+    /** @brief Clamps a value to be not greater than a given upper bound.
+     *
+     * @param x Value to clamp.
+     * @param max Upper bound.
+     * @return `x` if `x <= max`, otherwise `max`.
+     */
+    constexpr auto CLAMP_HIGH = [](auto x, auto max)
+    {
+        return (x > max) ? max : x;
+    };
+
+    /** @brief Clamps a value to the inclusive range `[min, max]`.
+     *
+     * Uses `CLAMP_HIGH`, then `CLAMP_LOW` to ensure the value
+     * is between the specified bounds.
+     *
+     * @param x Value to clamp.
+     * @param min Lower bound.
+     * @param max Upper bound.
+     * @return `x` clamped to the range `[min, max]`.
+     */
+    constexpr auto CLAMP_RANGE = [](auto x, auto min, auto max)
+    {
+        return CLAMP_LOW(CLAMP_HIGH(x, max), min);
+    };
+
+    /** @brief Clamps a value to the range `[min, max]` using `MIN` first.
+     *
+     * Takes the smaller value between `x` and `max`, then ensures the result
+     * is not less than `min`.
+     *
+     * @param x Value to clamp.
+     * @param min Lower bound.
+     * @param max Upper bound.
+     * @return `x` clamped to the range `[min, max]`.
+     */
+    constexpr auto CLAMP_MIN_THEN_LOW = [](auto x, auto min, auto max)
+    {
+        return CLAMP_LOW(MIN(x, max), min);
+    };
+
+    /** @brief Clamps a value to the range `[min, max]` using `CLAMP_LOW` first.
+     *
+     * Ensures `x` is not less than `min`, then uses `MIN` to restrict
+     * the result to not exceed `max`.
+     *
+     * @param x Value to clamp.
+     * @param min Lower bound.
+     * @param max Upper bound.
+     * @return `x` clamped to the range `[min, max]`.
+     */
+    constexpr auto CLAMP_LOW_THEN_MIN = [](auto x, auto min, auto max)
+    {
+        return MIN(CLAMP_LOW(x, min), max);
+    };
+
     /** @brief Computes the absolute value.
      *
      * @param x Value.
@@ -77,13 +154,15 @@ namespace Silent::Math
         return (x < 0) ? -x : x;
     };
 
-    /** @brief Computes the absolute value of an `s32` by shifting.
+    /** @brief Computes the absolute value of an integer by shifting.
      *
      * @param x Value.
      * @return Absolute value of `x`.
      */
-    #define ABS_32(x) \
-        (((x) ^ ((x) >> 31)) - ((x) >> 31))
+    constexpr auto ABS_32 = [](auto x)
+    {
+        return (x ^ (x >> 31)) - (x >> 31);
+    };
 
     /** @brief Computes the absolute sum of two values.
      *
@@ -118,6 +197,17 @@ namespace Silent::Math
         return (a >= 0 && b < 0) || (a < 0 && b >= 0);
     };
 
+    /** @brief Scales a large `x` before trigonometric multiplication.
+     *
+     * @note "Range-based scaling mechanism common in fixed-point DSP or min-level game engine math." - ChatGPT
+     *
+     * @param x Value to use for overflow computation.
+     * @return 4 if `x` overflows, otherwise 0. */
+    constexpr auto OVERFLOW_GUARD = [](auto x)
+    {
+        return (((uint)x + SHRT_MAX) >= USHRT_MAX) ? 4 : 0;
+    };
+
     /** @brief Rounds a floating-point value.
      *
      * @param x Value to round.
@@ -144,8 +234,10 @@ namespace Silent::Math
      * @param step Flooring step.
      * @return `x` floored to the closest `step`.
      */
-    #define FLOOR_TO_STEP(x, step) \
-        (((x) >= 0) ? ((x) / (step)) : (((x) - ((step) - 1)) / (step)))
+    constexpr auto FLOOR_TO_STEP = [](auto x, auto step)
+    {
+        return (x >= 0) ? (x / step) : ((x - (step - 1)) / step);
+    };
 
     /** @brief Ceils a floating-point value.
      *

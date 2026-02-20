@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Math/Legacy/Arithmetic.h"
-#include "Math/Legacy/Compatibility.h"
-#include "Math/Legacy/FixedPoint.h"
+#include "Math/Compatibility.h"
+#include "Math/FixedPoint.h"
 
 namespace Silent::Math
 {

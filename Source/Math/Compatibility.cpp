@@ -1,8 +1,8 @@
 #include "Framework.h"
-#include "Math/Legacy/Compatibility.h"
+#include "Math/Compatibility.h"
 
 #include "Math/Constants.h"
-#include "Math/Legacy/FixedPoint.h"
+#include "Math/FixedPoint.h"
 #include "Math/Objects/EulerAngles.h"
 #include "Math/Objects/Matrix.h"
 #include "Math/Objects/Vector3i.h"

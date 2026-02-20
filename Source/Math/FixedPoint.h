@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Math/Legacy/Arithmetic.h"
 #include "Math/Constants.h"
 
 namespace Silent::Math
@@ -20,7 +19,7 @@ namespace Silent::Math
      *
      * @note Deprecated.
      *
-     * @param x `int` to convert.
+     * @param x Integer to convert.
      * @param shift Fixed-point shift.
      * @return `x` converted to fixed-point.
      */
@@ -31,16 +30,18 @@ namespace Silent::Math
 
     /** @brief Converts a float to a fixed-point Q format.
      *
-     * @param x `float` to convert.
+     * @param x Floating-point value to convert.
      * @param shift Fixed-point shift.
-     * @return `x` converted to fixed-point (`s32`).
+     * @return `x` converted to fixed-point.
      */
-    #define TO_FIXED(x, shift) \
-        (s32)((x) * (1 << (shift)))
+    constexpr int TO_FIXED(float x, int shift)
+    {
+        return x * (1 << shift);
+    }
 
     /** @brief Converts an integer from a fixed-point Q format.
      *
-     * @param x `int` to convert.
+     * @param x Integer to convert.
      * @param shift Fixed-point shift.
      * @return `x` converted from fixed-point.
      */
@@ -67,8 +68,10 @@ namespace Silent::Math
      * @param shift Fixed-point shift.
      * @return `x` rounded and converted from fixed-point.
      */
-    #define FP_ROUND_SCALED(x, scale, shift) \
-        (((x) + ((TO_FIXED(1.0f, shift) * (scale)) - 1)) / (TO_FIXED(1.0f, shift) * (scale)))
+    constexpr int FP_ROUND_SCALED(int x, int scale, int shift)
+    {
+        return (x + ((TO_FIXED(1.0f, shift) * scale) - 1)) / (TO_FIXED(1.0f, shift) * scale);
+    }
 
     /** @brief Converts an integer from a fixed-point Q format rounded toward 0.
      *
@@ -76,8 +79,10 @@ namespace Silent::Math
      * @param shift Fixed-point shift.
      * @return `x` rounded toward 0 and converted from fixed-point.
      */
-    #define FP_ROUND_TO_ZERO(x, shift) \
-        ((s32)(FP_FROM(x, shift) + ((u32)(x) >> 31)) >> 1)
+    constexpr int FP_ROUND_TO_ZERO(int x, int shift)
+    {
+        return (FP_FROM(x, shift) + (x >> 31)) >> 1;
+    }
 
     /** @brief Multiplies two integers in a fixed-point Q format.
      *
@@ -123,8 +128,10 @@ namespace Silent::Math
      * @param shift Fixed-point shift.
      * @return Precise product of `a` and `b` converted from fixed-point.
      */
-    #define FP_MULTIPLY_FLOAT_PRECISE(aInt, bFlt, shift) \
-        FP_MULTIPLY((s64)(aInt), (s64)TO_FIXED(bFlt, shift), shift)
+    constexpr int FP_MULTIPLY_FLOAT_PRECISE(int a, float b, int shift)
+    {
+        return FP_MULTIPLY((int64)(a), (int64)TO_FIXED(b, shift), shift);
+    }
 
     /** @brief Divides an integer in a fixed-point Q format by another.
      *
@@ -132,8 +139,10 @@ namespace Silent::Math
      * @param b Fixed-point denominator.
      * @return Fixed-point result of `a` divided by `b`.
      */
-    #define FP_DIVIDE(a, b, shift) \
-        (((a) << (shift)) / (b))
+    constexpr int FP_DIVIDE(int a, int b, int shift)
+    {
+        return (a << shift) / b;
+    }
 
     /** @brief Squares a fixed-point value.
      *
@@ -141,8 +150,10 @@ namespace Silent::Math
      * @param shift Fixed-point shift.
      * @return Fixed-point square of `x`.
      */
-    #define FP_SQUARE(x, shift) \
-        FP_MULTIPLY(x, x, shift)
+    constexpr int FP_SQUARE(int x, int shift)
+    {
+        return FP_MULTIPLY(x, x, shift);
+    }
 
     /** @brief Squares a fixed-point value, using 64-bit intermediates for higher precision.
      *
@@ -150,70 +161,86 @@ namespace Silent::Math
      * @param shift Fixed-point shift.
      * @return Fixed-point square of `x`.
      */
-    #define FP_SQUARE_PRECISE(x, shift) \
-        FP_MULTIPLY_PRECISE(x, x, shift)
+    constexpr int FP_SQUARE_PRECISE(int x, int shift)
+    {
+        return FP_MULTIPLY_PRECISE(x, x, shift);
+    }
 
-    /** @brief Multiplies two integers in Q*.12 fixed-point.
+    /** @brief Multiplies two integers in Q19.12 fixed-point.
      *
-     * @param a First Q*.12 fixed-point factor.
-     * @param b Second Q*.12 fixed-point factor.
-     * @return Q*.12 product of `a` and `b`.
+     * @param a First Q19.12 fixed-point factor.
+     * @param b Second Q19.12 fixed-point factor.
+     * @return Q19.12 product of `a` and `b`.
      */
-    #define Q12_MULT(a, b) \
-        FP_MULTIPLY(a, b, Q12_SHIFT)
+    constexpr q19_12 Q12_MULT(q19_12 a, q19_12 b)
+    {
+        return FP_MULTIPLY(a, b, Q12_SHIFT);
+    }
 
-    /** @brief Multiplies two integers in Q*.12 fixed-point, using 64-bit intermediates for higher precision.
+    /** @brief Multiplies two integers in Q19.12 fixed-point, using 64-bit intermediates for higher precision.
      *
-     * @param a First Q*.12 fixed-point factor.
-     * @param b Second Q*.12 fixed-point factor.
-     * @return Precise Q*.12 product of `a` and `b`.
+     * @param a First Q19.12 fixed-point factor.
+     * @param b Second Q19.12 fixed-point factor.
+     * @return Precise Q19.12 product of `a` and `b`.
      */
-    #define Q12_MULT_PRECISE(a, b) \
-        FP_MULTIPLY_PRECISE(a, b, Q12_SHIFT)
+    constexpr q19_12 Q12_MULT_PRECISE(q19_12 a, q19_12 b)
+    {
+        return FP_MULTIPLY_PRECISE(a, b, Q12_SHIFT);
+    }
 
-    /** @brief Multiplies an integer in Q*.12 fixed-point by a float converted to Q*.12 fixed-point.
+    /** @brief Multiplies an integer in Q19.12 fixed-point by a float converted to Q19.12 fixed-point.
      *
-     * @param a First Q*.12 fixed-point factor.
+     * @param a First Q19.12 fixed-point factor.
      * @param b Second floating-point factor.
-     * @return Q*.12 product of `a` and `b`.
+     * @return Q19.12 product of `a` and `b`.
      */
-    #define Q12_MULT_FLOAT(a, b) \
-        FP_MULTIPLY_FLOAT(a, b, Q12_SHIFT)
+    constexpr q19_12 Q12_MULT_FLOAT(q19_12 a, float b)
+    {
+        return FP_MULTIPLY_FLOAT(a, b, Q12_SHIFT);
+    }
 
-    /** @brief Multiplies an integer in Q*.12 fixed-point by a float converted to Q*.12 fixed-point,
+    /** @brief Multiplies an integer in Q19.12 fixed-point by a float converted to Q19.12 fixed-point,
      * using 64-bit intermediates for higher precision.
      *
-     * @param a First Q*.12 fixed-point factor.
+     * @param a First Q19.12 fixed-point factor.
      * @param b Second floating-point factor.
-     * @return Precise Q*.12 product of `a` and `b`.
+     * @return Precise Q19.12 product of `a` and `b`.
      */
-    #define Q12_MULT_FLOAT_PRECISE(a, b) \
-        FP_MULTIPLY_FLOAT_PRECISE(a, b, Q12_SHIFT)
+    constexpr q19_12 Q12_MULT_FLOAT_PRECISE(q19_12 a, float b)
+    {
+        return FP_MULTIPLY_FLOAT_PRECISE(a, b, Q12_SHIFT);
+    }
 
-    /** @brief Divides an integer in Q*.12 fixed-point by another.
+    /** @brief Divides an integer in Q19.12 fixed-point by another.
      *
-     * @param a Q*.12 fixed-point numerator.
-     * @param b Q*.12 fixed-point denominator.
-     * @return Q*.12 result of `a` divided by `b`.
+     * @param a Q19.12 fixed-point numerator.
+     * @param b Q19.12 fixed-point denominator.
+     * @return Q19.12 result of `a` divided by `b`.
      */
-    #define Q12_DIV(a, b) \
-        FP_DIVIDE(a, b, Q12_SHIFT)
+    constexpr q19_12 Q12_DIV(q19_12 a, q19_12 b)
+    {
+        return FP_DIVIDE(a, b, Q12_SHIFT);
+    }
 
-    /** @brief Squares a Q*.12 value.
+    /** @brief Squares a Q19.12 value.
      *
-     * @param x Q*.12 value to be squared.
-     * @return Q*.12 square of `x`.
+     * @param x Q19.12 value to be squared.
+     * @return Q19.12 square of `x`.
      */
-    #define Q12_SQUARE(x) \
-        FP_SQUARE(x, Q12_SHIFT)
+    constexpr q19_12 Q12_SQUARE(q19_12 x)
+    {
+        return FP_SQUARE(x, Q12_SHIFT);
+    }
 
     /** @brief Squares a fixed-point value, using 64-bit intermediates for higher precision.
      *
-     * @param x Q*.12 value to be squared.
-     * @return Q*.12 square of `x`.
+     * @param x Q19.12 value to be squared.
+     * @return Q19.12 square of `x`.
      */
-    #define Q12_SQUARE_PRECISE(x) \
-        FP_SQUARE_PRECISE(x, Q12_SHIFT)
+    constexpr q19_12 Q12_SQUARE_PRECISE(q19_12 x)
+    {
+        return FP_SQUARE_PRECISE(x, Q12_SHIFT);
+    }
 
     /** @brief Computes the square 2D distance between two positions in Q19.12 fixed-point,
      * using Q21.8 fixed-point intermediates to avoid overflow.
@@ -454,7 +481,7 @@ namespace Silent::Math
      * unsigned Q0.8 fixed-point, integer range `[0, 255]`.
      *
      * @param angle Unsigned Q3.12 fixed-point angle, full rotation integer range `[0, 4096]`.
-     * @return Unsigned Q0.8 fixed-point packed angle, full rotation integer range `[0, 255]` (`s16`).
+     * @return Unsigned Q0.8 fixed-point packed angle, full rotation integer range `[0, 255]` (`short`).
      */
     #define FP_ANGLE_TO_PACKED(angle) \
         Q12_TO_Q8(deg);
@@ -463,17 +490,17 @@ namespace Silent::Math
      * unsigned Q3.12 fixed-point, full rotation integer range `[0, 4096]`.
      *
      * @param packedAngle Unsigned Q0.8 fixed-point packed angle, full rotation integer range `[0, 255]`.
-     * @return Unsigned Q3.12 fixed-point angle, full rotation integer range `[0, 4096]` (`s16`).
+     * @return Unsigned Q3.12 fixed-point angle, full rotation integer range `[0, 4096]` (`short`).
      */
     #define FP_ANGLE_FROM_PACKED(packedAngle) \
-        (s16)Q8_TO_Q12(packedAngle)
+        (short)Q8_TO_Q12(packedAngle)
 
     /** @brief Normalizes a signed Q3.12 fixed-point angle to the clamped unsigned integer range `[0, 4095]`.
      *
      * @note Has the same effect as `FP_ANGLE_NORM_U`. Could they somehow be combined?
      *
      * @param angle Signed Q3.12 fixed-point angle, full rotation integer range `[-2048, 2047]`.
-     * @return Unsigned Q3.12 fixed-point angle, wrapped to the clamped integer range `[0, 4095]` (`s16`).
+     * @return Unsigned Q3.12 fixed-point angle, wrapped to the clamped integer range `[0, 4095]` (`short`).
      */
     #define FP_ANGLE_ABS(angle) \
         Q12_FRACT((angle) + FP_ANGLE(360.0f))
@@ -481,7 +508,7 @@ namespace Silent::Math
     /** @brief Normalizes an unsigned Q3.12 fixed-point angle to the clamped signed integer range `[-2048, 2047]`.
      *
      * @param angle Unsigned Q3.12 fixed-point angle, full rotation integer range `[0, 4095]`.
-     * @return Signed Q3.12 fixed-point angle wrapped to the clamped integer range `[-2048, 2047]` (`s16`).
+     * @return Signed Q3.12 fixed-point angle wrapped to the clamped integer range `[-2048, 2047]` (`short`).
      */
     #define FP_ANGLE_NORM_S(angle) \
         (((angle) << 20) >> 20)
@@ -489,7 +516,7 @@ namespace Silent::Math
     /** @brief Normalizes a signed Q3.12 fixed-point angle to the clamped unsigned range `[0, 4095]`.
      *
      * @param angle Signed Q3.12 fixed-point angle, full rotation integer range `[-2048, 2047]`.
-     * @return Unsigned Q3.12 fixed-point angle, wrapped to the clamped integer range `[0, 4095]` (`s16`).
+     * @return Unsigned Q3.12 fixed-point angle, wrapped to the clamped integer range `[0, 4095]` (`short`).
      */
     #define FP_ANGLE_NORM_U(angle) \
         ((angle) & (FP_ANGLE(360.0f) - 1))
@@ -501,8 +528,8 @@ namespace Silent::Math
      *
      * @note π = 10240 units.
      *
-     * @param rad Radians (`float`).
-     * @return Fixed-point radian representation, full rotation integer range `[0, 20480]` (`s32`).
+     * @param rad Radians.
+     * @return Fixed-point radian representation, full rotation integer range `[0, 20480]`.
      */
     constexpr int FP_RADIAN(float rad)
     {
