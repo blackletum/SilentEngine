@@ -1,6 +1,8 @@
 #include "Framework.h"
 #include "Math/Legacy.h"
 
+#include "Math/FixedPoint.h"
+
 namespace Silent::Math
 {
     static const auto SinCosTable = std::array<q3_12, 5120>
@@ -647,15 +649,20 @@ namespace Silent::Math
         0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
     };
 
+    int Math_MulFixed(int a, int b, int shift)
+    {
+        return FP_MULTIPLY(a, b, shift);
+    }
+
     q19_12 Math_Sin(q19_12 angle)
     {
-        q3_12* sinAngle = (q3_12*)&SinCosTable + (angle & 0xFFF);
+        q3_12* sinAngle = (q3_12*)&SinCosTable + Q12_FRACT(angle);
         return *sinAngle;
     }
 
     q19_12 Math_Cos(q19_12 angle)
     {
-        q3_12* sinAngle = (q3_12*)&SinCosTable + (angle & 0xFFF);
+        q3_12* sinAngle = (q3_12*)&SinCosTable + Q12_FRACT(angle);
         return *(sinAngle + 1024);
     }
 }

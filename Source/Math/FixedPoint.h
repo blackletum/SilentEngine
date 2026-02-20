@@ -242,17 +242,6 @@ namespace Silent::Math
         return FP_SQUARE_PRECISE(x, Q12_SHIFT);
     }
 
-    /** @brief Computes the square 2D distance between two positions in Q19.12 fixed-point,
-     * using Q21.8 fixed-point intermediates to avoid overflow.
-     *
-     * @param from First position.
-     * @param to Second position.
-     * @param return 2D distance between two positions.
-     */
-    #define Q12_2D_DISTANCE_SQR(from, to)         \
-        (SQUARE(Q12_TO_Q8((to).vx - (from).vx)) + \
-        SQUARE(Q12_TO_Q8((to).vz - (from).vz)))
-
     // ==================================
     // Raw Q Format Conversion and Utils
     // ==================================
@@ -401,11 +390,11 @@ namespace Silent::Math
      * clamped integer range `[-128, 127]`.
      *
      * @param analog Analog stick value (`float`).
-     * @return Analog stick value in Q0.7 fixed-point, clamped integer range `[-128, 127]`.
+     * @return Analog stick value in Q0.7 fixed-point, clamped integer range `[-128, 127]` (`q0_7`).
      */
-    #define FP_STICK(analog)                                                  \
-        (s8)(((analog) >= 0) ? CLAMP(Q8(analog) / 2, 0, (Q8(1.0f) / 2) - 1) : \
-                            -CLAMP(Q8(ABS(analog)) / 2, 0, Q8(1.0f) / 2))
+    #define FP_STICK(analog)                                                    \
+        (q0_7)(((analog) >= 0) ? CLAMP(Q8(analog) / 2, 0, (Q8(1.0f) / 2) - 1) : \
+                                -CLAMP(Q8(ABS(analog)) / 2, 0, Q8(1.0f) / 2))
 
     /** @brief Converts a normalized floating-point color component in the range `[0.0f, 1.0f]` to Q0.8 fixed-point,
      * integer range `[0, 255]`.
@@ -413,11 +402,11 @@ namespace Silent::Math
      * TODO: Deprecated, don't use. Doesn't make sense to have `float` color components in this project.
      *
      * @param comp Floating-point color component.
-     * @return Q0.8 fixed-point color component, clamped integer range `[0, 255]` (`u8`).
+     * @return Q0.8 fixed-point color component, clamped integer range `[0, 255]`.
      */
-    constexpr uchar FP_COLOR(float comp)
+    constexpr q0_8 FP_COLOR(float comp)
     {
-        return (uchar)(comp * (FP_TO(1.0f, Q8_SHIFT) - 1));
+        return (q0_8)(comp * (FP_TO(1.0f, Q8_SHIFT) - 1));
     }
 
     /** @brief Converts an 8-bit color value in the range `[0, 255]` to a normalized color format in the range
@@ -426,7 +415,7 @@ namespace Silent::Math
      * @param comp Fixed-point color component.
      * @return Floating-point color component.
      */
-    constexpr float FP_COLOR_FROM(uchar comp)
+    constexpr float FP_COLOR_FROM(q0_8 comp)
     {
         return (comp == FP_COLOR(1.0f)) ? 1.0f : std::clamp((float)comp / (float)FP_TO(1.0f, Q8_SHIFT), 0.0f, 1.0f);
     }
@@ -465,23 +454,24 @@ namespace Silent::Math
         return (deg * (360.0f / (float)FP_ANGLE_COUNT)) * (PI / 180.0f);
     }
 
-    /** @brief Converts floating-point degrees to unsigned Q0.8 fixed-point, clamped full rotation integer range `[0, 255]`.
+    /** @brief Converts floating-point degrees to unsigned Q0.8 fixed-point, clamped full rotation integer range
+     * `[0, 255]`.
      *
      * This angle format is used in map data.
      *
      * @note 1 degree = 0.711111 units.
      *
-     * @param deg Degrees (`float`).
-     * @return Unsigned Q0.8 fixed-point packed angle, clamped full rotation integer range `[0, 255]` (`u8`).
+     * @param deg Angle in degrees (`float`).
+     * @return Unsigned Q0.8 fixed-point packed angle, clamped full rotation integer range `[0, 255]` (`q0_8`).
      */
     #define FP_ANGLE_PACKED(deg) \
-        (u8)Q8_CLAMPED((deg) / 360.0f)
+        (q0_8)Q8_CLAMPED((deg) / 360.0f)
 
     /** @brief Converts a signed Q3.12 fixed-point angle, full rotation integer range `[0, 4096]` to
      * unsigned Q0.8 fixed-point, integer range `[0, 255]`.
      *
      * @param angle Unsigned Q3.12 fixed-point angle, full rotation integer range `[0, 4096]`.
-     * @return Unsigned Q0.8 fixed-point packed angle, full rotation integer range `[0, 255]` (`short`).
+     * @return Unsigned Q0.8 fixed-point packed angle, full rotation integer range `[0, 255]` (`q3_12`).
      */
     #define FP_ANGLE_TO_PACKED(angle) \
         Q12_TO_Q8(deg);
@@ -490,17 +480,17 @@ namespace Silent::Math
      * unsigned Q3.12 fixed-point, full rotation integer range `[0, 4096]`.
      *
      * @param packedAngle Unsigned Q0.8 fixed-point packed angle, full rotation integer range `[0, 255]`.
-     * @return Unsigned Q3.12 fixed-point angle, full rotation integer range `[0, 4096]` (`short`).
+     * @return Unsigned Q3.12 fixed-point angle, full rotation integer range `[0, 4096]` (`q3_12`).
      */
     #define FP_ANGLE_FROM_PACKED(packedAngle) \
-        (short)Q8_TO_Q12(packedAngle)
+        (q3_12)Q8_TO_Q12(packedAngle)
 
     /** @brief Normalizes a signed Q3.12 fixed-point angle to the clamped unsigned integer range `[0, 4095]`.
      *
      * @note Has the same effect as `FP_ANGLE_NORM_U`. Could they somehow be combined?
      *
      * @param angle Signed Q3.12 fixed-point angle, full rotation integer range `[-2048, 2047]`.
-     * @return Unsigned Q3.12 fixed-point angle, wrapped to the clamped integer range `[0, 4095]` (`short`).
+     * @return Unsigned Q3.12 fixed-point angle, wrapped to the clamped integer range `[0, 4095]` (`q3_12`).
      */
     #define FP_ANGLE_ABS(angle) \
         Q12_FRACT((angle) + FP_ANGLE(360.0f))
@@ -508,7 +498,7 @@ namespace Silent::Math
     /** @brief Normalizes an unsigned Q3.12 fixed-point angle to the clamped signed integer range `[-2048, 2047]`.
      *
      * @param angle Unsigned Q3.12 fixed-point angle, full rotation integer range `[0, 4095]`.
-     * @return Signed Q3.12 fixed-point angle wrapped to the clamped integer range `[-2048, 2047]` (`short`).
+     * @return Signed Q3.12 fixed-point angle wrapped to the clamped integer range `[-2048, 2047]` (`q3_12`).
      */
     #define FP_ANGLE_NORM_S(angle) \
         (((angle) << 20) >> 20)
@@ -516,7 +506,7 @@ namespace Silent::Math
     /** @brief Normalizes a signed Q3.12 fixed-point angle to the clamped unsigned range `[0, 4095]`.
      *
      * @param angle Signed Q3.12 fixed-point angle, full rotation integer range `[-2048, 2047]`.
-     * @return Unsigned Q3.12 fixed-point angle, wrapped to the clamped integer range `[0, 4095]` (`short`).
+     * @return Unsigned Q3.12 fixed-point angle, wrapped to the clamped integer range `[0, 4095]` (`q3_12`).
      */
     #define FP_ANGLE_NORM_U(angle) \
         ((angle) & (FP_ANGLE(360.0f) - 1))
@@ -528,7 +518,7 @@ namespace Silent::Math
      *
      * @note π = 10240 units.
      *
-     * @param rad Radians.
+     * @param rad Angle in radians.
      * @return Fixed-point radian representation, full rotation integer range `[0, 20480]`.
      */
     constexpr int FP_RADIAN(float rad)
@@ -536,4 +526,15 @@ namespace Silent::Math
         return (((rad < 0.0f) ? (PI + (PI - ABS(rad))) : rad) * ((float)FP_PI / PI)) *
                ((rad < 0.0f || rad >= PI) ? 1.0f : 2.0f);
     }
+
+    /** @brief Computes the square 2D distance between two positions in Q19.12 fixed-point,
+     * using Q21.8 fixed-point intermediates to avoid overflow.
+     *
+     * @param from First Q19.12 position.
+     * @param to Second Q19.12 position.
+     * @param return 2D Q19.12 distance between two positions.
+     */
+    #define Q12_2D_DISTANCE_SQR(from, to)        \
+        SQUARE(Q12_TO_Q8((to).vx - (from).vx)) + \
+        SQUARE(Q12_TO_Q8((to).vz - (from).vz));
 }

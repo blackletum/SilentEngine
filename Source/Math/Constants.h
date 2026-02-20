@@ -16,6 +16,7 @@ namespace Silent::Math
     constexpr int TRI_VERTEX_COUNT  = 3;
     constexpr int QUAD_VERTEX_COUNT = 4;
 
+    /** @brief Geometry containment types. */
     enum class ContainmentType
     {
         None,
