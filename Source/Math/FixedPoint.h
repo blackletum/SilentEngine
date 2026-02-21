@@ -245,93 +245,115 @@ namespace Silent::Math
     // Raw Q Format Conversion and Utils
     // ==================================
 
-    /** @brief Converts a floating-point value to Q*.4 fixed-point.
+    /** @brief Converts a floating-point value to Q27.4 fixed-point.
+     *
+     * @param x Value to convert.
+     * @return `x` converted to Q27.4 fixed-point.
+     */
+    constexpr q27_4 Q4(float x)
+    {
+        return TO_FIXED(x, Q4_SHIFT);
+    }
+
+    /** @brief Converts a floating-point value to Q25.6 fixed-point.
+     *
+     * @param x Value to convert.
+     * @return `x` converted to Q25.6 fixed-point.
+     */
+    constexpr q25_6 Q6(float x)
+    {
+        return TO_FIXED(x, Q6_SHIFT);
+    }
+
+    /** @brief Converts a floating-point value to Q23.8 fixed-point.
+     *
+     * @param x Value to convert.
+     * @return `x` converted to Q23.8 fixed-point.
+     */
+    constexpr q23_8 Q8(float x)
+    {
+        return TO_FIXED(x, Q8_SHIFT);
+    }
+
+    /** @brief Converts a floating-point value to clamped Q25.8 fixed-point.
+     *
+     * @param x Value to convert.
+     * @return `x` converted to clamped Q25.8 fixed-point.
+     */
+    constexpr q23_8 Q8_CLAMPED(float x)
+    {
+        return CLAMP(Q8(x), Q8(0.0f), Q8(1.0f) - 1);
+    }
+
+    /** @brief Converts a floating-point value to Q19.12 fixed-point.
      *
      * @param x Value to convert (`float`).
-     * @return `x` converted to Q*.4 fixed-point.
+     * @return `x` converted to Q19.12 fixed-point.
      */
-    #define Q4(x) \
-        TO_FIXED(x, Q4_SHIFT)
+    constexpr q19_12 Q12(float x)
+    {
+        return TO_FIXED(x, Q12_SHIFT);
+    }
 
-    /** @brief Converts a floating-point value to Q*.6 fixed-point.
+    /** @brief Converts a floating-point value to clamped Q19.12 fixed-point.
      *
-     * @param x Value to convert (`float`).
-     * @return `x` converted to Q*.6 fixed-point.
+     * @param x Value to convert.
+     * @return `x` converted to clamped Q19.12 fixed-point.
      */
-    #define Q6(x) \
-        TO_FIXED(x, Q6_SHIFT)
+    constexpr q19_12 Q12_CLAMPED(float x)
+    {
+        return CLAMP(Q12(x), Q12(0.0f), Q12(1.0f) - 1);
+    }
 
-    /** @brief Converts a floating-point value to Q*.8 fixed-point.
+    /** @brief Converts a fixed-point value from Q27.4 to Q23.8.
      *
-     * @param x Value to convert (`float`).
-     * @return `x` converted to Q*.8 fixed-point.
+     * @param x Q27.4 fixed-point value to convert.
+     * @return `x` converted to Q23.8 fixed-point.
      */
-    #define Q8(x) \
-        TO_FIXED(x, Q8_SHIFT)
+    constexpr q23_8 Q4_TO_Q8(q27_4 x)
+    {
+        return x << 4;
+    }
 
-    /** @brief Converts a floating-point value to clamped Q*.8 fixed-point.
+    /** @brief Converts a fixed-point value from Q27.4 to Q19.12.
      *
-     * @param x Value to convert (`float`).
-     * @return `x` converted to clamped Q*.8 fixed-point.
+     * @param x Q27.4 fixed-point value to convert.
+     * @return `x` converted to Q19.12 fixed-point.
      */
-    #define Q8_CLAMPED(x) \
-        CLAMP(Q8(x), 0, Q8(1.0f) - 1)
+    constexpr q19_12 Q4_TO_Q12(q27_4 x)
+    {
+        return x << 8;
+    }
 
-    /** @brief Converts a floating-point value to Q*.12 fixed-point.
+    /** @brief Converts a fixed-point value from Q25.6 to Q19.12.
      *
-     * @param x Value to convert (`float`).
-     * @return `x` converted to Q*.12 fixed-point.
+     * @param x Q25.6 fixed-point value to convert.
+     * @return `x` converted to Q19.12 fixed-point.
      */
-    #define Q12(x) \
-        TO_FIXED(x, Q12_SHIFT)
+    constexpr q19_12 Q6_TO_Q12(q25_6 x)
+    {
+        return x << 6;
+    }
 
-    /** @brief Converts a floating-point value to clamped Q*.12 fixed-point.
+    /** @brief Converts a fixed-point value from Q23.8 to Q19.12.
      *
-     * @param x Value to convert (`float`).
-     * @return `x` converted to clamped Q*.12 fixed-point.
+     * @param x Q23.8 fixed-point value to convert.
+     * @return `x` converted to Q19.12 fixed-point.
      */
-    #define Q12_CLAMPED(x) \
-        CLAMP(Q12(x), 0, Q12(1.0f) - 1)
+    constexpr q23_8 Q8_TO_Q12(q19_12 x)
+    {
+        return x << 4;
+    }
 
-    /** @brief Converts a fixed-point value from Q*.4 to Q*.8.
+    /** @brief Converts a fixed-point value from Q23.8 to Q27.4.
      *
-     * @param x Q*.4 fixed-point value to convert.
-     * @return `x` converted to Q*.8 fixed-point.
+     * @param x Q23.8 fixed-point value to convert.
+     * @return `x` converted to Q27.4 fixed-point.
      */
-    #define Q4_TO_Q8(x) \
-        ((x) << 4)
-
-    /** @brief Converts a fixed-point value from Q*.4 to Q*.12.
-     *
-     * @param x Q*.4 fixed-point value to convert.
-     * @return `x` converted to Q*.12 fixed-point.
-     */
-    #define Q4_TO_Q12(x) \
-        ((x) << 8)
-
-    /** @brief Converts a fixed-point value from Q*.6 to Q*.12.
-     *
-     * @param x Q*.6 fixed-point value to convert.
-     * @return `x` converted to Q*.12 fixed-point.
-     */
-    #define Q6_TO_Q12(x) \
-        ((x) << 6)
-
-    /** @brief Converts a fixed-point value from Q*.8 to Q*.12.
-     *
-     * @param x Q*.8 fixed-point value to convert.
-     * @return `x` converted to Q*.12 fixed-point.
-     */
-    #define Q8_TO_Q12(x) \
-        ((x) << 4)
-
-    /** @brief Converts a fixed-point value from Q*.8 to Q*.4.
-     *
-     * @param x Q*.8 fixed-point value to convert.
-     * @return `x` converted to Q*.4 fixed-point.
-     */
-    #define Q8_TO_Q4(x) \
-        ((x) >> 4)
+    constexpr q27_4 Q8_TO_Q4(q23_8 x)
+    {
+        return x >> 4;
+    }
 
     /** @brief Converts a fixed-point value from Q*.10 to Q*.12.
      *
@@ -341,29 +363,35 @@ namespace Silent::Math
     #define Q10_TO_Q12(x) \
         ((x) << 2)
 
-    /** @brief Converts a fixed-point value from Q*.12 to Q*.4.
+    /** @brief Converts a fixed-point value from Q19.12 to Q27.4.
      *
-     * @param x Q*.12 fixed-point value to convert.
-     * @return `x` converted to Q*.4 fixed-point.
+     * @param x Q19.12 fixed-point value to convert.
+     * @return `x` converted to Q27.4 fixed-point.
      */
-    #define Q12_TO_Q4(x) \
-        ((x) >> 8)
+    constexpr q27_4 Q12_TO_Q4(q19_12 x)
+    {
+        return x >> 8;
+    }
 
-    /** @brief Converts a fixed-point value from Q*.12 to Q*.6.
+    /** @brief Converts a fixed-point value from Q19.12 to Q25.6.
      *
-     * @param x Q*.12 fixed-point value to convert.
-     * @return `x` converted to Q*.6 fixed-point.
+     * @param x Q19.12 fixed-point value to convert.
+     * @return `x` converted to Q25.6 fixed-point.
      */
-    #define Q12_TO_Q6(x) \
-        ((x) >> 6)
+    constexpr q25_6 Q12_TO_Q6(q19_12 x)
+    {
+        return x >> 6;
+    }
 
-    /** @brief Converts a fixed-point value from Q*.12 to Q*.8.
+    /** @brief Converts a fixed-point value from Q19.12 to Q23.8.
      *
-     * @param x Q*.12 fixed-point value to convert.
-     * @return `x` converted to Q*.8 fixed-point.
+     * @param x Q19.12 fixed-point value to convert.
+     * @return `x` converted to Q23.8 fixed-point.
      */
-    #define Q12_TO_Q8(x) \
-        ((x) >> 4)
+    constexpr q23_8 Q12_TO_Q8(q19_12 x)
+    {
+        return x >> 4;
+    }
 
     /** @brief Converts a fixed-point value from Q*.12 to Q*.10.
      *
@@ -373,13 +401,15 @@ namespace Silent::Math
     #define Q12_TO_Q10(x) \
         ((x) >> 2)
 
-    /** @brief Extracts the fractional part of a value in Q*.12 fixed-point.
+    /** @brief Extracts the fractional part of a value in Q19.12 fixed-point.
      *
-     * @param x Q*.12 fixed-point value.
-     * @return Fractional part of `x` in Q*.12 fixed-point.
+     * @param x Q19.12 fixed-point value.
+     * @return Fractional part of `x` in Q19.12 fixed-point.
      */
-    #define Q12_FRACT(x) \
-        ((x) & 0xFFF)
+    constexpr q19_12 Q12_FRACT(q19_12 x)
+    {
+        return x & 0xFFF;
+    }
 
     // =======================================
     // Abstract Q Format Conversion and Utils
@@ -430,10 +460,10 @@ namespace Silent::Math
      */
     constexpr q3_12 Q12_ANGLE(float deg)
     {
-        return (q3_12)Q12((float)deg / 360.0f);
+        return (q3_12)Q12(deg / 360.0f);
     }
 
-    /** @brief Converts floating-point radians to fixed-point degrees in Q1.15 format.
+    /** @brief Converts floating-point radians to fixed-point degrees in Q3.12 format.
      *
      * @param rad Angle in radians.
      * @return Unsigned Q3.12 fixed-point angle, full rotation integer range `[0, 4096]`.
@@ -443,7 +473,7 @@ namespace Silent::Math
         return Q12_ANGLE(rad / (PI / 180.0f));
     }
 
-    /** @brief Converts fixed-point degrees in Q1.15 format to floating-point radians.
+    /** @brief Converts fixed-point degrees in Q3.12 format to floating-point radians.
      *
      * @param deg Angle in degrees.
      * @return Unsigned Q3.12 fixed-point angle, full rotation integer range `[0, 4096]`
@@ -460,46 +490,56 @@ namespace Silent::Math
      *
      * @note 1 degree = 0.711111 units.
      *
-     * @param deg Angle in degrees (`float`).
-     * @return Unsigned Q0.8 fixed-point angle, clamped full rotation integer range `[0, 255]` (`q0_8`).
+     * @param deg Angle in degrees.
+     * @return Unsigned Q0.8 fixed-point angle, clamped full rotation integer range `[0, 255]`.
      */
-    #define Q8_ANGLE(deg) \
-        (q0_8)Q8_CLAMPED((float)(deg) / 360.0f)
+    constexpr q0_8 Q8_ANGLE(float deg)
+    {
+        return Q8_CLAMPED(deg / 360.0f);
+    }
 
     /** @brief Converts an unsigned Q0.8 fixed-point angle, full rotation integer range `[0, 255]` to
      * unsigned Q3.12 fixed-point, full rotation integer range `[0, 4096]`.
      *
      * @param angle Unsigned Q0.8 fixed-point angle, full rotation integer range `[0, 255]`.
-     * @return Unsigned Q3.12 fixed-point angle, full rotation integer range `[0, 4096]` (`q3_12`).
+     * @return Unsigned Q3.12 fixed-point angle, full rotation integer range `[0, 4096]`.
      */
-    #define Q12_ANGLE_FROM_Q8(angle) \
-        (q3_12)Q8_TO_Q12(angle)
+    constexpr q3_12 Q12_ANGLE_FROM_Q8(q0_8 angle)
+    {
+        return Q8_TO_Q12(angle);
+    }
 
     /** @brief Normalizes a signed Q3.12 fixed-point angle to the clamped unsigned integer range `[0, 4095]`.
      *
      * @note Has the same effect as `Q12_ANGLE_NORM_U`. Could they somehow be combined?
      *
      * @param angle Signed Q3.12 fixed-point angle, full rotation integer range `[-2048, 2047]`.
-     * @return Unsigned Q3.12 fixed-point angle, wrapped to the clamped integer range `[0, 4095]` (`q3_12`).
+     * @return Unsigned Q3.12 fixed-point angle, wrapped to the clamped integer range `[0, 4095]`.
      */
-    #define Q12_ANGLE_ABS(angle) \
-        Q12_FRACT((angle) + Q12_ANGLE(360.0f))
+    constexpr q3_12 Q12_ANGLE_ABS(q3_12 angle)
+    {
+        return Q12_FRACT(angle + Q12_ANGLE(360.0f));
+    }
 
     /** @brief Normalizes an unsigned Q3.12 fixed-point angle to the clamped signed integer range `[-2048, 2047]`.
      *
      * @param angle Unsigned Q3.12 fixed-point angle, full rotation integer range `[0, 4095]`.
-     * @return Signed Q3.12 fixed-point angle wrapped to the clamped integer range `[-2048, 2047]` (`q3_12`).
+     * @return Signed Q3.12 fixed-point angle wrapped to the clamped integer range `[-2048, 2047]`.
      */
-    #define Q12_ANGLE_NORM_S(angle) \
-        (((angle) << 20) >> 20)
+    constexpr q3_12 Q12_ANGLE_NORM_S(q19_12 angle)
+    {
+        return (angle << 20) >> 20;
+    }
 
     /** @brief Normalizes a signed Q3.12 fixed-point angle to the clamped unsigned range `[0, 4095]`.
      *
      * @param angle Signed Q3.12 fixed-point angle, full rotation integer range `[-2048, 2047]`.
-     * @return Unsigned Q3.12 fixed-point angle, wrapped to the clamped integer range `[0, 4095]` (`q3_12`).
+     * @return Unsigned Q3.12 fixed-point angle, wrapped to the clamped integer range `[0, 4095]`.
      */
-    #define Q12_ANGLE_NORM_U(angle) \
-        ((angle) & (Q12_ANGLE(360.0f) - 1))
+    constexpr q3_12 Q12_ANGLE_NORM_U(q3_12 angle)
+    {
+        return angle & (Q12_ANGLE(360.0f) - 1);
+    }
 
     /** @brief Converts floating-point radians in the range `[-PI, PI]` to the fixed-point full rotation,
      * integer range `[0, 20480]`.
