@@ -42,9 +42,9 @@ namespace Silent::Math
          * @param b Blue component.
          * @param a Alpha component.
          */
-        static constexpr Color From8Bit(uchar r, uchar g, uchar b, uchar a = FP_COLOR(1.0f))
+        static constexpr Color From8Bit(uchar r, uchar g, uchar b, uchar a = Q8_COLOR(1.0f))
         {
-            return Color(FP_COLOR_FROM(r), FP_COLOR_FROM(g), FP_COLOR_FROM(b), FP_COLOR_FROM(a));
+            return Color(Q8_COLOR_FROM(r), Q8_COLOR_FROM(g), Q8_COLOR_FROM(b), Q8_COLOR_FROM(a));
         }
 
         /** @brief Creates an instance from packed 8-bit RGBA components.
@@ -53,10 +53,10 @@ namespace Silent::Math
          */
         static constexpr Color FromPacked8Bit(uint packedRgba)
         {
-            return Color::From8Bit((packedRgba >> 24) & FP_COLOR(1.0f),
-                                   (packedRgba >> 16) & FP_COLOR(1.0f),
-                                   (packedRgba >> 8)  & FP_COLOR(1.0f),
-                                    packedRgba        & FP_COLOR(1.0f));
+            return Color::From8Bit((packedRgba >> 24) & Q8_COLOR(1.0f),
+                                   (packedRgba >> 16) & Q8_COLOR(1.0f),
+                                   (packedRgba >> 8)  & Q8_COLOR(1.0f),
+                                    packedRgba        & Q8_COLOR(1.0f));
         }
 
         // ========

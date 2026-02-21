@@ -54,22 +54,22 @@ namespace Silent::Math
 
     uchar Color::R8() const
     {
-        return FP_COLOR(R());
+        return Q8_COLOR(R());
     }
 
     uchar Color::G8() const
     {
-        return FP_COLOR(G());
+        return Q8_COLOR(G());
     }
 
     uchar Color::B8() const
     {
-        return FP_COLOR(B());
+        return Q8_COLOR(B());
     }
 
     uchar Color::A8() const
     {
-        return FP_COLOR(A());
+        return Q8_COLOR(A());
     }
 
     Color Color::Lerp(const Color& from, const Color& to, float alpha)
@@ -138,7 +138,7 @@ namespace Silent::Math
 
     uint Color::ToPacked8Bit() const
     {
-        return (FP_COLOR(R()) << 24) | (FP_COLOR(G()) << 16) | (FP_COLOR(B()) << 8) | FP_COLOR(A());
+        return (Q8_COLOR(R()) << 24) | (Q8_COLOR(G()) << 16) | (Q8_COLOR(B()) << 8) | Q8_COLOR(A());
     }
 
     const Vector4& Color::ToVector4() const

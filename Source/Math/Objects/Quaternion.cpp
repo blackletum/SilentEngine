@@ -80,7 +80,7 @@ namespace Silent::Math
     EulerAngles Quaternion::ToEulerAngles() const
     {
         auto eulerAnglesRad = glm::eulerAngles(ToGlmQuat());
-        return EulerAngles(FP_ANGLE_FROM_RAD(eulerAnglesRad.x), FP_ANGLE_FROM_RAD(eulerAnglesRad.y), FP_ANGLE_FROM_RAD(eulerAnglesRad.z));
+        return EulerAngles(Q12_ANGLE_FROM_RAD(eulerAnglesRad.x), Q12_ANGLE_FROM_RAD(eulerAnglesRad.y), Q12_ANGLE_FROM_RAD(eulerAnglesRad.z));
     }
 
     AxisAngle Quaternion::ToAxisAngle() const

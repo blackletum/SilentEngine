@@ -68,7 +68,7 @@ namespace Silent::Math
          */
         bool Intersects(const Vector3& point) const;
 
-        /** @brief Checks if a sphere intersects the sphere.
+        /** @brief Checks if another sphere intersects the sphere.
          *
          * @param sphere Sphere to test against.
          * @return `true` if the intersection is valid, `false` otherwise.

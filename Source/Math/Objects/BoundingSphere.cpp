@@ -85,7 +85,7 @@ namespace Silent::Math
         float distSqr = Vector3::DistanceSquared(Center, closestPoint);
         return distSqr <= SQUARE(Radius);
     }
-    
+
     ContainmentType BoundingSphere::Contains(const Vector3& point) const
     {
         return Intersects(point) ? ContainmentType::Contains : ContainmentType::None;

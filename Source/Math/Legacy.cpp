@@ -662,7 +662,7 @@ namespace Silent::Math
 
     q19_12 Math_Cos(q19_12 angle)
     {
-        q3_12* sinAngle = (q3_12*)&SinCosTable + Q12_FRACT(angle);
-        return *(sinAngle + 1024);
+        q3_12* cosAngle = (q3_12*)&SinCosTable + (Q12_FRACT(angle) + Q12_ANGLE(90.0f));
+        return *cosAngle;
     }
 }
