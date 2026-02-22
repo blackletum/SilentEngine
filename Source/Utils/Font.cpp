@@ -6,7 +6,8 @@
 
 namespace Silent::Utils
 {
-    Font::Font(FT_Library& fontLib, const FontMetadata& metadata, const std::filesystem::path& path, const std::string& precacheGlyphs)
+    Font::Font(FT_Library& fontLib, const FontMetadata& metadata, const std::filesystem::path& path,
+               const std::string& precacheGlyphs)
     {
         constexpr int POINT_SIZE_MAX = ATLAS_SIZE / 8;
 
@@ -20,7 +21,8 @@ namespace Silent::Utils
         _pointSize = metadata.PointSize;
         if (_pointSize > POINT_SIZE_MAX)
         {
-            Debug::Log(Fmt("Attempted to initialize font chain `{}` with invalid point size {}. Max is {}.", _name, _pointSize, POINT_SIZE_MAX),
+            Debug::Log(Fmt("Attempted to initialize font chain `{}` with invalid point size {}. Max is {}.",
+                           _name, _pointSize, POINT_SIZE_MAX),
                        Debug::LogLevel::Warning);
 
             _pointSize = std::min<int>(_pointSize, POINT_SIZE_MAX);
@@ -53,7 +55,8 @@ namespace Silent::Utils
         {
             if (Find(_glyphs, codePoint) != nullptr)
             {
-                Debug::Log(Fmt("Attempted to precache existing glyph U+{:X} for font chain `{}`. Check precache string for duplicates.", (int)codePoint, _name),
+                Debug::Log(Fmt("Attempted to precache existing glyph U+{:X} for font chain `{}`. Check for duplicates.",
+                               (int)codePoint, _name),
                            Debug::LogLevel::Warning);
                 continue;
             }
@@ -64,7 +67,8 @@ namespace Silent::Utils
         // Debug.
         /*for (int i = 0; i < _textureAtlases.size(); i++)
         {
-            stbi_write_png((g_App.GetFilesystem().GetAppDirectory() / (_name + Fmt("_Atlas{}.png", i))).string().c_str(), ATLAS_SIZE, ATLAS_SIZE, RGBA_COMP_COUNT, _textureAtlases[i].data(), ATLAS_SIZE * 4);
+            stbi_write_png((g_App.GetFilesystem().GetAppDirectory() / (_name + Fmt("_Atlas{}.png", i))).string().c_str(),
+                           ATLAS_SIZE, ATLAS_SIZE, RGBA_COMP_COUNT, _textureAtlases[i].data(), ATLAS_SIZE * 4);
             break;
         }*/
     }
@@ -208,11 +212,13 @@ namespace Silent::Utils
             ftFont = _ftFonts[i];
             break;
         }
-        Debug::Assert(ftFont != nullptr, Fmt("Failed to cache glyph U+{:X} for font chain `{}`.", (int)codePoint, _name));
+        Debug::Assert(ftFont != nullptr, Fmt("Failed to cache glyph U+{:X} for font chain `{}`.",
+                                             (int)codePoint, _name));
 
         // Get metrics.
         const auto& metrics = ftFont->glyph->metrics;
-        auto        size    = Vector2i(FP_FROM(metrics.width, Q6_SHIFT), FP_FROM(metrics.height, Q6_SHIFT)) + Vector2i(GLYPH_PADDING * 2);
+        auto        size    = Vector2i(FP_FROM(metrics.width, Q6_SHIFT), FP_FROM(metrics.height, Q6_SHIFT)) +
+                              Vector2i(GLYPH_PADDING * 2);
 
         // Insert new rectangle.
         const auto& rect = InsertGlyphRect(size, codePoint);
@@ -251,14 +257,16 @@ namespace Silent::Utils
         auto* rect = sma_item_add(_rectAtlases[_activeAtlasIdx], size.x, size.y);
         if (rect == nullptr)
         {
-            Debug::Log(Fmt("Active atlas {} for font chain `{}` is full. Creating new atlas.", _activeAtlasIdx, _name), Debug::LogLevel::Info);
+            Debug::Log(Fmt("Active atlas {} for font chain `{}` is full. Creating new atlas.", _activeAtlasIdx, _name),
+                       Debug::LogLevel::Info);
             AddAtlas();
 
             // Attempt insertion into new active atlas.
             rect = sma_item_add(_rectAtlases[_activeAtlasIdx], size.x, size.y);
             if (rect == nullptr)
             {
-                throw std::runtime_error(Fmt("Failed to insert glyph U+{:X} rectangle for font chain `{}`.", (int)codePoint, _name));
+                throw std::runtime_error(Fmt("Failed to insert glyph U+{:X} rectangle for font chain `{}`.",
+                                             (int)codePoint, _name));
             }
         }
         
@@ -279,7 +287,9 @@ namespace Silent::Utils
             for (int x = 0; x < bitmap.width; x++)
             {
                 byte pixel = pixelsFrom[(bitmap.width * y) + x];
-                pixel      = _enableAntialiasing ? pixel : ((uchar)pixel >= Q8_COLOR(0.5f)) ? Q8_COLOR(1.0f) : Q8_COLOR(0.0f);
+                pixel      = _enableAntialiasing ? pixel :
+                                                   ((uchar)pixel >= Q8_COLOR(0.5f)) ? Q8_COLOR(1.0f) :
+                                                                                      Q8_COLOR(0.0f);
 
                 int pixelBaseIdx           = ((ATLAS_SIZE * y) * RGBA_COMP_COUNT) + (x * RGBA_COMP_COUNT);
                 pixelsTo[pixelBaseIdx + 0] =
@@ -326,7 +336,8 @@ namespace Silent::Utils
         return font;
     }
 
-    void FontManager::LoadFont(const FontMetadata& metadata, const std::filesystem::path& path, const std::string& glyphPrecache)
+    void FontManager::LoadFont(const FontMetadata& metadata, const std::filesystem::path& path,
+                               const std::string& glyphPrecache)
     {
         if (metadata.Filenames.empty())
         {

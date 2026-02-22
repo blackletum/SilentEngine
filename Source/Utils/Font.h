@@ -80,14 +80,16 @@ namespace Silent::Utils
         /** @brief Creates a default uninitialized instance. */
         Font() = default;
 
-        /** @brief Creates an instance from a chain of font files and adds it to a library and precaches a set of glyphs in the texture atlas.
+        /** @brief Creates an instance from a chain of font files and adds it to a library and precaches a set of glyphs
+         * in the texture atlas.
          *
          * @param fontLib Library to load the font into.
          * @param metadata Font chain metadata.
          * @param path Path containing font files.
          * @param precacheGlyphs Glyphs to precache.
          */
-        Font(FT_Library& fontLib, const FontMetadata& metadata, const std::filesystem::path& path, const std::string& precacheGlyphs);
+        Font(FT_Library& fontLib, const FontMetadata& metadata, const std::filesystem::path& path,
+             const std::string& precacheGlyphs);
 
         /** @brief Gracefully destroys the instance and frees resources. */
         ~Font();
@@ -213,6 +215,7 @@ namespace Silent::Utils
          * @param path Path containing font files.
          * @param precacheGlyphs Glyphs to precache in the atlas on font initialization.
          */
-        void LoadFont(const FontMetadata& metadata, const std::filesystem::path& path, const std::string& precacheGlyphs = {});
+        void LoadFont(const FontMetadata& metadata, const std::filesystem::path& path,
+                      const std::string& precacheGlyphs = {});
     };
 }

@@ -60,6 +60,17 @@ namespace Silent::Math
         return (float)x / (float)FP_TO(1.0f, shift);
     }
 
+    /** @brief Floors a fixed-point value.
+     *
+     * @param x Fixed-point value to floor.
+     * @param shift Fixed-point shift.
+     * @return Fixed-point result of `x` floored to the closest integer.
+     */
+    constexpr int FP_FLOOR(int x, int shift)
+    {
+        return TO_FIXED(FP_FROM(x, shift), shift);
+    }
+
     /** @brief Converts an integer from a scaled fixed-point Q format rounded to the nearest value.
      *
      * @param x Fixed-point value to convert.
@@ -163,6 +174,16 @@ namespace Silent::Math
     constexpr int FP_SQUARE_PRECISE(int x, int shift)
     {
         return FP_MULTIPLY_PRECISE(x, x, shift);
+    }
+
+    /** @brief Floors a Q19.12 fixed-point value.
+     *
+     * @param x Q19.12 fixed-point value to floor.
+     * @return Q19.12 result of `x` floored to the closest integer.
+     */
+    constexpr q19_12 Q12_FLOOR(q19_12 x)
+    {
+        return FP_FLOOR(x, Q12_SHIFT);
     }
 
     /** @brief Multiplies two integers in Q19.12 fixed-point.
@@ -460,7 +481,7 @@ namespace Silent::Math
      */
     constexpr q3_12 Q12_ANGLE(float deg)
     {
-        return (q3_12)Q12(deg / 360.0f);
+        return Q12(deg / 360.0f);
     }
 
     /** @brief Converts floating-point radians to fixed-point degrees in Q3.12 format.
