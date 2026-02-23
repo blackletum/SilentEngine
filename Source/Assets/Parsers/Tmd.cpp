@@ -93,7 +93,7 @@ namespace Silent::Assets
         return Color::From8Bit(color & UCHAR_MAX,
                                (color >> 8) & UCHAR_MAX,
                                (color >> 16) & UCHAR_MAX,
-                               FP_COLOR_FROM(colorAlpha));
+                               Q8_COLOR_FROM(colorAlpha));
     }
 
     /** @brief Gets the blend mode and color alpha of a TMD primitive.
