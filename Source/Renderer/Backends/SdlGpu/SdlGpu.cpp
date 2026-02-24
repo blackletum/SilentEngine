@@ -147,7 +147,7 @@ namespace Silent::Renderer::SdlGpu
             4, 5, 1, 1, 0, 4  // Bottom
         };
         GetMeshes().Load(*copyPass, "CHARA/DOC.ILM");
-        GetMeshes().Load(*copyPass, "ITEM/UNQE1.TMD");
+        //GetMeshes().Load(*copyPass, "ITEM/UNQE1.TMD");
         GetMeshes().Load(*copyPass, bufferVertsTest, bufferIdxsTest, "TestCube");
 
         // @todo If this isn't called and the texture is missing, for some reason
