@@ -77,6 +77,12 @@ sudo apt install build-essential git ninja-build python3 python3-pip
 ```
 </details>
 
+TODO
+Install `PyInstaller`:
+```
+pip install pyinstaller
+```
+
 ### Clone the repository
 
 Initialize Git LFS to ensure assets are pulled correctly:

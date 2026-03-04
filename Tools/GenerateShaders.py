@@ -118,16 +118,14 @@ def get_shadercross_executable():
     """
     Get the path to the appropriate `shadercross` executable based on the system OS.
     """
-    # Setup.
-    system_os = platform.system()
-
     # Define executable path corresponding for current platform.
+    system_os = platform.system()
     if system_os == "Windows":
         shadercross_exe = os.path.join(SHADERCROSS_PATH, "Windows", SHADERCROSS_NAME + ".exe")
-    elif system_os == "Linux":
-        shadercross_exe = os.path.join(SHADERCROSS_PATH, "Linux", SHADERCROSS_NAME)
     elif system_os == "Darwin": # macOS.
         shadercross_exe = os.path.join(SHADERCROSS_PATH, "MacOs", SHADERCROSS_NAME)
+    elif system_os == "Linux":
+        shadercross_exe = os.path.join(SHADERCROSS_PATH, "Linux", SHADERCROSS_NAME)
     else:
         raise Exception(f"'{system_os}' is unsupported.")
 
