@@ -26,6 +26,10 @@
     path = Libraries/LuaJIT
     url = https://github.com/LuaJIT/LuaJIT.git
 
+[submodule "Libraries/pl_mpeg"]
+    path = Libraries/pl_mpeg
+    url = https://github.com/phoboslab/pl_mpeg.git
+
 [submodule "Libraries/psyz"]
     path = Libraries/psyz
     url = https://github.com/Xeeynamo/psyz.git
