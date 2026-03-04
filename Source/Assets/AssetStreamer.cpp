@@ -2,11 +2,11 @@
 #include "Assets/AssetStreamer.h"
 
 #include "Application.h"
-#include "Assets/Parsers/Anm.h"
-#include "Assets/Parsers/Ilm.h"
-#include "Assets/Parsers/Ipd.h"
-#include "Assets/Parsers/Tim.h"
-#include "Assets/Parsers/Tmd.h"
+#include "Assets/Loaders/Anm.h"
+#include "Assets/Loaders/Ilm.h"
+#include "Assets/Loaders/Ipd.h"
+#include "Assets/Loaders/Tim.h"
+#include "Assets/Loaders/Tmd.h"
 #include "Utils/Parallel.h"
 #include "Utils/Utils.h"
 
@@ -14,7 +14,17 @@ using namespace Silent::Utils;
 
 namespace Silent::Assets
 {
-    using ParserFunc = std::function<std::shared_ptr<void>(const std::filesystem::path& file)>;
+    using ParseFunc           = std::function<std::shared_ptr<void>(const std::filesystem::path& file)>;
+    using QueueGpuUploadFunc  = std::function<void(const Asset& asset)>;
+    using QueueGpuReleaseFunc = std::function<void(const Asset& asset)>;
+
+    /** @brief Streamable asset file loader. */
+    struct AssetLoader
+    {
+        ParseFunc          Parse           = nullptr;
+        QueueGpuUploadFunc QueueGpuUpload  = nullptr;
+        QueueGpuUploadFunc QueueGpuRelease = nullptr;
+    };
 
     static const auto ASSET_TYPES = std::unordered_map<std::string, AssetType>
     {
@@ -35,15 +45,15 @@ namespace Silent::Assets
         { ".PNG", AssetType::Png }
     };
 
-    static const auto PARSER_FUNCS = std::unordered_map<AssetType, ParserFunc>
+    static const auto ASSET_LOADERS = std::unordered_map<AssetType, AssetLoader>
     {
-        { AssetType::Anm, ParseAnm },
-        { AssetType::Ilm, ParseIlm },
-        { AssetType::Ipd, ParseIpd },
-        //{ AssetType::Plm, ParsePlm },
-        { AssetType::Png, ParsePng },
-        { AssetType::Tim, ParseTim },
-        { AssetType::Tmd, ParseTmd }
+        { AssetType::Anm, { ParseAnm }                                        },
+        { AssetType::Ilm, { ParseIlm }                                        },
+        { AssetType::Ipd, { ParseIpd }                                        },
+        //{ AssetType::Plm, { ParsePlm } },
+        { AssetType::Png, { PngParse, PngQueueGpuUpload, PngQueueGpuRelease } },
+        { AssetType::Tim, { TimParse, TimQueueGpuUpload, TimQueueGpuRelease } },
+        { AssetType::Tmd, { ParseTmd }                                        }
     };
 
     const std::string& AssetStreamer::GetName(int assetIdx) const
@@ -73,6 +83,11 @@ namespace Silent::Assets
         }
 
         return names;
+    }
+
+    int AssetStreamer::GetLoadingCount() const
+    {
+        return _loadingCount;
     }
 
     const Asset* AssetStreamer::GetAsset(int assetIdx)
@@ -214,11 +229,11 @@ namespace Silent::Assets
         // Load asynchronously.
         _loadFutures[assetIdx] = executor.AddTask([&]()
         {
-            // Get parser function.
-            const auto* parserFunc = Find(PARSER_FUNCS, asset.Type);
-            if (parserFunc == nullptr)
+            // Get loader.
+            const auto* loader = Find(ASSET_LOADERS, asset.Type);
+            if (loader == nullptr)
             {
-                Debug::Log(Fmt("Attempted to load streamable asset `{}` with no parser function for asset type {}.",
+                Debug::Log(Fmt("Attempted to load streamable asset `{}` with no loader for asset type {}.",
                                asset.Name, (int)asset.Type),
                            Debug::LogLevel::Error);
 
@@ -227,11 +242,22 @@ namespace Silent::Assets
                 return;
             }
 
-            // Parse asset data from file.
+            // Load asset data from file.
             try
             {
-                asset.Data  = (*parserFunc)(asset.File);
                 asset.State = AssetState::Loaded;
+
+                // Parse file.
+                if (loader->Parse != nullptr)
+                {
+                    asset.Data = loader->Parse(asset.File);
+                }
+
+                // Queue GPU resource upload.
+                if (loader->QueueGpuUpload != nullptr)
+                {
+                    loader->QueueGpuUpload(asset);
+                }
 
                 Debug::Log(Fmt("Loaded streamable asset `{}`.", asset.Name),
                            Debug::LogLevel::Info, Debug::LogMode::Debug);
@@ -282,6 +308,13 @@ namespace Silent::Assets
             return;
         }
 
+        // Queue GPU resource release.
+        const auto* loader = Find(ASSET_LOADERS, asset.Type);
+        if (loader != nullptr && loader->QueueGpuRelease != nullptr)
+        {
+            loader->QueueGpuRelease(asset);
+        }
+
         // Unload.
         asset.State = AssetState::Unloaded;
         asset.Data  = nullptr;
@@ -316,6 +349,13 @@ namespace Silent::Assets
             if (asset->State == AssetState::Unloaded)
             {
                 continue;
+            }
+
+            // Queue GPU resource release.
+            const auto* loader = Find(ASSET_LOADERS, asset->Type);
+            if (loader != nullptr && loader->QueueGpuRelease != nullptr)
+            {
+                loader->QueueGpuRelease(*asset);
             }
 
             // Unload.

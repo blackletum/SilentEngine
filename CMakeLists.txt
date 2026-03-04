@@ -14,11 +14,14 @@ set(CMAKE_CXX_STANDARD 23)
 # Set compiler options.
 if(MSVC)
     add_compile_options(/std:c++20) # Enable modules.
+    add_compile_options(/wd4244)    # Suppress narrowing/conversion. Required for C struct compat.
     add_compile_options(/wd4018)    # Suppress sign comparison warnings.
     add_compile_options(/wd4244)    # Suppress type conversion warnings.
     add_compile_options(/wd4267)    # Suppress type conversion warnings.
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     add_compile_options(-Mmodules)            # Enable modules.
+    add_compile_options(-Wno-narrowing)       # Silence narrowing entirely. Required for C struct compat.
+    add_compile_options(-Wno-error=narrowing) # Suppress conversion narrowing errors. Required for C struct compat.
     add_compile_options(-Wno-changes-meaning) # Suppress name shadowing errors.
     add_compile_options(-Wformat-extra-args)  # Suppress format string errors.
     add_compile_options(-Wno-sign-compare)    # Suppress sign comparison warnings.
@@ -50,7 +53,9 @@ execute_process(
 add_definitions(-DGIT_COMMIT="${GIT_COMMIT}")
 
 # Add executable.
-file(GLOB_RECURSE SOURCES "Source/*.cpp")
+file(GLOB_RECURSE SOURCES
+    CONFIGURE_DEPENDS "Source/*.cpp"
+)
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES})
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
     OUTPUT_NAME "${CMAKE_PROJECT_NAME}"
@@ -62,7 +67,7 @@ file(GLOB LIB_SOURCES
     "${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui/*.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui/backends/imgui_impl_sdl3.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui/backends/imgui_impl_sdlgpu3.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/Libraries/ImGuizmo/*.cpp"
+    #"${CMAKE_CURRENT_LIST_DIR}/Libraries/ImGuizmo/*.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/Libraries/smol-atlas/src/*.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/Libraries/vlc/lib/*.cpp"
 )
@@ -111,8 +116,8 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 add_subdirectory(Libraries/freetype)
 add_subdirectory(Libraries/glm)
 add_subdirectory(Libraries/json)
-#add_subdirectory(Libraries/psyz/psyz)
-add_subdirectory(Libraries/SDL) # @todo PSY-Z also uses SDL and keeping this line causes a conflict.
+add_subdirectory(Libraries/psyz/psyz)
+#add_subdirectory(Libraries/SDL) # @todo PSY-Z also uses SDL and keeping this line causes a conflict.
 add_subdirectory(Libraries/sol2)
 add_subdirectory(Libraries/spdlog)
 add_subdirectory(Libraries/utfcpp)
@@ -125,10 +130,10 @@ target_include_directories(${CMAKE_PROJECT_NAME} SYSTEM PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/glm
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui/backends
-    ${CMAKE_CURRENT_LIST_DIR}/Libraries/ImGuizmo
+    #${CMAKE_CURRENT_LIST_DIR}/Libraries/ImGuizmo
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/json/include
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/LuaJIT/src
-    #${CMAKE_CURRENT_LIST_DIR}/Libraries/psyz//psyz/include
+    ${CMAKE_CURRENT_LIST_DIR}/Libraries/psyz/psyz/include
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/SDL/include
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/smol-atlas/src
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/sol2/include
@@ -144,7 +149,7 @@ add_library(luajit STATIC IMPORTED)
 set_target_properties(luajit PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/Libraries/LuaJIT/src/libluajit.a")
 
 # Set PSY-Z compile definition.
-#target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE __psyz)
+target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE __psyz)
 
 # Add libraries.
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
@@ -152,7 +157,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
     freetype
     glm
     luajit
-    #psyz
+    psyz
     sol2
     SDL3::SDL3-static
     spdlog

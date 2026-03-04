@@ -78,14 +78,11 @@ namespace Silent::Renderer
         // @todo
     }
 
-    void RendererBase::PrepareRenderBuffer()
+    void RendererBase::PrepareFrameData()
     {
         auto& executor = g_App.GetExecutor();
 
-        // @todo Need to call `UpdateFontAtlasTextures` here. Backends need their own
-        // pre-render data prep method.
-
-        // @todo Using parallelism causes flickering here. Why?
+        // @todo Using parallelism here causes flickering. Why if lock guards are in place?
         // Generate active buffer data.
         //auto tasks = ParallelTasks
         //{
@@ -100,17 +97,19 @@ namespace Silent::Renderer
 
         // Swap double buffer.
         std::swap(_doubleBuffer.Render, _doubleBuffer.Active);
-
-        // Clear active buffer.
         _doubleBuffer.Active.DrawCallCount = 0;
         _doubleBuffer.Active.Primitives2d.clear();
         _doubleBuffer.Active.Primitives3d.clear();
         _doubleBuffer.Active.DebugPrimitives3d.clear();
         _doubleBuffer.Active.DebugGuiDrawCalls.clear();
+        _doubleBuffer.Active.TextureUploadQueue.clear();
+        _doubleBuffer.Active.TextureReleaseQueue.clear();
+        _doubleBuffer.Active.MeshUploadQueue.clear();
+        _doubleBuffer.Active.MeshReleaseQueue.clear();
 
-        _shapes2d.clear();
-        _sprites2d.clear();
-        _glyphs2d.clear();
+        // Swap debug messages.
+        Debug::g_Work.PrevMessages = Debug::g_Work.Messages;
+        Debug::g_Work.Messages.clear();
     }
 
     void RendererBase::SignalResize()
@@ -118,11 +117,32 @@ namespace Silent::Renderer
         _isResized = true;
     }
 
+    void RendererBase::QueueTextureUpload(const std::string& assetName)
+    {
+        _doubleBuffer.Active.TextureUploadQueue.push_back(assetName);
+    }
+
+    void RendererBase::QueueTextureRelease(const std::string& assetName)
+    {
+        _doubleBuffer.Active.TextureReleaseQueue.push_back(assetName);
+    }
+
+    void RendererBase::QueueMeshUpload(const std::string& assetName)
+    {
+        _doubleBuffer.Active.MeshUploadQueue.push_back(assetName);
+    }
+
+    void RendererBase::QueueMeshRelease(const std::string& assetName)
+    {
+        _doubleBuffer.Active.MeshReleaseQueue.push_back(assetName);
+    }
+
     bool RendererBase::SubmitShape2d(const Shape2d& shape)
     {
         if (_shapes2d.size() >= SHAPE_2D_COUNT_MAX)
         {
-            Debug::Log("Attempted to submit 2D shape to full container.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
+            Debug::Log("Attempted to submit 2D shape to full container.",
+                       Debug::LogLevel::Warning, Debug::LogMode::Debug);
             return false;
         }
 
@@ -136,7 +156,8 @@ namespace Silent::Renderer
 
         if (_sprites2d.size() >= SPRITE_2D_COUNT_MAX)
         {
-            Debug::Log("Attempted to submit 2D sprite to full container.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
+            Debug::Log("Attempted to submit 2D sprite to full container.",
+                       Debug::LogLevel::Warning, Debug::LogMode::Debug);
             return false;
         }
 
@@ -145,7 +166,8 @@ namespace Silent::Renderer
         //const auto* asset = assets.GetAsset(sprite.TextureName);
         //if (asset->Type != AssetType::Tim)
         //{
-        //    Debug::Log("Attempted to submit non-image asset as screen sprite.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
+        //    Debug::Log("Attempted to submit non-image asset as screen sprite.",
+        //               Debug::LogLevel::Warning, Debug::LogMode::Debug);
         //    return false;
         //}
 
@@ -155,9 +177,8 @@ namespace Silent::Renderer
 
     bool RendererBase::SubmitText2d(const Text2d& text)
     {
-        constexpr auto SHADOW_COLOR  = Color::From8Bit(16, 16, 16);
-        constexpr auto SHADOW_OFFSET = Vector2(SCREEN_SPACE_RES.x * (1.0f / RETRO_SCREEN_SPACE_RES.y),
-                                               SCREEN_SPACE_RES.y * (1.0f / RETRO_SCREEN_SPACE_RES.y));
+        constexpr auto    SHADOW_COLOR  = Color::From8Bit(16, 16, 16);
+        static const auto SHADOW_OFFSET = SCREEN_SPACE_RES / Vector2(RETRO_SCREEN_SPACE_RES.y);
 
         auto& fonts = g_App.GetFonts();
 
@@ -165,14 +186,15 @@ namespace Silent::Renderer
         auto* font = fonts.GetFont(text.FontName);
         if (font == nullptr)
         {
-            Debug::Log(Fmt("Attempted to submit 2D text with missing font `{}`.", text.FontName), Debug::LogLevel::Warning, Debug::LogMode::Debug);
+            Debug::Log(Fmt("Attempted to submit 2D text with missing font `{}`.", text.FontName),
+                       Debug::LogLevel::Warning, Debug::LogMode::Debug);
             return false;
         }
 
         // Get shaped text glyphs.
         auto shapedText = font->GetShapedText(text.Message);
 
-        // Compute trasformation parameters.
+        // Compute transformation parameters.
         auto rotMat           = Matrix::CreateRotationZ(text.Rotation);
         auto fontScaleFactor  = SCREEN_SPACE_RES / (float)font->GetPointSize();
         auto textSize         = (Vector2(shapedText.Width, (float)font->GetPointSize()) * fontScaleFactor) * text.Scale;
@@ -235,6 +257,13 @@ namespace Silent::Renderer
         }
         auto adjTextPos = text.Position + Vector2::Transform(textOffset, rotMat);
 
+        // Compute shadow offset.
+        auto shadowOffset    = SHADOW_OFFSET * aspectCorrection;
+        auto adjShadowOffset = Vector2::Transform(shadowOffset, rotMat);
+        // @todo This version scales according to the internal pixel size of the font.
+        //auto shadowOffset    = ((SHADOW_RETRO_PIXEL_OFFSET * fontScaleFactor) * text.Scale) * aspectCorrection;
+        //auto adjShadowOffset = Vector2::Transform(shadowOffset, rotMat);
+
         // Run through shaped glyphs.
         auto pixelOffset = Vector2::Zero;
         for (const auto& shapedGlyph : shapedText.Glyphs)
@@ -247,7 +276,8 @@ namespace Silent::Renderer
             auto adjPixelOffset = Vector2::Transform(pixelOffset, rotMat);
 
             // Compute rotated bearing.
-            auto pixelBearing    = Vector2(shapedGlyph.Attribs.Bearing.x, shapedGlyph.Attribs.AtlasSize.y - shapedGlyph.Attribs.Bearing.y);
+            auto pixelBearing    = Vector2(shapedGlyph.Attribs.Bearing.x,
+                                           shapedGlyph.Attribs.AtlasSize.y - shapedGlyph.Attribs.Bearing.y);
             auto adjPixelBearing = Vector2::Transform(pixelBearing, rotMat);
 
             // Compute screen position.
@@ -267,7 +297,8 @@ namespace Silent::Renderer
             {
                 if (_glyphs2d.size() >= GLYPH_2D_COUNT_MAX)
                 {
-                    Debug::Log("Attempted to submit 2D glyph to full container.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
+                    Debug::Log("Attempted to submit 2D glyph to full container.",
+                               Debug::LogLevel::Warning, Debug::LogMode::Debug);
                     return false;
                 }
 
@@ -289,8 +320,6 @@ namespace Silent::Renderer
             // Submit 2D drop shadow glyph.
             if (text.HasShadow)
             {
-                // @todo Scale offset.
-                auto adjShadowOffset = Vector2::Transform(SHADOW_OFFSET, rotMat);
                 if (!AddGlyph(adjShadowOffset, SHADOW_COLOR, text.Depth + 1, false))
                 {
                     return false;
@@ -308,7 +337,8 @@ namespace Silent::Renderer
     {
         if (_doubleBuffer.Active.DebugGuiDrawCalls.size() >= DEBUG_GUI_COUNT_MAX)
         {
-            Debug::Log("Attempted to submit debug GUI draw call to full container.", Debug::LogLevel::Warning, Debug::LogMode::Debug);
+            Debug::Log("Attempted to submit debug GUI draw call to full container.",
+                       Debug::LogLevel::Warning, Debug::LogMode::Debug);
             return;
         }
 
@@ -322,7 +352,8 @@ namespace Silent::Renderer
         return;
     }
 
-    void RendererBase::SubmitDebugLine(const Vector2& from, const Vector2& to, const Color& color, ScaleMode scaleMode, Debug::Page page)
+    void RendererBase::SubmitDebugLine(const Vector2& from, const Vector2& to, const Color& color, ScaleMode scaleMode,
+                                       Debug::Page page)
     {
         if (!Debug::CheckPage(page))
         {
@@ -344,7 +375,8 @@ namespace Silent::Renderer
         _doubleBuffer.Active.DebugPrimitives3d.push_back(line);
     }
 
-    void RendererBase::SubmitDebugTriangle(const Vector2& vert0, const Vector2& vert1, const Vector2& vert2, const Color& color, ScaleMode scaleMode, Debug::Page page)
+    void RendererBase::SubmitDebugTriangle(const Vector2& vert0, const Vector2& vert1, const Vector2& vert2,
+                                           const Color& color, ScaleMode scaleMode, Debug::Page page)
     {
         if (!Debug::CheckPage(page))
         {
@@ -355,7 +387,8 @@ namespace Silent::Renderer
         _doubleBuffer.Active.DebugShapes2d.push_back(tri);
     }
 
-    void RendererBase::SubmitDebugTriangle(const Vector3& vert0, const Vector3& vert1, const Vector3& vert2, const Color& color, Debug::Page page)
+    void RendererBase::SubmitDebugTriangle(const Vector3& vert0, const Vector3& vert1, const Vector3& vert2,
+                                           const Color& color, Debug::Page page)
     {
         if (!Debug::CheckPage(page))
         {
@@ -374,7 +407,6 @@ namespace Silent::Renderer
                                       SPRITE_2D_COUNT_MAX + 
                                       GLYPH_2D_COUNT_MAX);
         };
-
         ReserveMemory(_doubleBuffer.Active);
         ReserveMemory(_doubleBuffer.Render);
 
@@ -445,6 +477,8 @@ namespace Silent::Renderer
                 });
             }
         }
+
+        _shapes2d.clear();
     }
 
     void RendererBase::ProcessSprites2d()
@@ -553,6 +587,8 @@ namespace Silent::Renderer
                 });
             }
         }
+
+        _sprites2d.clear();
     }
 
     void RendererBase::ProcessGlyphs2d()
@@ -613,6 +649,8 @@ namespace Silent::Renderer
                 });
             }
         }
+
+        _glyphs2d.clear();
     }
 
     void RendererBase::SortRenderBufferData()

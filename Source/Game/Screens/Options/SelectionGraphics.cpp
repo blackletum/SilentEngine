@@ -1,11 +1,12 @@
 #include "Framework.h"
+#include "Psx.h"
 #include "Game/Screens/Options/SelectionGraphics.h"
+
+#include "Game/Bodyprog/Bodyprog.h"
 
 #include "Application.h"
 #include "Game/Screens/Options/Options.h"
 #include "Renderer/Renderer.h"
-
-#include "Game/Dummy.h"
 
 using namespace Silent::Renderer;
 
@@ -43,7 +44,7 @@ namespace Silent::Game
         auto& renderer = g_App.GetRenderer();
 
         // Compute color fade as component in range `[0.0f, 0.5f]`.
-        int colorFade = g_SysWork.timer_1C & (Q8_COLOR(0.5f) - 1);
+        int colorFade = g_SysWork.counters_1C[0] & (Q8_COLOR(0.5f) - 1);
 
         // Fade start color.
         int colorStart = 0;

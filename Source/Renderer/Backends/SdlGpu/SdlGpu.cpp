@@ -146,19 +146,19 @@ namespace Silent::Renderer::SdlGpu
             3, 2, 6, 6, 7, 3, // Top
             4, 5, 1, 1, 0, 4  // Bottom
         };
-        GetMeshes().Load(*copyPass, "CHARA/DOC.ILM");
-        //GetMeshes().Load(*copyPass, "ITEM/UNQE1.TMD");
-        GetMeshes().Load(*copyPass, bufferVertsTest, bufferIdxsTest, "TestCube");
-
-        // @todo If this isn't called and the texture is missing, for some reason
-        // the app hangs instead of crashing like it's supposed to. Why isn't such an error
-        // handled as written?
-        UpdateFontAtlasTextures(*copyPass);
+        //GetMeshes().Upload(*copyPass, "CHARA/DOC.ILM");
+        //GetMeshes().Upload(*copyPass, "ITEM/UNQE1.TMD");
+        GetMeshes().Upload(*copyPass, bufferVertsTest, bufferIdxsTest, "TestCube");
 
         // Load temp. textures.
-        GetTextures().Load(*copyPass, "TIM/HERO_PIC.TIM");
-        GetTextures().Load(*copyPass, "1ST/2ZANKO_E.TIM");
-        GetTextures().Load(*copyPass, "TIM/BG_ETC.TIM");
+        GetTextures().Upload(*copyPass, "TIM/HERO_PIC.TIM");
+        GetTextures().Upload(*copyPass, "1ST/2ZANKO_E.TIM");
+        GetTextures().Upload(*copyPass, "TIM/BG_ETC.TIM");
+
+        // @todo If atlas textures aren't updated and the texture is missing, for some reason
+        // the app hangs instead of crashing like it's supposed to. Why isn't such an error
+        // handled as written?
+        UpdateResources(*copyPass);
 
         SDL_EndGPUCopyPass(copyPass);
         SDL_SubmitGPUCommandBuffer(uploadCmdBuffer);
@@ -181,12 +181,8 @@ namespace Silent::Renderer::SdlGpu
         SDL_DestroyGPUDevice(_device);
     }
 
-    void Renderer::Update()
+    void Renderer::PrepareFrameResources()
     {
-        // Frame setup.
-        SortRenderBufferData();
-        ClearDrawBatches();
-    
         // Acquire command buffer.
         _commandBuffer = SDL_AcquireGPUCommandBuffer(_device);
         if (_commandBuffer == nullptr)
@@ -219,9 +215,16 @@ namespace Silent::Renderer::SdlGpu
         // Process copy pass.
         auto* copyPass = SDL_BeginGPUCopyPass(_commandBuffer);
 
-        UpdateFontAtlasTextures(*copyPass);
+        UpdateResources(*copyPass);
 
         SDL_EndGPUCopyPass(copyPass);
+    }
+
+    void Renderer::Update()
+    {
+        // Frame setup.
+        SortRenderBufferData();
+        ClearDrawBatches();
 
         // Draw frame.
         if (_swapchainTexture != nullptr)
@@ -257,19 +260,22 @@ namespace Silent::Renderer::SdlGpu
         auto* surface = SDL_GetWindowSurface(_window);
         if (surface == nullptr)
         {
-            Debug::Log(Fmt("Failed to save screenshot: {}", SDL_GetError()), Debug::LogLevel::Warning, Debug::LogMode::All, true);
+            Debug::Log(Fmt("Failed to save screenshot: {}", SDL_GetError()),
+                       Debug::LogLevel::Warning, Debug::LogMode::All, true);
             return;
         }
 
         // Lock surface to access pixels.
         if (!SDL_LockSurface(surface))
         {
-            Debug::Log(Fmt("Failed to save screenshot: {}", SDL_GetError()), Debug::LogLevel::Warning, Debug::LogMode::All, true);
+            Debug::Log(Fmt("Failed to save screenshot: {}", SDL_GetError()),
+                       Debug::LogLevel::Warning, Debug::LogMode::All, true);
             return;
         }
 
         // Write screenshot file.
-        if (stbi_write_png(path.string().c_str(), res.x, res.y, COLOR_CHANNEL_COUNT, surface->pixels, res.x * COLOR_CHANNEL_COUNT))
+        if (stbi_write_png(path.string().c_str(), res.x, res.y, COLOR_CHANNEL_COUNT,
+                           surface->pixels, res.x * COLOR_CHANNEL_COUNT))
         {
             Debug::Log("Saved screenshot.", Debug::LogLevel::Info, Debug::LogMode::All, true);
         }
@@ -309,8 +315,8 @@ namespace Silent::Renderer::SdlGpu
             .type                 = SDL_GPU_TEXTURETYPE_2D,
             .format               = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
             .usage                = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER,
-            .width                = viewportRes.x,
-            .height               = viewportRes.y,
+            .width                = (uint)viewportRes.x,
+            .height               = (uint)viewportRes.y,
             .layer_count_or_depth = 1,
             .num_levels           = 1
         };
@@ -335,8 +341,8 @@ namespace Silent::Renderer::SdlGpu
             .type                 = SDL_GPU_TEXTURETYPE_2D,
             .format               = SDL_GPU_TEXTUREFORMAT_D32_FLOAT,
             .usage                = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET,
-            .width                = viewportRes.x,
-            .height               = viewportRes.y,
+            .width                = (uint)viewportRes.x,
+            .height               = (uint)viewportRes.y,
             .layer_count_or_depth = 1,
             .num_levels           = 1
         };
@@ -357,7 +363,7 @@ namespace Silent::Renderer::SdlGpu
 
         SDL_EndGPUCopyPass(copyPass);
 
-        // Begin render pass.
+        // Process render pass.
         auto colorTargetInfo = SDL_GPUColorTargetInfo
         {
             .texture     = _renderTexture,
@@ -400,9 +406,15 @@ namespace Silent::Renderer::SdlGpu
         PushVertexUniform(uni0, UniformSlot::PerFrame);
         PushVertexUniform(uni1, UniformSlot::PerObject);
 
-        PushFragmentUniform(UniformModel{ false }, UniformSlot::PerObject);
+        // Push uniform.
+        auto uni = UniformModel
+        {
+            .IsFastAlpha = false
+        };
+        PushFragmentUniform(uni, UniformSlot::PerObject);
 
-        //const auto* mesh = GetMeshes()["Test"];
+        // Draw.
+        //const auto* mesh = GetMeshes()["CHARA/DOC.ILM_0"];
         //const auto* mesh = GetMeshes()["ITEM/UNQE1.TMD_1"];
         const auto* mesh = GetMeshes()["TestCube"];
         if (mesh != nullptr && mesh->IsValid())
@@ -413,7 +425,6 @@ namespace Silent::Renderer::SdlGpu
 
         //---------------------------
 
-        // Process render pass.
         SDL_EndGPURenderPass(&renderPass);
     }
 
@@ -434,7 +445,7 @@ namespace Silent::Renderer::SdlGpu
 
         SDL_EndGPUCopyPass(copyPass);
 
-        // Begin render pass.
+        // Process render pass.
         auto colorTargetInfo = SDL_GPUColorTargetInfo
         {
             .texture  = _renderTexture,
@@ -457,11 +468,11 @@ namespace Silent::Renderer::SdlGpu
             };
             SDL_BindGPUFragmentSamplers(&renderPass, 0, &binding, 1);
 
+            // Draw.
             SDL_DrawGPUIndexedPrimitives(&renderPass, QUAD_IDX_COUNT, 1, 0, 0, 0);
             _doubleBuffer.Active.DrawCallCount++;
         }
 
-        // End render pass.
         SDL_EndGPURenderPass(&renderPass);
     }
 
@@ -481,22 +492,32 @@ namespace Silent::Renderer::SdlGpu
 
         SDL_EndGPUCopyPass(copyPass);
 
-        // Begin render pass.
+        // Process render pass.
         auto colorTargetInfo = SDL_GPUColorTargetInfo
         {
             .texture  = _renderTexture,
             .load_op  = SDL_GPU_LOADOP_LOAD,
             .store_op = SDL_GPU_STOREOP_STORE
         };
-        auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, nullptr);
+        auto depthTargetInfo = SDL_GPUDepthStencilTargetInfo
+        {
+            .texture     = _depthTexture,
+            .clear_depth = 1.0f,
+            .load_op     = SDL_GPU_LOADOP_CLEAR,
+            .store_op    = SDL_GPU_STOREOP_DONT_CARE
+        };
+        auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, &depthTargetInfo);
 
         // Draw 2D primitives.
         _gpuBuffers.Vertices2d.Bind(renderPass, 0, 0);
         for (const auto& batch : _drawBatches.Primitives2d)
         {
             _pipelines.Bind(renderPass, batch.RenderStg, batch.BlendMd);
+
+            // Push uniform.
             PushFragmentUniform(batch.Uniform, UniformSlot::PerObject);
 
+            // Bind texture.
             if (!batch.TextureName.empty())
             {
                 auto* tex = GetTextures()[batch.TextureName];
@@ -506,11 +527,11 @@ namespace Silent::Renderer::SdlGpu
                 }
             }
 
+            // Draw.
             SDL_DrawGPUIndexedPrimitives(&renderPass, batch.VertexCount, 1, batch.IdxOffset, batch.VertexOffset, 0);
             _doubleBuffer.Active.DrawCallCount++;
         }
 
-        // End render pass.
         SDL_EndGPURenderPass(&renderPass);
     }
 
@@ -531,7 +552,7 @@ namespace Silent::Renderer::SdlGpu
 
         SDL_EndGPUCopyPass(copyPass);
 
-        // Begin render pass.
+        // Process render pass.
         auto colorTargetInfo = SDL_GPUColorTargetInfo
         {
             .texture  = _renderTexture,
@@ -540,7 +561,7 @@ namespace Silent::Renderer::SdlGpu
         };
         auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, nullptr);
 
-        // Process render pass.
+        // Bind viewport quad.
         _gpuBuffers.ViewportVertices2d.Bind(renderPass, 0, 0);
 
         // @todo Severe visual artefacts.
@@ -562,9 +583,17 @@ namespace Silent::Renderer::SdlGpu
         }*/
 
         // Luma-based fade.
+        if (Debug::g_Work.BlendAlpha > 0.0f)
         {
             _pipelines.Bind(renderPass, RenderStage::Fade, BlendMode::Opaque);
-            PushFragmentUniform(UniformLumaFade{ .FadeAlpha = Debug::g_Work.BlendAlpha }, UniformSlot::PerFrame);
+
+            // Push uniform.
+            auto uni = UniformLumaFade
+            {
+                .FadeAlpha = Debug::g_Work.BlendAlpha,
+                .IsWhite   = false
+            };
+            PushFragmentUniform(uni, UniformSlot::PerFrame);
 
             // Bind render texture.
             auto binding = SDL_GPUTextureSamplerBinding
@@ -574,6 +603,7 @@ namespace Silent::Renderer::SdlGpu
             };
             SDL_BindGPUFragmentSamplers(&renderPass, 0, &binding, 1);
 
+            // Draw.
             SDL_DrawGPUIndexedPrimitives(&renderPass, QUAD_IDX_COUNT, 1, 0, 0, 0);
             _doubleBuffer.Active.DrawCallCount++;
         }
@@ -583,7 +613,14 @@ namespace Silent::Renderer::SdlGpu
         if (options->EnableCrtFilter)
         {
             _pipelines.Bind(renderPass, RenderStage::Crt, BlendMode::Opaque);
-            PushFragmentUniform(UniformCrt{ .Resolution = GetViewportResolution().ToVector2(), .Time = 0.0f }, UniformSlot::PerFrame);
+
+            // Push uniform.
+            auto uni = UniformCrt
+            {
+                .Resolution = GetViewportResolution().ToVector2(),
+                .Time       = 0.0f
+            };
+            PushFragmentUniform(uni, UniformSlot::PerFrame);
 
             // Bind render texture.
             auto binding = SDL_GPUTextureSamplerBinding
@@ -593,6 +630,7 @@ namespace Silent::Renderer::SdlGpu
             };
             SDL_BindGPUFragmentSamplers(&renderPass, 0, &binding, 1);
 
+            // Draw.
             SDL_DrawGPUIndexedPrimitives(&renderPass, QUAD_IDX_COUNT, 1, 0, 0, 0);
             _doubleBuffer.Active.DrawCallCount++;
         }
@@ -602,7 +640,14 @@ namespace Silent::Renderer::SdlGpu
         if (options->EnableVignette)
         {
             _pipelines.Bind(renderPass, RenderStage::Vignette, BlendMode::Opaque);
-            PushFragmentUniform(UniformCrt{ .Resolution = GetViewportResolution().ToVector2(), .Time = 0.0f }, UniformSlot::PerFrame);
+
+            // Push uniform.
+            auto uni = UniformCrt
+            {
+                .Resolution = GetViewportResolution().ToVector2(),
+                .Time       = 0.0f
+            };
+            PushFragmentUniform(uni, UniformSlot::PerFrame);
 
             // Bind render texture.
             auto binding = SDL_GPUTextureSamplerBinding
@@ -612,6 +657,7 @@ namespace Silent::Renderer::SdlGpu
             };
             SDL_BindGPUFragmentSamplers(&renderPass, 0, &binding, 1);
 
+            // Draw.
             SDL_DrawGPUIndexedPrimitives(&renderPass, QUAD_IDX_COUNT, 1, 0, 0, 0);
             _doubleBuffer.Active.DrawCallCount++;
         }
@@ -626,7 +672,7 @@ namespace Silent::Renderer::SdlGpu
 
         const auto& options = g_App.GetOptions();
 
-        // Begin render pass.
+        // Process render pass.
         auto colorTargetInfo = SDL_GPUColorTargetInfo
         {
             .texture     = _swapchainTexture,
@@ -636,16 +682,15 @@ namespace Silent::Renderer::SdlGpu
         };
         auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, nullptr);
 
-        // Process render pass.
-
-        _pipelines.Bind(renderPass, RenderStage::Blit, BlendMode::Opaque);
+        // Bind viewport quad.
         _gpuBuffers.ViewportVertices2d.Bind(renderPass, 0, 0);
 
+        _pipelines.Bind(renderPass, RenderStage::Blit, BlendMode::Opaque);
+
         // Push uniform.
-        float brightness = (BRIGHTNESS_STEP * options->BrightnessLevel) - BRIGHTNESS_MIDDLE;
-        auto  uni        = UniformBlit
+        auto uni = UniformBlit
         {
-            .Brightness = brightness
+            .Brightness = (options->BrightnessLevel * BRIGHTNESS_STEP) - BRIGHTNESS_MIDDLE
         };
         PushFragmentUniform(uni, UniformSlot::PerFrame);
 
@@ -657,7 +702,7 @@ namespace Silent::Renderer::SdlGpu
         };
         SDL_BindGPUFragmentSamplers(&renderPass, 0, &binding, 1);
 
-        // Draw screen quad.
+        // Draw.
         SDL_DrawGPUIndexedPrimitives(&renderPass, QUAD_IDX_COUNT, 1, 0, 0, 0);
         _doubleBuffer.Active.DrawCallCount++;
 
@@ -688,7 +733,7 @@ namespace Silent::Renderer::SdlGpu
         auto* drawData = ImGui::GetDrawData();
         ImGui_ImplSDLGPU3_PrepareDrawData(drawData, _commandBuffer);
 
-        // Begin render pass.
+        // Process render pass.
         auto colorTargetInfo = SDL_GPUColorTargetInfo
         {
             .texture  = _swapchainTexture,
@@ -697,7 +742,7 @@ namespace Silent::Renderer::SdlGpu
         };
         auto* renderPass = SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, nullptr);
 
-        // Process render pass.
+        // Draw.
         ImGui_ImplSDLGPU3_RenderDrawData(drawData, _commandBuffer, renderPass);
 
         SDL_EndGPURenderPass(renderPass);
@@ -731,6 +776,7 @@ namespace Silent::Renderer::SdlGpu
         _gpuBuffers.Vertices2d.Initialize(*_device, VERT_2D_COUNT_MAX, VERT_2D_IDX_COUNT_MAX, "2D vertices");
         _gpuBuffers.Vertices3d.Initialize(*_device, VERT_3D_COUNT_MAX, VERT_3D_IDX_COUNT_MAX, "3D vertices");
 
+        // Reserve mesh cache.
         _meshes = std::make_unique<MeshCache>(_gpuBuffers.Vertices3d);
 
         // Reserve draw batches.
@@ -738,9 +784,31 @@ namespace Silent::Renderer::SdlGpu
         _drawBatches.Primitives3d.reserve(PRIM_3D_BATCH_COUNT_MAX);
     }
 
-    void Renderer::UpdateFontAtlasTextures(SDL_GPUCopyPass& copyPass)
+    void Renderer::UpdateResources(SDL_GPUCopyPass& copyPass)
     {
         auto& fonts = g_App.GetFonts();
+
+        // Release/upload textures.
+        auto& texs = GetTextures();
+        for (const auto& assetName : _doubleBuffer.Render.TextureReleaseQueue)
+        {
+            texs.Release(assetName);
+        }
+        for (const auto& assetName : _doubleBuffer.Render.TextureUploadQueue)
+        {
+            texs.Upload(copyPass, assetName);
+        }
+
+        // Release/upload meshes.
+        auto& meshes = GetMeshes();
+        for (const auto& assetName : _doubleBuffer.Render.MeshReleaseQueue)
+        {
+            meshes.Release(assetName);
+        }
+        for (const auto& assetName : _doubleBuffer.Render.MeshUploadQueue)
+        {
+            meshes.Upload(copyPass, assetName);
+        }
 
         // Run through registered fonts.
         for (const auto& metadata : FONTS_METADATA)
@@ -754,7 +822,6 @@ namespace Silent::Renderer::SdlGpu
                     const auto& atlas = atlases[atlasIdx];
 
                     // Initialize new or update existing GPU font atlas textures.
-                    // @todo Not efficient. Updates all atlases even if only 1 has been updated.
                     auto  name = metadata.Name + std::to_string(atlasIdx);
                     auto* tex  = GetTextures()[name];
                     if (tex != nullptr)
@@ -763,7 +830,7 @@ namespace Silent::Renderer::SdlGpu
                     }
                     else
                     {
-                        GetTextures().Load(copyPass, ToSpan(atlas), Vector2i(Font::ATLAS_SIZE), name);
+                        GetTextures().Upload(copyPass, ToSpan(atlas), Vector2i(Font::ATLAS_SIZE), name);
                     }
                 }
 
@@ -794,7 +861,7 @@ namespace Silent::Renderer::SdlGpu
                 auto  pos    = Vector3(prim.Vertices[i].Position.x, prim.Vertices[i].Position.y, depthZ);
                 bufferVerts.push_back(BufferVertex2d{ pos, prim.Vertices[i].Uv, prim.Vertices[i].Col });
             }
-    
+
             int curVertCount = 0;
             int curIdxCount  = 0;
 
@@ -824,8 +891,8 @@ namespace Silent::Renderer::SdlGpu
             }
 
             // Add batch.
-            // @todo Smarter way that strings together primitives with the same render stage, blend mode, and texture. What to do with uniforms?
-            // For now, collect each as its own batch of 2 triangles.
+            // @todo Smarter way that strings together primitives with the same render stage, blend mode, and texture.
+            // What to do with uniforms? For now, collect each as its own batch of 2 triangles.
             _drawBatches.Primitives2d.push_back(DrawBatch
             {
                 .TextureName  = prim.TextureName,
@@ -899,5 +966,6 @@ namespace Silent::Renderer::SdlGpu
     void Renderer::ClearDrawBatches()
     {
         _drawBatches.Primitives2d.clear();
+        _drawBatches.Primitives3d.clear();
     }
 }

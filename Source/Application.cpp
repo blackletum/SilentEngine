@@ -6,7 +6,7 @@
 #include "Assets/Locales.h"
 #include "Assets/TranslationKeys.h"
 #include "Audio/Audio.h"
-#include "Game/Game.h"
+#include "Game/Entry.h"
 #include "Input/Input.h"
 #include "Renderer/Renderer.h"
 #include "Savegame/Savegame.h"
@@ -21,6 +21,7 @@
 
 using namespace Silent::Assets;
 using namespace Silent::Audio;
+using namespace Silent::Game;
 using namespace Silent::Input;
 using namespace Silent::Renderer;
 using namespace Silent::Savegame;
@@ -151,7 +152,6 @@ namespace Silent
         {
             throw std::runtime_error(Fmt("Failed to create window: {}", SDL_GetError()));
         }
-
         SDL_SetWindowMinimumSize(_window, (int)RETRO_SCREEN_SPACE_RES.x, (int)RETRO_SCREEN_SPACE_RES.y);
         SDL_SetWindowAspectRatio(_window, WINDOW_ASPECT_RATIO_MIN, WINDOW_ASPECT_RATIO_MAX);
 
@@ -194,7 +194,8 @@ namespace Silent
         _work.Input.Initialize();
 
         // Show fullscreen toggle toaster hint.
-        _work.Toaster.Add(_work.Translator((PLATFORM_TYPE == PlatformType::MacOs) ? KEY_SYS_FULLSCREEN_HINT_MAC : KEY_SYS_FULLSCREEN_HINT_GENERIC));
+        _work.Toaster.Add(_work.Translator((PLATFORM_TYPE == PlatformType::MacOs) ? KEY_SYS_FULLSCREEN_HINT_MAC :
+                                                                                    KEY_SYS_FULLSCREEN_HINT_GENERIC));
 
         Debug::Log("Startup complete.");
     }
@@ -292,8 +293,9 @@ namespace Silent
         // Update input.
         _work.Input.Update(*_window, _mouseWheelAxis);
 
-        // Tick game state.
-        for (int i = 0; i < _work.Clock.GetTicks(); i++)
+        // Tick game state. @todo Don't process catch-up ticks for now.
+        if (_work.Clock.GetTicks() > 0)
+        //for (int i = 0; i < _work.Clock.GetTicks(); i++)
         {
             Entry();
         }
@@ -314,11 +316,11 @@ namespace Silent
             _prevFrameFuture.wait();
         }
 
-        Debug::g_Work.PrevMessages = Debug::g_Work.Messages;
-        Debug::g_Work.Messages.clear();
+        // Prepare renderer for new frame.
+        _work.Renderer->PrepareFrameData();
+        _work.Renderer->PrepareFrameResources();
 
         // Render frame asynchronously.
-        _work.Renderer->PrepareRenderBuffer();
         if (_work.Options->EnableParallelism)
         {
             _prevFrameFuture = std::async(std::launch::async, TASK(_work.Renderer->Update()));

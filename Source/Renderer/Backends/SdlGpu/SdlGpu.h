@@ -74,6 +74,7 @@ namespace Silent::Renderer::SdlGpu
 
         void Initialize(SDL_Window& window) override;
         void Deinitialize() override;
+        void PrepareFrameResources() override;
         void Update() override;
         void SaveScreenshot() const override;
 
@@ -122,19 +123,17 @@ namespace Silent::Renderer::SdlGpu
         /** @brief Allocates memory pools for draw batches and GPU buffers. */
         void InitializeGpuBuffers();
 
-        /** @brief Adds new glyph texture atlases and updates old ones if new glyphs have been added.
+        /** @brief Updates texture and mesh resources on the GPU.
          *
-         * @todo Race condition! Should run this before render thread.
-         *
-         * @param copyPass Copy pass.
+         * @param copyPass GPU copy pass.
          */
-        void UpdateFontAtlasTextures(SDL_GPUCopyPass& copyPass);
+        void UpdateResources(SDL_GPUCopyPass& copyPass);
 
         /** @brief Converts render buffer data to 2D triangle GPU buffer data and uploads it to the GPU.
          *
          * Processes 2D sprites and shapes.
          *
-         * @param copyPass Copy pass.
+         * @param copyPass GPU copy pass.
          */
         void CopyGpuPrimitives2d(SDL_GPUCopyPass& copyPass);
 

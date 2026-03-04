@@ -173,7 +173,6 @@ namespace Silent::Renderer::SdlGpu
             .Stage                    = RenderStage::Shape2d,
             .VertShaderName           = "Primitive2d.vert",
             .FragShaderName           = "Shape2d.frag",
-            .FragShaderSamplerCount   = 1,
             .FragShaderUniBufferCount = 2,
             .VertBufferDescs          = BUFFER_VERTEX_2D_DESCS,
             .VertBufferAttribs        = BUFFER_VERTEX_2D_ATTRIBS,
@@ -186,7 +185,8 @@ namespace Silent::Renderer::SdlGpu
                 BlendMode::Add,
                 BlendMode::Subtract,
                 BlendMode::Wireframe
-            }
+            },
+            .EnableDepthTest = true
         },
         // 2D sprite.
         {
@@ -206,7 +206,8 @@ namespace Silent::Renderer::SdlGpu
                 BlendMode::Add,
                 BlendMode::Subtract,
                 BlendMode::Wireframe
-            }
+            },
+            .EnableDepthTest = true
         },
         // 2D glyph.
         {
@@ -221,7 +222,8 @@ namespace Silent::Renderer::SdlGpu
             {
                 BlendMode::Alpha,
                 BlendMode::Wireframe
-            }
+            },
+            .EnableDepthTest = true
         },
         // 3D model.
         {

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Assets/Parsers/Ilm.h"
-#include "Assets/Parsers/Ipd.h"
-#include "Assets/Parsers/Plm.h"
-#include "Assets/Parsers/Png.h"
-#include "Assets/Parsers/Tim.h"
-#include "Assets/Parsers/Tmd.h"
+#include "Assets/Loaders/Ilm.h"
+#include "Assets/Loaders/Ipd.h"
+#include "Assets/Loaders/Plm.h"
+#include "Assets/Loaders/Png.h"
+#include "Assets/Loaders/Tim.h"
+#include "Assets/Loaders/Tmd.h"
 
 namespace Silent::Assets
 {
@@ -103,6 +103,12 @@ namespace Silent::Assets
          * @return Vector of all loaded asset names.
          */
         std::vector<std::string> GetLoadedNames() const;
+
+        /** @brief Gets the number of assets currently being loaded.
+         *
+         * @return Number of assets being loaded.
+         */
+        int GetLoadingCount() const;
 
         /** @brief Gets a loaded asset via a file index.
          *

@@ -11,82 +11,39 @@ namespace Silent::Math
     constexpr int RECT_VERTEX_COUNT = 4;
     constexpr int BOX_VERTEX_COUNT  = 8;
 
-    /** @brief Fixed-point Q types. */
-    enum class QType
-    {
-        Q4,
-        Q6,
-        Q8,
-        Q12
-    };
-
-#if 0
-    /** @brief PsyQ matrix. */
-    struct MATRIX
-    {
-        short m[3][3]; /** 3x3 rotation matrix. */
-        int   t[3];    /** Transfer vector. */
-
-        MATRIX(const Matrix& mat);
-
-        Matrix ToMatrix() const;
-    };
-
-    /** @brief PsyQ `short`-based XY vector. */
-    struct DVECTOR
-    {
-        short vx;
-        short vy;
-    };
-
-    /** @brief `DVECTOR` variant with a `vz` component instead of `vy`. */
+    /** @brief SH `DVECTOR` variant with a `vz` component instead of `vy`. */
     struct DVECTOR_XZ
     {
         short vx;
         short vz;
+
+        DVECTOR_XZ() : vx(0), vz(0) {}
+        DVECTOR_XZ(int x, int z) : vx(x), vz(z) {}
     };
 
-    /** @brief PsyQ `short`-based XYZ vector. */
+    /** @brief SH `SVECTOR` variant without padding. */
     struct SVECTOR3
     {
         short vx;
         short vy;
         short vz;
-    };
-    using SVECTOR = SVECTOR3;
 
-    /** @brief PsyQ `int`-based XYZ vector. */
-    struct VECTOR3 : Vector3i
+        SVECTOR3() : vx(0), vy(0), vz(0) {}
+        SVECTOR3(int x, int y, int z) : vx(x), vy(y), vz(z) {}
+    };
+
+    /** @brief SH `VECTOR` variant without padding. */
+    struct VECTOR3
     {
-        int& vx;
-        int& vy;
-        int& vz;
+        int vx;
+        int vy;
+        int vz;
 
-        VECTOR3(int x, int y, int z) : Vector3i(x, y, z), vx(this->x), vy(this->y), vz(this->z) {}
+        VECTOR3() : vx(0), vy(0), vz(0) {}
+        VECTOR3(int x, int y, int z) : vx(x), vy(y), vz(z) {}
 
-        Vector3 ToVector3(QType qType) const;
+        Vector3 ToVector3(float qScale) const;
     };
-    using VECTOR = VECTOR3;
-
-    /** @brief PsyQ coordinate. */
-    struct GsCOORD2PARAM
-    {
-        VECTOR3 scale;
-        SVECTOR rotate;
-        VECTOR3 trans;
-    };
-
-    /** @brief PsyQ bone coordinate. */
-    struct GsCOORDINATE2
-    {
-        ulong                 flg;   /** `bool`. */
-        MATRIX                coord;
-        MATRIX                workm;
-        GsCOORD2PARAM*        param;
-        struct GsCOORDINATE2* super; /** Parent. */
-        struct GsCOORDINATE2* sub;   /** Child. */
-    };
-#endif
 
     struct s_Line2d
     {
@@ -115,7 +72,6 @@ namespace Silent::Math
         ushort   r;
         ushort   g;
         ushort   b;
-        ushort   __pad_E; // Maybe 4th component of a RGB+code struct?
     };
 
     struct s_LineBorder

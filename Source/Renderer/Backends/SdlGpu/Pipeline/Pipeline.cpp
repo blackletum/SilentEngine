@@ -92,12 +92,11 @@ namespace Silent::Renderer::SdlGpu
                 {
                     .fill_mode = (blendMode == BlendMode::Wireframe) ? SDL_GPU_FILLMODE_LINE : SDL_GPU_FILLMODE_FILL
                 },
-                .depth_stencil_state = !config.EnableDepthTest ? SDL_GPUDepthStencilState{} :
-                SDL_GPUDepthStencilState
+                .depth_stencil_state = SDL_GPUDepthStencilState
                 {
-                    .compare_op         = SDL_GPU_COMPAREOP_LESS,
-                    .enable_depth_test  = true,
-                    .enable_depth_write = true
+                    .compare_op         = config.EnableDepthTest ? SDL_GPU_COMPAREOP_LESS : SDL_GPU_COMPAREOP_INVALID,
+                    .enable_depth_test  = config.EnableDepthTest,
+                    .enable_depth_write = config.EnableDepthTest
                 },
                 .target_info = SDL_GPUGraphicsPipelineTargetInfo
                 {
@@ -154,19 +153,19 @@ namespace Silent::Renderer::SdlGpu
         auto shadersDir = fs.GetAssetsDirectory() / ASSETS_SHADERS_DIR_NAME / filename;
         if (formatFlags & SDL_GPU_SHADERFORMAT_SPIRV)
         {
-            snprintf(fullPath, sizeof(fullPath), "%s.spv", shadersDir.c_str());
+            snprintf(fullPath, sizeof(fullPath), "%s.spv", shadersDir.string().c_str());
             activeFormatFlag = SDL_GPU_SHADERFORMAT_SPIRV;
             entryPoint       = "main";
         }
         else if (formatFlags & SDL_GPU_SHADERFORMAT_MSL)
         {
-            snprintf(fullPath, sizeof(fullPath), "%s.msl", shadersDir.c_str());
+            snprintf(fullPath, sizeof(fullPath), "%s.msl", shadersDir.string().c_str());
             activeFormatFlag = SDL_GPU_SHADERFORMAT_MSL;
             entryPoint       = "main0";
         }
         else if (formatFlags & SDL_GPU_SHADERFORMAT_DXIL)
         {
-            snprintf(fullPath, sizeof(fullPath), "%s.dxil", shadersDir.c_str());
+            snprintf(fullPath, sizeof(fullPath), "%s.dxil", shadersDir.string().c_str());
             activeFormatFlag = SDL_GPU_SHADERFORMAT_DXIL;
             entryPoint       = "main";
         }

@@ -31,6 +31,11 @@ namespace Silent::Renderer
             std::vector<Shape2d>               DebugShapes2d     = {};
             std::vector<Primitive3d>           DebugPrimitives3d = {};
             std::vector<std::function<void()>> DebugGuiDrawCalls = {};
+
+            std::vector<std::string> TextureUploadQueue  = {}; /** Asset names. */
+            std::vector<std::string> TextureReleaseQueue = {}; /** Asset names. */
+            std::vector<std::string> MeshUploadQueue     = {}; /** Asset names. */
+            std::vector<std::string> MeshReleaseQueue    = {}; /** Asset names. */
         };
 
         Data Active = {};
@@ -117,11 +122,35 @@ namespace Silent::Renderer
         /** @brief Updates the render view. */
         void UpdateView();
 
-        /** @brief Processes high-level object data and swaps the double buffer.. */
-        void PrepareRenderBuffer();
+        /** @brief Processes high-level object data and swaps the double buffer for a new frame. */
+        void PrepareFrameData();
 
         /** @brief Signals a viewport resize. */
         void SignalResize();
+
+        /** @brief Queues a texture upload to the GPU.
+         *
+         * @param assetName Texture asset name.
+         */
+        void QueueTextureUpload(const std::string& assetName);
+
+        /** @brief Queues a texture release from the GPU.
+         *
+         * @param assetName Texture asset name.
+         */
+        void QueueTextureRelease(const std::string& assetName);
+
+        /** @brief Queues a mesh upload to the GPU.
+         *
+         * @param assetName Mesh asset name.
+         */
+        void QueueMeshUpload(const std::string& assetName);
+
+        /** @brief Queues a mesh unload from the GPU.
+         *
+         * @param assetName Mesh asset name.
+         */
+        void QueueMeshRelease(const std::string& assetName);
 
         /** @brief Submits an immediate-mode 2D screen shape for drawing.
          *
@@ -152,6 +181,9 @@ namespace Silent::Renderer
 
         /** @brief Gracefully deinitializes the renderer and its subsystems. */
         virtual void Deinitialize() = 0;
+
+        /** @brief Sets up GPU resources for a new frame. */
+        virtual void PrepareFrameResources() = 0;
 
         /** @brief Prepares all GPU data and draws to the render surface. */
         virtual void Update() = 0;
@@ -200,7 +232,8 @@ namespace Silent::Renderer
          * @param scaleMode Screen space scale mode.
          * @param page Debug page in which the triangle will be visible.
          */
-        void SubmitDebugTriangle(const Vector2& vert0, const Vector2& vert1, const Vector2& vert2, const Color& color, ScaleMode scaleMode, Debug::Page page);
+        void SubmitDebugTriangle(const Vector2& vert0, const Vector2& vert1, const Vector2& vert2,
+                                 const Color& color, ScaleMode scaleMode, Debug::Page page);
 
         /** @brief Submits a 3D triangle polygon with additive blending for drawing.
          * Used to construct more complex geometry.
@@ -211,7 +244,8 @@ namespace Silent::Renderer
          * @param color Triangle color.
          * @param page Debug page in which the triangle will be visible.
          */
-        void SubmitDebugTriangle(const Vector3& vert0, const Vector3& vert1, const Vector3& vert2, const Color& color, Debug::Page page);
+        void SubmitDebugTriangle(const Vector3& vert0, const Vector3& vert1, const Vector3& vert2,
+                                 const Color& color, Debug::Page page);
 
     protected:
         // ========

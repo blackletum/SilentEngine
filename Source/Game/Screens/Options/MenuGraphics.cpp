@@ -1,10 +1,12 @@
 #include "Framework.h"
+#include "Psx.h"
 #include "Game/Screens/Options/MenuGraphics.h"
+
+#include "Game/Bodyprog/Bodyprog.h"
 
 #include "Application.h"
 #include "Assets/TranslationKeys.h"
-#include "Game/Bodyprog/Screen/TextDraw.h"
-#include "Game/Dummy.h"
+#include "Game/Bodyprog/Text/TextDraw.h"
 #include "Game/Screens/Options/Options.h"
 #include "Game/Screens/Options/SelectionGraphics.h"
 #include "Utils/Translator.h"
@@ -92,7 +94,7 @@ namespace Silent::Game
         const auto& translator = g_App.GetTranslator();
 
         // Submit heading string.
-        Gfx_StringSetColor(e_StringColorId::White);
+        Gfx_StringSetColor(StringColorId_White);
         Gfx_StringSetPosition(HEADING_STR_POS.x, HEADING_STR_POS.y);
         Gfx_StringDraw(translator(KEY_OPTIONS_MENU_OPTIONS), DEFAULT_MAP_MESSAGE_LENGTH);
 
@@ -170,13 +172,16 @@ namespace Silent::Game
             59, 169, 174, 156, 104, 112, 75, 129, 112
         };
 
+        static auto selectionHighlightFrom = Vector2i::Zero;
+        static auto selectionHighlightTo   = Vector2i::Zero;
+
         // Set active selection highlight position references.
         if (g_Options_SelectionHighlightTimer == 0)
         {
-            g_MainOptions_SelectionHighlightFrom.x = SELECTION_HIGHLIGHT_WIDTHS[g_MainOptionsMenu_PrevSelectedEntry] + HIGHLIGHT_OFFSET_X;
-            g_MainOptions_SelectionHighlightFrom.y = (g_MainOptionsMenu_PrevSelectedEntry * LINE_OFFSET_Y)           - HIGHLIGHT_OFFSET_Y;
-            g_MainOptions_SelectionHighlightTo.x   = SELECTION_HIGHLIGHT_WIDTHS[g_MainOptionsMenu_SelectedEntry]     + HIGHLIGHT_OFFSET_X;
-            g_MainOptions_SelectionHighlightTo.y   = (g_MainOptionsMenu_SelectedEntry * LINE_OFFSET_Y)               - HIGHLIGHT_OFFSET_Y;
+            selectionHighlightFrom.x = SELECTION_HIGHLIGHT_WIDTHS[g_MainOptionsMenu_PrevSelectedEntry] + HIGHLIGHT_OFFSET_X;
+            selectionHighlightFrom.y = (g_MainOptionsMenu_PrevSelectedEntry * LINE_OFFSET_Y)           - HIGHLIGHT_OFFSET_Y;
+            selectionHighlightTo.x   = SELECTION_HIGHLIGHT_WIDTHS[g_MainOptionsMenu_SelectedEntry]     + HIGHLIGHT_OFFSET_X;
+            selectionHighlightTo.y   = (g_MainOptionsMenu_SelectedEntry * LINE_OFFSET_Y)               - HIGHLIGHT_OFFSET_Y;
         }
 
         // Compute sine-based interpolation alpha.
@@ -185,10 +190,10 @@ namespace Silent::Game
         // Draw active selection highlight.
         auto highlightLine      = s_Line2d{};
         highlightLine.vertex0.x = HIGHLIGHT_OFFSET_X;
-        highlightLine.vertex1.x = g_MainOptions_SelectionHighlightFrom.x +
-                                  FP_FROM((g_MainOptions_SelectionHighlightTo.x - g_MainOptions_SelectionHighlightFrom.x) * interpAlpha, Q12_SHIFT);
-        highlightLine.vertex1.y = g_MainOptions_SelectionHighlightFrom.y +
-                                  FP_FROM((g_MainOptions_SelectionHighlightTo.y - g_MainOptions_SelectionHighlightFrom.y) * interpAlpha, Q12_SHIFT) +
+        highlightLine.vertex1.x = selectionHighlightFrom.x +
+                                  FP_FROM((selectionHighlightTo.x - selectionHighlightFrom.x) * interpAlpha, Q12_SHIFT);
+        highlightLine.vertex1.y = selectionHighlightFrom.y +
+                                  FP_FROM((selectionHighlightTo.y - selectionHighlightFrom.y) * interpAlpha, Q12_SHIFT) +
                                   LINE_OFFSET_Y;
         highlightLine.vertex0.y = highlightLine.vertex1.y;
         Options_Selection_HighlightDraw(highlightLine);
@@ -258,13 +263,16 @@ namespace Silent::Game
             Vector2i(-107, -34)
         };
 
+        static auto selectionHighlightFrom = Vector2i::Zero;
+        static auto selectionHighlightTo   = Vector2i::Zero;
+
         // Set active selection highlight position references.
         if (g_Options_SelectionHighlightTimer == 0)
         {
-            g_ExtraOptions_SelectionHighlightFrom.x = SELECTION_HIGHLIGHT_WIDTHS[g_ExtraOptionsMenu_PrevSelectedEntry] + (65536 + HIGHLIGHT_OFFSET_X); // TODO
-            g_ExtraOptions_SelectionHighlightFrom.y = (g_ExtraOptionsMenu_PrevSelectedEntry * LINE_OFFSET_Y)           - HIGHLIGHT_OFFSET_Y;
-            g_ExtraOptions_SelectionHighlightTo.x   = SELECTION_HIGHLIGHT_WIDTHS[g_ExtraOptionsMenu_SelectedEntry]     + (65536 + HIGHLIGHT_OFFSET_X); // TODO
-            g_ExtraOptions_SelectionHighlightTo.y   = (g_ExtraOptionsMenu_SelectedEntry * LINE_OFFSET_Y)               - HIGHLIGHT_OFFSET_Y;
+            selectionHighlightFrom.x = SELECTION_HIGHLIGHT_WIDTHS[g_ExtraOptionsMenu_PrevSelectedEntry] + (65536 + HIGHLIGHT_OFFSET_X); // TODO
+            selectionHighlightFrom.y = (g_ExtraOptionsMenu_PrevSelectedEntry * LINE_OFFSET_Y)           - HIGHLIGHT_OFFSET_Y;
+            selectionHighlightTo.x   = SELECTION_HIGHLIGHT_WIDTHS[g_ExtraOptionsMenu_SelectedEntry]     + (65536 + HIGHLIGHT_OFFSET_X); // TODO
+            selectionHighlightTo.y   = (g_ExtraOptionsMenu_SelectedEntry * LINE_OFFSET_Y)               - HIGHLIGHT_OFFSET_Y;
         }
 
         // Compute sine-based interpolation alpha.
@@ -273,12 +281,12 @@ namespace Silent::Game
         // Draw active selection highlight.
         auto highlightLine = s_Line2d
         {
-            Vector2i(0, g_ExtraOptions_SelectionHighlightFrom.y) +
+            Vector2i(0, selectionHighlightFrom.y) +
             Vector2i(HIGHLIGHT_OFFSET_X,
-                     FP_MULTIPLY(g_ExtraOptions_SelectionHighlightTo.y - g_ExtraOptions_SelectionHighlightFrom.y, interpAlpha, Q12_SHIFT) + LINE_OFFSET_Y),
-            g_ExtraOptions_SelectionHighlightFrom.x +
-            Vector2i(FP_MULTIPLY(g_ExtraOptions_SelectionHighlightTo.x - g_ExtraOptions_SelectionHighlightFrom.x, interpAlpha, Q12_SHIFT),
-                     FP_MULTIPLY(g_ExtraOptions_SelectionHighlightTo.y - g_ExtraOptions_SelectionHighlightFrom.y, interpAlpha, Q12_SHIFT) + LINE_OFFSET_Y)
+                     FP_MULTIPLY(selectionHighlightTo.y - selectionHighlightFrom.y, interpAlpha, Q12_SHIFT) + LINE_OFFSET_Y),
+            selectionHighlightFrom.x +
+            Vector2i(FP_MULTIPLY(selectionHighlightTo.x - selectionHighlightFrom.x, interpAlpha, Q12_SHIFT),
+                     FP_MULTIPLY(selectionHighlightTo.y - selectionHighlightFrom.y, interpAlpha, Q12_SHIFT) + LINE_OFFSET_Y)
         };
         Options_Selection_HighlightDraw(highlightLine);
 

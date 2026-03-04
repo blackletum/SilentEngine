@@ -44,12 +44,11 @@ https://github.com/Vatuu/silent-hill-decomp
 - Forward renderer. Basic system abstraction is done, now it needs expansion.
 - Sound system. Need to write a `KDC`+`VAB` -> `XM` converter?
 - Parsers for all proprietary game file types.
-- Renderer expanison.
 - Lua scripting.
 
 ## Building (Windows/macOS/Linux)
 
-This section is incomplete. Ideally, the project will be able to cross-compile between all main development platforms.
+NOTE: Project setup is yet to be streamlined and this section is incomplete. Ideally, the project will be able to cross-compile between all main development platforms.
 
 ### Install dependencies
 
@@ -80,7 +79,12 @@ sudo apt install build-essential git ninja-build python3 python3-pip
 
 ### Clone the repository
 
-Clone https://github.com/Sezzary/SilentEngine to your desired directory. Cloning recursively will ensure the submodules are included in the process.
+Initialize Git LFS to ensure assets are pulled correctly:
+```
+git lfs install
+```
+
+Clone https://github.com/Sezzary/SilentEngine to your desired directory. Cloning recursively will include submodules in the process:
 ```
 git clone --recursive https://github.com/Sezzary/SilentEngine
 git submodule update --init --recursive
@@ -92,11 +96,27 @@ cd Libraries/LuaJIT && make && cd ../..
 ```
 
 <details>
-<summary>Linux</summary>
+<summary>Windows</summary>
+TODO: Steps incomplete.
 
+Build shaders:
 ```
-sudo apt install build-essential git ninja-build python3 python3-pip
+python Tools/GenerateShaders.py Windows
 ```
+</details>
+
+<details>
+<summary>macOS</summary>
+TODO: Steps incomplete.
+
+Build shaders:
+```
+python Tools/GenerateShaders.py macOS
+```
+</details>
+
+<details>
+<summary>Linux</summary>
 
 Install SDL dependencies:
 ```
@@ -113,14 +133,17 @@ Set up Python virtual environment:
 python3 -m venv .venv
 source .venv/bin/activate
 ```
+
+Build shaders:
+```
+python Tools/GenerateShaders.py Linux
+```
 </details>
 
 ### Transfer assets
 
 Copy the `Assets` folder from the root of the repository to the `Build` folder. Then, extract all folders from the ROM's .SILENT archive to `Assets/Stream/Psx`.
-Original game assets are not provided and your own ROM of the 1.1 US release of the game must be sourced.
-
-This is yet to be streamlined and automation of this step will be provided in the future.
+Original game assets are not provided. Your own ROM of the 1.1 US release of the game must be sourced.
 
 ### Build the code (Debug/Release)
 
