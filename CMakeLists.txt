@@ -4,6 +4,10 @@ cmake_minimum_required(VERSION 3.28.3)
 # - Modules don't work.
 # - Assimp doesn't work.
 
+# ==============
+# Project Setup
+# ==============
+
 # Define project.
 project(SilentEngine)
 
@@ -14,9 +18,8 @@ set(CMAKE_CXX_STANDARD 23)
 # Set compiler options.
 if(MSVC)
     add_compile_options(/std:c++20) # Enable modules.
-    add_compile_options(/wd4244)    # Suppress narrowing/conversion. Required for C struct compat.
     add_compile_options(/wd4018)    # Suppress sign comparison warnings.
-    add_compile_options(/wd4244)    # Suppress type conversion warnings.
+    add_compile_options(/wd4244)    # Suppress narrowing/conversion warnings. Required for C struct compat.
     add_compile_options(/wd4267)    # Suppress type conversion warnings.
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     add_compile_options(-Mmodules)            # Enable modules.
@@ -62,17 +65,6 @@ set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
     DEBUG_POSTFIX "_d"
 )
 
-# Add library sources.
-file(GLOB LIB_SOURCES
-    "${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui/*.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui/backends/imgui_impl_sdl3.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui/backends/imgui_impl_sdlgpu3.cpp"
-    #"${CMAKE_CURRENT_LIST_DIR}/Libraries/ImGuizmo/*.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/Libraries/smol-atlas/src/*.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/Libraries/vlc/lib/*.cpp"
-)
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${LIB_SOURCES})
-
 # Set `Debug` build definitions.
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 add_definitions(-D_DEBUG)
@@ -102,6 +94,21 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 endif()
 
+# =================
+# Dependency Setup
+# =================
+
+# Add library sources.
+file(GLOB LIB_SOURCES
+    "${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui/*.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui/backends/imgui_impl_sdl3.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui/backends/imgui_impl_sdlgpu3.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/Libraries/ImGuizmo/*.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/Libraries/smol-atlas/src/*.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/Libraries/vlc/lib/*.cpp"
+)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${LIB_SOURCES})
+
 # Link libraries statically.
 set(BUILD_SHARED_LIBS OFF)
 
@@ -130,7 +137,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} SYSTEM PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/glm
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui/backends
-    #${CMAKE_CURRENT_LIST_DIR}/Libraries/ImGuizmo
+    ${CMAKE_CURRENT_LIST_DIR}/Libraries/ImGuizmo
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/json/include
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/LuaJIT/src
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/psyz/psyz/include

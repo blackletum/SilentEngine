@@ -68,7 +68,7 @@
 #include <imgui_impl_sdlgpu3.h>
 
 // ImGuizmo @todo Issues on Windows build.
-//#include <ImGuizmo.h>
+#include <ImGuizmo.h>
 
 // json
 #include <nlohmann/json.hpp>
@@ -87,8 +87,8 @@ using json = nlohmann::json;
 #include <smol-atlas.h>
 
 // sol2
-//#define SOL_ALL_SAFETIES_ON 1
-//#include <sol/sol.hpp>
+#define SOL_ALL_SAFETIES_ON 1
+#include <sol/sol.hpp>
 
 // spdlog
 #include <spdlog/fmt/fmt.h>

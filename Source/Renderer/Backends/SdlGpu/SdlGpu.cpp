@@ -578,6 +578,7 @@ namespace Silent::Renderer::SdlGpu
             };
             SDL_BindGPUFragmentSamplers(&renderPass, 0, &binding, 1);
 
+            // Draw.
             SDL_DrawGPUIndexedPrimitives(&renderPass, QUAD_IDX_COUNT, 1, 0, 0, 0);
             _doubleBuffer.Active.DrawCallCount++;
         }*/
