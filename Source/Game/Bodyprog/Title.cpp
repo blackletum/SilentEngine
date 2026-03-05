@@ -371,16 +371,16 @@ namespace Silent::Game
 
         if (g_GameWork.gameState_594 == GameState_MainMenu)
         {
-            Gfx_MainMenu_BackgroundDraw();
+            MainMenu_BackgroundDraw();
             //func_8003B560();
 
             if (g_MainMenuState < 3)
             {
-                Gfx_MainMenu_MainTextDraw();
+                MainMenu_MainTextDraw();
                 return;
             }
 
-            Gfx_MainMenu_DifficultyTextDraw(newGameSelectedDifficultyIdx);
+            MainMenu_DifficultyTextDraw(newGameSelectedDifficultyIdx);
             return;
         }
         else
@@ -400,7 +400,7 @@ namespace Silent::Game
         g_MainMenu_SelectedEntry = MainMenuEntry_Continue;
     }
 
-    void Gfx_MainMenu_MainTextDraw(void) // 0x8003B568
+    void MainMenu_MainTextDraw(void) // 0x8003B568
     {
         #define COLUMN_POS_X 158
         #define COLUMN_POS_Y 184
@@ -450,7 +450,7 @@ namespace Silent::Game
         }
     }
 
-    void Gfx_MainMenu_DifficultyTextDraw(s32 idx) // 0x8003B678
+    void MainMenu_DifficultyTextDraw(s32 idx) // 0x8003B678
     {
         #define DIFFICULTY_MENU_SELECTION_COUNT 3
         #define COLUMN_POS_X                    158
@@ -493,7 +493,7 @@ namespace Silent::Game
         }
     }
 
-    void Gfx_MainMenu_BackgroundDraw(void) // 0x8003B758
+    void MainMenu_BackgroundDraw(void) // 0x8003B758
     {
         auto& renderer = g_App.GetRenderer();
 
@@ -510,7 +510,7 @@ namespace Silent::Game
         renderer.SubmitSprite2d(sprite);
         //Screen_BackgroundImgDraw(&g_TitleImg);
 
-        Gfx_MainMenu_FogUpdate();
+        MainMenu_FogUpdate();
     }
 
     void func_8003B7BC(void) // 0x8003B7BC
@@ -571,7 +571,7 @@ namespace Silent::Game
         return val;
     }
 
-    PACKET* Gfx_MainMenu_FogPacketGet(GsOT* ot, PACKET* packet) // 0x8003B838
+    PACKET* MainMenu_FogPacketGet(GsOT* ot, PACKET* packet) // 0x8003B838
     {
         s32      yOffset;
         s32      i;
@@ -619,19 +619,19 @@ namespace Silent::Game
         return packet;
     }
 
-    void Gfx_MainMenu_FogDraw(void) // 0x8003BA08
+    void MainMenu_FogDraw(void) // 0x8003BA08
     {
         PACKET*   packet;
         GsOT_TAG* tag;
 
         //tag    = g_OrderingTable2[g_ActiveBufferIdx].org;
-        //packet = Gfx_MainMenu_FogPacketGet((GsOT*)&tag[6], (PACKET*)GsOUT_PACKET_P);
+        //packet = MainMenu_FogPacketGet((GsOT*)&tag[6], (PACKET*)GsOUT_PACKET_P);
         //SetDrawMode((DR_MODE*)packet, 0, 1, 42, NULL);
         //addPrim(&tag[6], packet);
         //GsOUT_PACKET_P = packet + sizeof(DR_MODE);
     }
 
-    void Gfx_MainMenu_FogRandomize(void) // 0x8003BAC4
+    void MainMenu_FogRandomize(void) // 0x8003BAC4
     {
         s32 idx;
         s32 i;
@@ -668,7 +668,7 @@ namespace Silent::Game
         }
     }
 
-    void Gfx_MainMenu_FogScatter(void) // 0x8003BBF4
+    void MainMenu_FogScatter(void) // 0x8003BBF4
     {
         s32 i;
         s32 j;
@@ -677,7 +677,7 @@ namespace Silent::Game
 
         return; // @todo segfault
 
-        Gfx_MainMenu_FogRandomize();
+        MainMenu_FogRandomize();
 
         for (i = 0; i < MAIN_MENU_FOG_COUNT; i++)
         {
@@ -704,17 +704,17 @@ namespace Silent::Game
         }
     }
 
-    void Gfx_MainMenu_FogUpdate(void) // 0x8003BC8C
+    void MainMenu_FogUpdate(void) // 0x8003BC8C
     {
         static s32 foxCount = 0;
 
         if (foxCount == ((foxCount / 5) * 5))
         {
-            Gfx_MainMenu_FogScatter();
+            MainMenu_FogScatter();
         }
 
         foxCount++;
-        Gfx_MainMenu_FogDraw();
+        MainMenu_FogDraw();
     }
 
     void func_8003BCF4(void) // 0x8003BCF4
@@ -725,7 +725,7 @@ namespace Silent::Game
 
         for (i = 0; i < 30; i++)
         {
-            Gfx_MainMenu_FogScatter();
+            MainMenu_FogScatter();
         }
     }
 }

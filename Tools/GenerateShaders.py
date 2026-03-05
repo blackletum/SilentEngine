@@ -29,7 +29,46 @@ SOURCES_PATH     = BASE_PATH / "../Source/Assets/Shaders"
 OUTPUT_PATH      = BASE_PATH / "../Build/Assets/Shaders"
 TEMP_OUTPUT_PATH = OUTPUT_PATH / ".temp"
 
-def generate_shaders():
+def _get_shadercross_executable():
+    """
+    Get the path to the appropriate `shadercross` executable based on the system OS.
+    """
+    # Define executable path corresponding for current platform.
+    system_os = platform.system()
+    if system_os == "Windows":
+        shadercross_exe = os.path.join(SHADERCROSS_PATH, "Windows", SHADERCROSS_NAME + ".exe")
+    elif system_os == "Darwin": # macOS.
+        shadercross_exe = os.path.join(SHADERCROSS_PATH, "MacOs", SHADERCROSS_NAME)
+    elif system_os == "Linux":
+        shadercross_exe = os.path.join(SHADERCROSS_PATH, "Linux", SHADERCROSS_NAME)
+    else:
+        raise Exception(f"'{system_os}' is unsupported.")
+
+    if not os.path.isfile(shadercross_exe):
+        raise Exception(f"`{SHADERCROSS_NAME}` executable not found at '{shadercross_exe}'.")
+
+    return shadercross_exe
+
+def _get_output_formats():
+    """
+    Get the platform-specific shader formats to build according to the passed `build_os` argument.
+    """
+    if len(sys.argv) > 1:
+        build_os = sys.argv[1].lower()
+        if build_os == "windows":
+            formats = [".spv", ".dxil"]
+        elif build_os == "macos":
+            formats = [".msl"]
+        elif build_os == "linux":
+            formats = [".spv"]
+        else:
+            raise Exception(f"Passed invalid `build_os` argument `{build_os}`.")
+    else:
+        raise Exception("No `build_os` argument passed.")
+
+    return formats
+
+def main():
     """
     Run `shadercross` to generate platform-specific shaders.
     If generated shaders already exist and are outdated, they will be overwritten.
@@ -42,8 +81,8 @@ def generate_shaders():
             shutil.rmtree(TEMP_OUTPUT_PATH)
 
         # Setup.
-        shadercross_exe = get_shadercross_executable()
-        formats         = get_output_formats()
+        shadercross_exe = _get_shadercross_executable()
+        formats         = _get_output_formats()
         os.makedirs(OUTPUT_PATH,      exist_ok=True)
         os.makedirs(TEMP_OUTPUT_PATH, exist_ok=True)
 
@@ -114,43 +153,5 @@ def generate_shaders():
         print(f"Error: {ex}")
         sys.exit(1)
 
-def get_shadercross_executable():
-    """
-    Get the path to the appropriate `shadercross` executable based on the system OS.
-    """
-    # Define executable path corresponding for current platform.
-    system_os = platform.system()
-    if system_os == "Windows":
-        shadercross_exe = os.path.join(SHADERCROSS_PATH, "Windows", SHADERCROSS_NAME + ".exe")
-    elif system_os == "Darwin": # macOS.
-        shadercross_exe = os.path.join(SHADERCROSS_PATH, "MacOs", SHADERCROSS_NAME)
-    elif system_os == "Linux":
-        shadercross_exe = os.path.join(SHADERCROSS_PATH, "Linux", SHADERCROSS_NAME)
-    else:
-        raise Exception(f"'{system_os}' is unsupported.")
-
-    if not os.path.isfile(shadercross_exe):
-        raise Exception(f"`{SHADERCROSS_NAME}` executable not found at '{shadercross_exe}'.")
-
-    return shadercross_exe
-
-def get_output_formats():
-    """
-    Get the platform-specific shader formats to build according to the passed `build_os` argument.
-    """
-    if len(sys.argv) > 1:
-        build_os = sys.argv[1].lower()
-        if build_os == "windows":
-            formats = [".spv", ".dxil"]
-        elif build_os == "macos":
-            formats = [".msl"]
-        elif build_os == "linux":
-            formats = [".spv"]
-        else:
-            raise Exception(f"Passed invalid `build_os` argument `{build_os}`.")
-    else:
-        raise Exception("No `build_os` argument passed.")
-
-    return formats
-
-generate_shaders()
+if __name__ == "__main__":
+    main()

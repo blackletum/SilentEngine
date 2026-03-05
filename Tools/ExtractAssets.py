@@ -27,10 +27,10 @@ from typing import BinaryIO, Iterable
 from zlib import crc32
 
 class Flags(IntFlag):
-    NONE = 0
+    NONE                 = 0
     ENCRYPTED_1ST_FOLDER = 1
-    NO_XA_CONTAINER = 2
-    ALT_FILE_STRUCT = 4
+    NO_XA_CONTAINER      = 2
+    ALT_FILE_STRUCT      = 4
 
 @dataclass
 class Release:
@@ -132,11 +132,13 @@ RELEASES = (
     Release("PAL 99-06-07",                "SLES-01514", 0x337E4A60, 0xB8FC, 2310, DIRS_PAL,  FILE_TYPES, Flags.ENCRYPTED_1ST_FOLDER),
 )
 
-FILESIZE_STEP = 256
+FILESIZE_STEP     = 256
+ASSET_COUNT       = 2048
+ASSET_COUNT_PROTO = 2336
 
 ENTRY_STRUCT = Struct("<3I")
 
-def _createParser():
+def _create_parser():
     parser = ArgumentParser()
     parser.add_argument("--executable", "-exe", type = FileType("rb"))
     parser.add_argument("--silentFile", "-fs", type = FileType("rb"))
@@ -145,11 +147,11 @@ def _createParser():
     parser.add_argument("--exeChecksum", "-c", action = "store_true")
     return parser
 
-def _getChecksum(exe: BinaryIO):
+def _get_checksum(exe: BinaryIO):
     exe.seek(0)
     return crc32(exe.read(4096))
 
-def _detectRelease(checksum: int, name: str) -> Release:
+def _detect_release(checksum: int, name: str) -> Release:
     for release in RELEASES:
         if checksum == release.checksum:
             logging.info(f"Determined the release as {release.id} ({release.name}).")
@@ -159,7 +161,7 @@ def _detectRelease(checksum: int, name: str) -> Release:
     logging.error("\tIt is not a supported Silent Hill executable.")
     return None
 
-def _parseEntry(entry, release):
+def _parse_entry(entry, release):
     meta, file1, file2 = ENTRY_STRUCT.unpack(entry)
 
     if not release.flags & Flags.ALT_FILE_STRUCT:
@@ -190,13 +192,13 @@ def _parseEntry(entry, release):
         # size, lba, name, path, type
         return (meta >> 19) & 0xFFF, meta & 0x7FFFF, name, release.dirs[directoryIndex], release.filetypes[extensionIndex]
 
-def _formatEntry(size, lba, name, path, type, release):
+def _format_entry(size, lba, name, path, type, release):
     name = name.ljust(8)
     namesep = ','.join(f"'{name[i]}'" for i in range(0, len(name)))
 
     return f'{{ {lba:#07x}, {size:4d}, {release.dirs.index(path):2d}, FN({namesep}), {release.filetypes.index(type):2d} }}'
 
-def _decryptOverlay(data: bytes):
+def _decrypt_overlay(data: bytes):
     output   = bytearray(data)
     outArray = memoryview(output).cast("I") # `uint32`
     seed = 0
@@ -208,11 +210,13 @@ def _decryptOverlay(data: bytes):
 
     return output
 
-# LZSS decompressor based on JP1.0 0x800CC924 code.
-# Used (pointlessly) to compress the encrypted `HP_SAFE1.BIN`/`S__SAFE2.BIN` files, making them larger than the
-# uncompressed versions. Also used (pointlessly) to compress the .CMP files in `TEST`` folder, which also have the
-# uncompressed versions alongside them.
-def _decompressLzssFile(data: bytes) -> bytes:
+def _decompress_lzss_file(data: bytes) -> bytes:
+    """
+    LZSS decompressor based on JP1.0 0x800CC924 code.
+    Used (pointlessly) to compress the encrypted `HP_SAFE1.BIN`/`S__SAFE2.BIN` files, making them larger than the
+    uncompressed versions. Also used (pointlessly) to compress the .CMP files in `TEST`` folder, which also have the
+    uncompressed versions alongside them.
+    """
     # Read expected output size from first 4 bytes.
     expected_size = int.from_bytes(data[0:4], byteorder='little')
 
@@ -232,7 +236,9 @@ def _decompressLzssFile(data: bytes) -> bytes:
         tag_register >>= 1
 
         if (tag_register & 0x100) == 0:
-            if input_ptr >= len(data): break
+            if input_ptr >= len(data):
+                break
+
             # Load new tag and set sentinel bit at 9th position.
             tag_register = data[input_ptr] | 0xFF00
             input_ptr += 1
@@ -240,7 +246,9 @@ def _decompressLzssFile(data: bytes) -> bytes:
         # LSB contains current flag.
         if tag_register & 0x1:
             # 1 = Literal byte.
-            if input_ptr >= len(data): break
+            if input_ptr >= len(data):
+                break
+
             byte = data[input_ptr]
             input_ptr += 1
 
@@ -249,7 +257,8 @@ def _decompressLzssFile(data: bytes) -> bytes:
             window_ptr = (window_ptr + 1) & 0xFFF
         else:
             # 0 = Reference (2 bytes).
-            if input_ptr + 1 >= len(data): break
+            if input_ptr + 1 >= len(data):
+                break
 
             b1 = data[input_ptr]
             b2 = data[input_ptr + 1]
@@ -285,7 +294,7 @@ def _extract(entries:Iterable[TableEntry], output: Path, file: BinaryIO, sectorS
         size = 0
         if not i.size == 0 and (i.type != ""):
             size = i.size * FILESIZE_STEP
-        elif index+1 < len(entries):
+        elif index + 1 < len(entries):
             size = (entries[index + 1].offset - i.offset) * sectorSize
         else:
             size = -1 # Read until end of file.
@@ -294,13 +303,13 @@ def _extract(entries:Iterable[TableEntry], output: Path, file: BinaryIO, sectorS
         if i.type == "BIN" and (releaseFlags & Flags.ENCRYPTED_1ST_FOLDER):
             if i.path.startswith("1ST"):
                 logging.info(f"\tDecrypting `{i.path}`...")
-                data = _decryptOverlay(data)
+                data = _decrypt_overlay(data)
             elif "HP_SAFE1" in i.path or "S__SAFE2" in i.path:
                 logging.info(f"\tDecompressing/decrypting `{i.path}`...")
-                data = _decryptOverlay(_decompressLzssFile(data))
+                data = _decrypt_overlay(_decompress_lzss_file(data))
         elif i.type == "CMP":
             logging.info(f"\tDecompressing `{i.path}`...")
-            decData = _decompressLzssFile(data)
+            decData = _decompress_lzss_file(data)
             outputDecPath = outputPath.with_name(outputPath.name + ".dec")
             with outputDecPath.open("wb") as _file:
                 _file.write(decData)
@@ -311,15 +320,15 @@ def _extract(entries:Iterable[TableEntry], output: Path, file: BinaryIO, sectorS
 
 def main():
     logging.basicConfig(level = logging.INFO)
-    args = _createParser().parse_args()
-    executable: BinaryIO = args.executable
-    checksum = _getChecksum(executable)
-    
+    args = _create_parser().parse_args()
+    exe: BinaryIO = args.executable
+    checksum = _get_checksum(exe)
+
     if args.exeChecksum:
-        logging.info(f"Checksum of `{executable.name}`: {checksum:08X}")
+        logging.info(f"Checksum of `{exe.name}`: {checksum:08X}")
         return
     else:
-        release = _detectRelease(checksum, executable.name)
+        release = _detect_release(checksum, exe.name)
         if release == None:
             return
 
@@ -328,27 +337,27 @@ def main():
     enumText = f"    {originText}"
     entriesSilent = []
     entriesHill = []
-    executable.seek(release.tocOffset)
+    exe.seek(release.tocOffset)
     for i in range(release.fileCount):
-        rawEntry = executable.read(ENTRY_STRUCT.size)
-        size, lba, name, directory, type = _parseEntry(rawEntry, release)
-        fullpath = os.path.join(directory, f"{name}.{type}" if not type == "" else f"{name}").replace("\\", "/")
-        headerText += f"/* {i:4d} */ {_formatEntry(size, lba, name, directory, type, release)}, // {fullpath}\n"
-        enumName = fullpath.replace("/", "_").replace("\\", "_").replace(".", "_")
-        enumText += f"    FILE_{enumName} = {i}, // {fullpath}\n"
-        entry = TableEntry(fullpath, type, size, lba)
+        rawEntry = exe.read(ENTRY_STRUCT.size)
+        size, lba, name, dir, type = _parse_entry(rawEntry, release)
+        fullPath = os.path.join(dir, f"{name}.{type}" if not type == "" else f"{name}").replace("\\", "/")
+        headerText += f"/* {i:4d} */ {_format_entry(size, lba, name, dir, type, release)}, // {fullPath}\n"
+        enumName = fullPath.replace("/", "_").replace("\\", "_").replace(".", "_")
+        enumText += f"    FILE_{enumName} = {i}, // {fullPath}\n"
+        entry = TableEntry(fullPath, type, size, lba)
 
-        match directory:
+        match dir:
             case "XA":
                 entriesHill.append(entry)
             case _:
                 entriesSilent.append(entry)
-    executable.close
+    exe.close
 
-    _extract(entriesSilent, args.outputFolder, args.silentFile, 2048, release.flags)
-    
+    _extract(entriesSilent, args.outputFolder, args.silentFile, ASSET_COUNT, release.flags)
+
     if not release.flags & Flags.NO_XA_CONTAINER and args.hillFile:
-        _extract(entriesHill, args.outputFolder, args.hillFile, 2336, release.flags)
+        _extract(entriesHill, args.outputFolder, args.hillFile, ASSET_COUNT_PROTO, release.flags)
 
     with open(os.path.join(args.outputFolder, "filetable.c.inc"), "a+") as f:
         f.truncate(0)
