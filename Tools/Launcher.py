@@ -5,6 +5,7 @@ Runs a simple launcher which prompts ROM selection for asset extraction and laun
 """
 
 import customtkinter
+import multiprocessing
 import os
 import platform
 import subprocess
@@ -44,7 +45,7 @@ def _get_dumpsxiso_exe():
 
     return dumpsxiso_exe
 
-def _get_extract_assets_py():
+def _get_extract_assets_script():
     """
     Get the `ExtractAssets.py` script to use.
     """
@@ -52,8 +53,9 @@ def _get_extract_assets_py():
     extract_assets_script = os.path.join(TEMP_BASE_PATH, EXTRACT_ASSETS_NAME)
 
     # Set permissions.
-    #if system_os in ["darwin", "linux"]:
-    os.chmod(extract_assets_script, 0o755)
+    system_os = platform.system().lower()
+    if system_os in ["darwin", "linux"]:
+        os.chmod(extract_assets_script, 0o755)
 
     return extract_assets_script
 
@@ -69,11 +71,13 @@ def _select_rom_file():
     return None
 
 def main():
+    multiprocessing.freeze_support()
+
     try:
         WIDTH  = 400
         HEIGHT = 500
 
-        customtkinter.set_appearance_mode("Dark")
+        customtkinter.set_appearance_mode("System")
 
         # Create window object.
         root = customtkinter.CTk()
@@ -86,35 +90,32 @@ def main():
         label.pack(expand=True)
 
         dumpsxiso_exe         = _get_dumpsxiso_exe()
-        extract_assets_script = _get_extract_assets_py()
+        extract_assets_script = _get_extract_assets_script()
 
         def handle_click():
             # Get ROM path.
-            romPath = _select_rom_file()
-            if romPath:
-                label.configure(text=f"Path: ...{romPath[-30:]}")
+            #romPath = _select_rom_file()
+            #if romPath:
+            #    label.configure(text=f"Path: ...{romPath[-30:]}")
+#
+            ## Run dump command.
+            #command = [dumpsxiso_exe,
+            #           "-x", TEMP_OUTPUT_PATH,
+            #           "-s", TEMP_OUTPUT_PATH / "Layout.xml",
+            #           romPath]
+            #result  = subprocess.run(command)
+            #if result.returncode != 0:
+            #    raise Exception(f"ROM dump failed: {result.stderr.decode()}")
 
-            # Run dump command.
-            command = [dumpsxiso_exe,
-                       "-x", TEMP_OUTPUT_PATH,
-                       "-s", TEMP_OUTPUT_PATH / "Layout.xml",
-                       romPath]
-            result  = subprocess.run(command)
-            if result.returncode != 0:
-                raise Exception("ROM ddump failed.")
-
-            # @todo Doesn't work.
             # Run asset extraction command.
-            command = [sys.executable, extract_assets_script,
+            command = [extract_assets_script,
+                       ASSETS_PATH,
                        "-exe", TEMP_OUTPUT_PATH / "SLUS_007.07",
                        "-fs", TEMP_OUTPUT_PATH / "SILENT.",
-                       "-fh", TEMP_OUTPUT_PATH / "HILL.",
-                       "-c"]
+                       "-fh", TEMP_OUTPUT_PATH / "HILL."]
             result  = subprocess.run(command)
-            if result.returncode == 0:
-                print("Assets extracted successfully.")
-            else:
-                print(f"Failed to extract assets: {result.stderr.decode()}")
+            if result.returncode != 0:
+                raise Exception(f"Asset extraction failed: {result.stderr.decode()}")
 
         button = customtkinter.CTkButton(root, text="Browse Files", command=handle_click)
         button.pack(expand=True)

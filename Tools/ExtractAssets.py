@@ -11,7 +11,7 @@ Arguments:
     --executable,  -exe : Path to the main game executable (SLUS/SLES/SLPM).
     --silentFile,  -fs  : Path to the `.SILENT` archive.
     --hillFile,    -fh  : Path to the `.HILL` archive.
-    --exeChecksum, -c   : Verify the integrity of the executable before extraction.
+    --exeChecksum, -c   : Verify the integrity of the executable without extracting.
 """
 
 import logging
