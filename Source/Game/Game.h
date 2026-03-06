@@ -1804,7 +1804,7 @@ namespace Silent::Game
         s32             npcFlags_2290; // Flags related to NPCs. Each bit corresponds to `npcs_1A0` index.
         e_SysWorkProcessFlags processFlags_2298;
         s32             field_229C;    /** Dead code. It get assigned -1 when the player has been initalized and get 0 assigned when the player changes the area, beyond that, the code do not use this variable. */
-        e_SysFlags      sysFlags_22A0; // Music related.
+        int             sysFlags_22A0; // `e_SysFlags` | Music related.
         int             flags_22A4;    // `e_SysFlags2` | `SysFlag2_6` passed as "use through door cam" flag in `vcSetFirstCamWork`. Also `e_SysFlags` or different?
         GsCOORDINATE2   coord_22A8;    // For particles only?
         GsCOORDINATE2   coord_22F8;    // Likely related to above.

@@ -3,6 +3,7 @@
 #include "Game/Bodyprog/Bodyprog.h"
 #include "Game/Screens/SaveLoad/SaveLoad.h"
 
+#include "Game/Bodyprog/Events/MapMsgDisplay.h"
 #include "Game/Bodyprog/MemCard.h"
 #include "Game/Bodyprog/Screen/ScreenData.h"
 #include "Game/Bodyprog/Text/TextDraw.h"
@@ -218,7 +219,7 @@ namespace Silent::Game
         s32 i;
         s32 j;
 
-        //func_80037124();
+        func_80037124();
 
         g_SaveScreen_OverwriteActive     = 0;
         g_SaveScreen_MemCardStateDisplay = 0;
@@ -1926,7 +1927,7 @@ namespace Silent::Game
 
     void SaveScreen_FormatCard(void) // 0x801E69E8
     {
-        #define STR_TIMER_MAX (TICKS_PER_SECOND / 2)
+        constexpr int STR_TIMER_MAX = TICKS_PER_SECOND / 2;
 
         // Handle memory card format state.
         switch (g_GameWork.gameStateStep_598[1])
@@ -1969,8 +1970,6 @@ namespace Silent::Game
                 }
                 break;
         }
-
-        #undef STR_TIMER_MAX
     }
 
     void SaveScreen_SaveGame(void) // 0x801E6B18

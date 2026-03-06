@@ -2078,10 +2078,6 @@ namespace Silent::Game
 
     extern s_800A99E4 D_800A99E4;
 
-    extern s32 g_MapMsg_CurrentIdx;
-
-    extern s16 g_MapMsg_SelectFlashTimer;
-
     extern s8 g_PaperMapFileIdxs[];
 
     extern s8 g_PaperMapMarkingFileIdxs[];
@@ -2096,8 +2092,6 @@ namespace Silent::Game
 
     /** Radio pitch state based on the distance from the player to an enemy. Range: `[0, 3]`. */
     extern s32 g_RadioPitchState;
-
-    extern void (*g_SysStateFuncs[])(void);
 
     extern s32 D_800A9A68;
 
@@ -2213,12 +2207,6 @@ namespace Silent::Game
     extern u8 D_800AE186;
 
     extern u8 g_SysState_GameOver_TipIdx;
-
-    /** Copy of delta timers.
-     * Appears to be used as save of the delta timer currently used as some instances where 2D backgrounds
-     * are drawn uses `g_DeltaTimeRaw` while `g_DeltaTime` is being stopped.
-     */
-    extern s32 g_DeltaTimeCpy;
 
     extern s_EventData* g_ItemTriggerEvents[];
 
@@ -2354,8 +2342,6 @@ namespace Silent::Game
     extern const char D_80025368[];
 
     extern s_MapMsgSelect g_MapMsg_Select;
-
-    extern u8 g_MapMsg_AudioLoadBlock;
 
     extern s8 g_MapMsg_SelectCancelIdx;
 

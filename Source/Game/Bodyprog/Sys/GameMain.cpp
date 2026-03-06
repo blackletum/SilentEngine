@@ -8,6 +8,7 @@
 #include "Assets/AssetStreamer.h"
 #include "Game/Bodyprog/MemCard.h"
 #include "Game/Bodyprog/Demo.h"
+#include "Game/Bodyprog/Events/GameSysStates.h"
 #include "Game/Bodyprog/Screen/ScreenDraw.h"
 #include "Game/Bodyprog/Sys/Joy.h"
 #include "Game/Bodyprog/Text/TextDraw.h"
@@ -48,16 +49,16 @@ namespace Silent::Game
         GameState_LoadSavegameScreen_Update,
         GameState_MovieOpening_Update,
         nullptr,//GameState_LoadScreen_Update,
-        nullptr,//GameState_InGame_Update,
-        nullptr,//GameState_MapEvent_Update,
+        GameState_InGame_Update,
+        GameState_MapEvent_Update,
         GameState_ExitMovie_Update,
         nullptr,//GameState_ItemScreens_Update,
         nullptr,//GameState_MapScreen_Update,
         GameState_LoadSavegameScreen_Update,
         GameState_DebugMoviePlayer_Update,
         GameState_Options_Update,
-        nullptr,//GameState_LoadStatusScreen_Update,
-        nullptr,//GameState_LoadMapScreen_Update,
+        GameState_LoadStatusScreen_Update,
+        GameState_LoadMapScreen_Update,
         nullptr,//GameState_Unk15_Update
     };
 

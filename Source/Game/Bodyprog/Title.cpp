@@ -391,8 +391,6 @@ namespace Silent::Game
             //Screen_Init(SCREEN_WIDTH, false);
             return;
         }
-
-        #undef MAIN_MENU_GAME_STATE_COUNT
     }
 
     void MainMenu_SelectedOptionIdxReset(void) // 0x8003B550
@@ -402,9 +400,9 @@ namespace Silent::Game
 
     void MainMenu_MainTextDraw(void) // 0x8003B568
     {
-        #define COLUMN_POS_X 158
-        #define COLUMN_POS_Y 184
-        #define STR_OFFSET_Y 20
+        constexpr int COLUMN_POS_X = 158;
+        constexpr int COLUMN_POS_Y = 184;
+        constexpr int STR_OFFSET_Y = 20;
 
         static const char* MAIN_MENU_ENTRY_STRINGS[] =
         {
@@ -452,10 +450,10 @@ namespace Silent::Game
 
     void MainMenu_DifficultyTextDraw(s32 idx) // 0x8003B678
     {
-        #define DIFFICULTY_MENU_SELECTION_COUNT 3
-        #define COLUMN_POS_X                    158
-        #define COLUMN_POS_Y                    204
-        #define STR_OFFSET_Y                    20
+        constexpr int DIFFICULTY_MENU_SELECTION_COUNT = 3;
+        constexpr int COLUMN_POS_X                    = 158;
+        constexpr int COLUMN_POS_Y                    = 204;
+        constexpr int STR_OFFSET_Y                    = 20;
 
         static const char* DIFFICULTY_MENU_ENTRY_STRINGS[] =
         {

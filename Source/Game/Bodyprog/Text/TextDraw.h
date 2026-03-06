@@ -45,8 +45,20 @@ namespace Silent::Game
     /** String X position. It's unclear why there are two. */
     extern int g_StringPositionX1;
 
+    extern s32 D_800C38B4;
+
+    extern s32 g_MapMsg_WidthTable[12];
+
+    extern s16 D_800C391C;
+
+    extern s32 D_800C3920;
+
     /** Sets the position of the next string to be drawn by `Gfx_StringDraw`. */
     void Gfx_StringSetPosition(int posX, int posY);
+
+    void Gfx_Strings2dLayerIdxSet(s32 idx);
+
+    void Gfx_StringsReset2dLayerIdx(void);
 
     /** Sets the color of the next string drawn by `Gfx_StringDraw`.
      *
@@ -61,5 +73,25 @@ namespace Silent::Game
      */
     bool Gfx_StringDraw(const std::string& str, int strLength);
 
+    s32 Gfx_MapMsg_CalculateWidths(s32 mapMsgIdx);
+
+    /** Draws string and returns map message index. */
+    s32 Gfx_MapMsg_StringDraw(char* mapMsg, s32 strLength);
+
+    void func_8004B658(void);
+
+    void Gfx_MapMsg_DefaultStringInfoSet(void);
+
+    /** @unused */
+    void func_8004B6D4(s16 arg0, s16 arg1);
+
+    /** @unused */
+    void func_8004B74C(s16 arg0);
+
+    /** @unused Draws string. */
+    void func_8004B76C(char* str, bool useFixedWidth);
+
     void Gfx_StringDrawInt(s32 widthMin, s32 strLength);
+
+    void func_8004BB10(void);
 }
