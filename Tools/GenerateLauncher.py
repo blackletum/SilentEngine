@@ -6,7 +6,9 @@ If a generated launcher already exist and is outdated, it will be overwritten.
 """
 
 """
+@todo Need to ask the user to run these commands.
 sudo apt install python3-tk
+pip install customtkinter
 """
 
 import os
@@ -17,10 +19,13 @@ import sys
 
 from pathlib import Path
 
+LAUNCHER_NAME    = "Launcher.py"
 SPEC_NAME        = "Launcher.spec"
 BASE_PATH        = Path(__file__).parent
 OUTPUT_PATH      = BASE_PATH / "../Build/Launcher"
 TEMP_OUTPUT_PATH = OUTPUT_PATH / ".temp"
+LAUNCHER_SCRIPT  = BASE_PATH / LAUNCHER_NAME
+SPEC_FILE        = OUTPUT_PATH / SPEC_NAME
 
 def _get_platform_name():
     """
@@ -40,18 +45,17 @@ def _get_platform_name():
 
 def _cleanup():
     """
-    Delete the temporary build files.
+    Delete temporary build files.
     """
     shutil.rmtree(TEMP_OUTPUT_PATH, ignore_errors=True)
-    
-    spec_file = OUTPUT_PATH / SPEC_NAME
-    if spec_file.exists():
-        spec_file.unlink()
+    SPEC_FILE.unlink(missing_ok=True)
 
 def main():
     try:
         print("Generating launcher...")
+        _cleanup()
 
+        # Setup.
         platform_name = _get_platform_name()
         exe_ext       = ".exe" if platform_name == "Windows" else ""
         colon         = ";"    if platform_name == "Windows" else ":"
@@ -59,13 +63,13 @@ def main():
 
         # Check if new launcher build is required.
         if launcher_exe.exists():
-            run_new_build = os.path.getmtime(BASE_PATH / "Launcher.py") > os.path.getmtime(launcher_exe)
+            run_new_build = os.path.getmtime(LAUNCHER_SCRIPT) > os.path.getmtime(launcher_exe)
         else:
             run_new_build = True
 
         # Run generation command.
         if run_new_build:
-            command = ["pyinstaller", "--onefile", "--windowed",  "--noconfirm",
+            command = ["pyinstaller", "--onefile", "--windowed", "--noconfirm",
                        "--add-data", f"../../Tools/ExtractAssets.py{colon}.",
                        "--add-binary", f"../../Tools/dumpsxiso/{platform_name}/dumpsxiso{exe_ext}{colon}.",
                        "--distpath", "Build/Launcher",
@@ -74,7 +78,7 @@ def main():
                        "Tools/Launcher.py"]
 
             # Report status.
-            result = subprocess.run(command, capture_output=True)
+            result = subprocess.run(command)
             if result.returncode == 0:
                 print("Launcher generated successfully.")
             else:

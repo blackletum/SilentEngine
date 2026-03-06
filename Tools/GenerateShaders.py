@@ -71,10 +71,9 @@ def _get_output_formats():
 
 def _cleanup():
     """
-    Delete the temporary build files.
+    Delete temporary build files.
     """
-    if os.path.isfile(TEMP_OUTPUT_PATH):
-        shutil.rmtree(TEMP_OUTPUT_PATH)
+    shutil.rmtree(TEMP_OUTPUT_PATH, ignore_errors=True)
 
 def main():
     try:
@@ -133,7 +132,6 @@ def main():
         # Copy contents of temporary output folder to real output folder.
         for shader_output in os.listdir(TEMP_OUTPUT_PATH):
             shutil.copy(TEMP_OUTPUT_PATH / shader_output, OUTPUT_PATH / shader_output)
-        _cleanup()
 
         # Report status.
         if build_count == 0 and len(fail_names) == 0:
@@ -145,6 +143,8 @@ def main():
             
             for fail_name in fail_names:
                 print(f"`{fail_name}`")
+
+        _cleanup()
     except Exception as ex:
         _cleanup()
 
