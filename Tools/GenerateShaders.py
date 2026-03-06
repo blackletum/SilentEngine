@@ -113,9 +113,10 @@ def main():
 
                 # Run generation command.
                 if run_new_build:
-                    command = [shadercross_exe, shader_source, "-I", SOURCES_PATH, "-o", temp_shader_output]
-
-                    result = subprocess.run(command, capture_output=True)
+                    command = [shadercross_exe, shader_source,
+                               "-I", SOURCES_PATH,
+                               "-o", temp_shader_output]
+                    result  = subprocess.run(command, capture_output=True)
                     if result.returncode == 0:
                         print(f"`{output_name}`")
                         build_count += 1
@@ -140,7 +141,7 @@ def main():
             successStr = f"{build_count} shader{"" if build_count == 1 else "s"} built successfully."
             failStr = (f" {len(fail_names)} failed:" if len(fail_names) > 0 else "")
             print(successStr + failStr)
-            
+
             for fail_name in fail_names:
                 print(f"`{fail_name}`")
 
