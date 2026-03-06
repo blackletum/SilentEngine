@@ -2,6 +2,7 @@
 Platform-Specific Shader Generator
 
 Generates shaders from .HLSL sources to be used by a platform-specific engine executable at runtime.
+If generated shaders already exist and are outdated, they will be overwritten.
 
 Usage:
     `python Tools/GenerateShaders.py <build_os>`
@@ -68,17 +69,17 @@ def _get_output_formats():
 
     return formats
 
+def _cleanup():
+    """
+    Delete the temporary build files.
+    """
+    if os.path.isfile(TEMP_OUTPUT_PATH):
+        shutil.rmtree(TEMP_OUTPUT_PATH)
+
 def main():
-    """
-    Run `shadercross` to generate platform-specific shaders.
-    If generated shaders already exist and are outdated, they will be overwritten.
-    """
     try:
         print("Generating shaders...")
-
-        # Ensure temporary output folder is deleted.
-        if os.path.isfile(TEMP_OUTPUT_PATH):
-            shutil.rmtree(TEMP_OUTPUT_PATH)
+        _cleanup()
 
         # Setup.
         shadercross_exe = _get_shadercross_executable()
@@ -132,7 +133,7 @@ def main():
         # Copy contents of temporary output folder to real output folder.
         for shader_output in os.listdir(TEMP_OUTPUT_PATH):
             shutil.copy(TEMP_OUTPUT_PATH / shader_output, OUTPUT_PATH / shader_output)
-        shutil.rmtree(TEMP_OUTPUT_PATH)
+        _cleanup()
 
         # Report status.
         if build_count == 0 and len(fail_names) == 0:
@@ -145,9 +146,7 @@ def main():
             for fail_name in fail_names:
                 print(f"`{fail_name}`")
     except Exception as ex:
-        # Ensure temporary output folder is deleted.
-        if os.path.isfile(TEMP_OUTPUT_PATH):
-            shutil.rmtree(TEMP_OUTPUT_PATH)
+        _cleanup()
 
         # Report exception.
         print(f"Error: {ex}")

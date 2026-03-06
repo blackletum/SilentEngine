@@ -52,12 +52,13 @@ NOTE: Project setup is yet to be streamlined and this section is incomplete. Ide
 
 ### Install dependencies
 
-The project has the following requirements:
+The project requires the following system tools:
 - cmake
 - git
 - ninja
 - pip
 - python3
+- python3-tk (on Linux)
 
 <details>
 <summary>Windows</summary>
@@ -77,10 +78,9 @@ sudo apt install build-essential git ninja-build python3 python3-pip
 ```
 </details>
 
-TODO
-Install `PyInstaller`:
+Install Python packages:
 ```
-pip install pyinstaller
+pip install -r Requirements.txt
 ```
 
 ### Clone the repository

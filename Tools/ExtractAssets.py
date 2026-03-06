@@ -17,14 +17,14 @@ Arguments:
 import logging
 import os
 
-from argparse import ArgumentParser, FileType
+from argparse    import ArgumentParser, FileType
 from dataclasses import dataclass
-from enum import IntFlag
-from itertools import chain
-from pathlib import Path
-from struct import Struct
-from typing import BinaryIO, Iterable
-from zlib import crc32
+from enum        import IntFlag
+from itertools   import chain
+from pathlib     import Path
+from struct      import Struct
+from typing      import BinaryIO, Iterable
+from zlib        import crc32
 
 class Flags(IntFlag):
     NONE                 = 0
@@ -34,20 +34,20 @@ class Flags(IntFlag):
 
 @dataclass
 class Release:
-    id: str
-    name: str
-    checksum: int
+    id:        str
+    name:      str
+    checksum:  int
     tocOffset: int
     fileCount: int
-    dirs: list[str]
+    dirs:      list[str]
     filetypes: list[str]
-    flags: Flags
+    flags:     Flags
 
 @dataclass
 class TableEntry:
-    path: Path
-    type: str
-    size: int
+    path:   Path
+    type:   str
+    size:   int
     offset: int
 
 # Description of each file type.
@@ -162,24 +162,24 @@ def _detect_release(checksum: int, name: str) -> Release:
     return None
 
 def _parse_entry(entry, release):
-    meta, file1, file2 = ENTRY_STRUCT.unpack(entry)
+    meta, file0, file1 = ENTRY_STRUCT.unpack(entry)
 
     if not release.flags & Flags.ALT_FILE_STRUCT:
         name = "".join(chain(
-            (chr(32 + ((file1 >> shift) & 0x3F)) for shift in range(4, 28, 6)),
-            (chr(32 + ((file2 >> shift) & 0x3F)) for shift in range(0, 24, 6))
+            (chr(32 + ((file0 >> shift) & 0x3F)) for shift in range(4, 28, 6)),
+            (chr(32 + ((file1 >> shift) & 0x3F)) for shift in range(0, 24, 6))
         )).strip()
 
         # size, lba, name, path, type
-        return meta >> 19, meta & 0x7FFFF, name, release.dirs[file1 & 0xF], release.filetypes[(file2 >> 24) & 0xF]
+        return meta >> 19, meta & 0x7FFFF, name, release.dirs[file0 & 0xF], release.filetypes[(file1 >> 24) & 0xF]
     else:
         directoryIndex0 = (meta >> 31) & 0x1
-        directoryIndex1 = file1 & 0x7
+        directoryIndex1 = file0 & 0x7
 
-        name0 = (file1 >> 3) & 0x1FFFFFFF
-        name1 = file2 & 0x7FFFF
+        name0 = (file0 >> 3) & 0x1FFFFFFF
+        name1 = file1 & 0x7FFFF
 
-        extensionIndex = (file2 >> 19) & 0xFF
+        extensionIndex = (file1 >> 19) & 0xFF
         directoryIndex = (directoryIndex1 << 1) | directoryIndex0
 
         nameBits = (name1 << 29) | name0
@@ -193,7 +193,7 @@ def _parse_entry(entry, release):
         return (meta >> 19) & 0xFFF, meta & 0x7FFFF, name, release.dirs[directoryIndex], release.filetypes[extensionIndex]
 
 def _format_entry(size, lba, name, path, type, release):
-    name = name.ljust(8)
+    name    = name.ljust(8)
     namesep = ','.join(f"'{name[i]}'" for i in range(0, len(name)))
 
     return f'{{ {lba:#07x}, {size:4d}, {release.dirs.index(path):2d}, FN({namesep}), {release.filetypes.index(type):2d} }}'
@@ -214,17 +214,17 @@ def _decompress_lzss_file(data: bytes) -> bytes:
     """
     LZSS decompressor based on JP1.0 0x800CC924 code.
     Used (pointlessly) to compress the encrypted `HP_SAFE1.BIN`/`S__SAFE2.BIN` files, making them larger than the
-    uncompressed versions. Also used (pointlessly) to compress the .CMP files in `TEST`` folder, which also have the
+    uncompressed versions. Also used (pointlessly) to compress the .CMP files in the `TEST` folder, which also have the
     uncompressed versions alongside them.
     """
     # Read expected output size from first 4 bytes.
     expected_size = int.from_bytes(data[0:4], byteorder='little')
 
     input_ptr = 4 # Start after size header.
-    output = bytearray()
+    output    = bytearray()
 
     # Ring buffer (Sliding Window)
-    window = bytearray([0] * 4096)
+    window     = bytearray([0] * 4096)
     window_ptr = 0xFEE # Standard initial window pointer.
 
     tag_register = 0 
@@ -260,12 +260,12 @@ def _decompress_lzss_file(data: bytes) -> bytes:
             if input_ptr + 1 >= len(data):
                 break
 
-            b1 = data[input_ptr]
-            b2 = data[input_ptr + 1]
+            byte0      = data[input_ptr]
+            byte1      = data[input_ptr + 1]
             input_ptr += 2
 
-            offset = b1 | ((b2 & 0xF0) << 4)
-            length = (b2 & 0x0F) + 3
+            offset = byte0 | ((byte1 & 0xF0) << 4)
+            length = (byte1 & 0x0F) + 3
 
             for _ in range(length):
                 byte = window[offset]
@@ -273,7 +273,7 @@ def _decompress_lzss_file(data: bytes) -> bytes:
 
                 # Write to window and move `window_ptr``.
                 window[window_ptr] = byte
-                window_ptr = (window_ptr + 1) & 0xFFF
+                window_ptr         = (window_ptr + 1) & 0xFFF
 
                 # Move reference offset forward (circularly).
                 offset = (offset + 1) & 0xFFF
@@ -320,9 +320,9 @@ def _extract(entries:Iterable[TableEntry], output: Path, file: BinaryIO, sectorS
 
 def main():
     logging.basicConfig(level = logging.INFO)
-    args = _create_parser().parse_args()
+    args          = _create_parser().parse_args()
     exe: BinaryIO = args.executable
-    checksum = _get_checksum(exe)
+    checksum      = _get_checksum(exe)
 
     if args.exeChecksum:
         logging.info(f"Checksum of `{exe.name}`: {checksum:08X}")
@@ -332,20 +332,21 @@ def main():
         if release == None:
             return
 
-    originText = f"// Generated from `{release.name}` ({release.id}).\n"
-    headerText = originText
-    enumText = f"    {originText}"
+    originText    = f"// Generated from `{release.name}` ({release.id}).\n"
+    headerText    = originText
+    enumText      = f"    {originText}"
     entriesSilent = []
-    entriesHill = []
+    entriesHill   = []
     exe.seek(release.tocOffset)
     for i in range(release.fileCount):
-        rawEntry = exe.read(ENTRY_STRUCT.size)
+        rawEntry                   = exe.read(ENTRY_STRUCT.size)
         size, lba, name, dir, type = _parse_entry(rawEntry, release)
-        fullPath = os.path.join(dir, f"{name}.{type}" if not type == "" else f"{name}").replace("\\", "/")
+
+        fullPath    = os.path.join(dir, f"{name}.{type}" if not type == "" else f"{name}").replace("\\", "/")
         headerText += f"/* {i:4d} */ {_format_entry(size, lba, name, dir, type, release)}, // {fullPath}\n"
-        enumName = fullPath.replace("/", "_").replace("\\", "_").replace(".", "_")
-        enumText += f"    FILE_{enumName} = {i}, // {fullPath}\n"
-        entry = TableEntry(fullPath, type, size, lba)
+        enumName    = fullPath.replace("/", "_").replace("\\", "_").replace(".", "_")
+        enumText   += f"    FILE_{enumName} = {i}, // {fullPath}\n"
+        entry       = TableEntry(fullPath, type, size, lba)
 
         match dir:
             case "XA":
@@ -359,12 +360,12 @@ def main():
     if not release.flags & Flags.NO_XA_CONTAINER and args.hillFile:
         _extract(entriesHill, args.outputFolder, args.hillFile, ASSET_COUNT_PROTO, release.flags)
 
-    with open(os.path.join(args.outputFolder, "filetable.c.inc"), "a+") as f:
-        f.truncate(0)
-        f.write(headerText)
-    with open(os.path.join(args.outputFolder, "fileenum.h.inc"), "a+") as f:
-        f.truncate(0)
-        f.write(enumText)
+    with open(os.path.join(args.outputFolder, "filetable.c.inc"), "a+") as file:
+        file.truncate(0)
+        file.write(headerText)
+    with open(os.path.join(args.outputFolder, "fileenum.h.inc"), "a+") as file:
+        file.truncate(0)
+        file.write(enumText)
 
     logging.info("All done!")
 

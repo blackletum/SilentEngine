@@ -419,7 +419,7 @@ namespace Silent::Input
             }
             else if (GetAction(In::Right).IsHeld())
             {
-                moveAxis.x = -1.0f;
+                moveAxis.x = 1.0f;
             }
             else
             {
