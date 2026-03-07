@@ -785,7 +785,7 @@ namespace Silent::Math
         return *cosAngle;
     }
 
-    q19_12 Math_Ratan2(q19_12 dx, q19_12 dy)
+    q19_12 Math_Ratan2(int x, int y)
     {
         q19_12 ret;
         int    flag0;
@@ -795,45 +795,45 @@ namespace Silent::Math
         flag0 = 0;
         flag1 = 0;
 
-        if (dy < 0)
+        if (y < 0)
         {
             flag0 = 1;
-            dy    = -dy;
+            y    = -y;
         }
 
-        if (dx < 0)
+        if (x < 0)
         {
             flag1 = 1;
-            dx    = -dx;
+            x    = -x;
         }
 
-        if (dy == 0 && dx == 0)
+        if (y == 0 && x == 0)
         {
             return 0;
         }
 
-        if (dx < dy)
+        if (x < y)
         {
-            if (dx & 0x7FE00000)
+            if (x & 0x7FE00000)
             {
-                lookup = dx / (dy >> 10);
+                lookup = x / (y >> 10);
             }
             else
             {
-                lookup = (dx << 10) / dy;
+                lookup = (x << 10) / y;
             }
 
             ret = RatanTable[lookup];
         }
         else
         {
-            if (dy & 0x7FE00000)
+            if (y & 0x7FE00000)
             {
-                lookup = dy / (dx >> 10);
+                lookup = y / (x >> 10);
             }
             else
             {
-                lookup = (dy << 10) / dx;
+                lookup = (y << 10) / x;
             }
 
             ret = 0x400 - RatanTable[lookup];

@@ -271,5 +271,11 @@ namespace Silent::Math
 
     //void Math_RotMatrixXyz(SVECTOR* rot, MATRIX* mat);
 
-    q19_12 Math_Ratan2(q19_12 dx, q19_12 dy);
+    /** @brief Computes the real arc tangent in Q19.12, integer range `[0, 4096]`.
+     *
+     * @param x Fixed-point X component.
+     * @param y Fixed-point Y component.
+     * @return Real arc tangent of `x` and `y`.
+     */
+    q19_12 Math_Ratan2(int x, int y);
 }
