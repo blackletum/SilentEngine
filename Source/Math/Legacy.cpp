@@ -789,79 +789,74 @@ namespace Silent::Math
 
     q19_12 Math_Sin(q19_12 angle)
     {
-        q3_12* sinAngle = (q3_12*)&SIN_COS_TABLE + Q12_FRACT(angle);
+        const q3_12* sinAngle = (const q3_12*)&SIN_COS_TABLE + Q12_FRACT(angle);
         return *sinAngle;
     }
 
     q19_12 Math_Cos(q19_12 angle)
     {
-        q3_12* cosAngle = (q3_12*)&SIN_COS_TABLE + (Q12_FRACT(angle) + Q12_ANGLE(90.0f));
+        const q3_12* cosAngle = (const q3_12*)&SIN_COS_TABLE + (Q12_FRACT(angle) + Q12_ANGLE(90.0f));
         return *cosAngle;
     }
 
     q19_12 Math_Ratan2(int x, int y)
     {
-        q19_12 ret;
-        int    flag0;
-        int    flag1;
-        int    lookup;
-
-        flag0 = 0;
-        flag1 = 0;
-
+        bool isNegY = false;
         if (y < 0)
         {
-            flag0 = 1;
-            y    = -y;
+            isNegY = true;
+            y      = -y;
         }
 
+        bool isNegX = false;
         if (x < 0)
         {
-            flag1 = 1;
-            x    = -x;
+            isNegX = true;
+            x      = -x;
         }
 
         if (y == 0 && x == 0)
         {
-            return 0;
+            return Q12_ANGLE(0.0f);
         }
 
+        q19_12 angle     = Q12_ANGLE(0.0f);
+        int    lookupIdx = 0;
         if (x < y)
         {
             if (x & 0x7FE00000)
             {
-                lookup = x / (y >> 10);
+                lookupIdx = x / (y >> 10);
             }
             else
             {
-                lookup = (x << 10) / y;
+                lookupIdx = (x << 10) / y;
             }
 
-            ret = RATAN_TABLE[lookup];
+            angle = RATAN_TABLE[lookupIdx];
         }
         else
         {
             if (y & 0x7FE00000)
             {
-                lookup = y / (x >> 10);
+                lookupIdx = y / (x >> 10);
             }
             else
             {
-                lookup = (y << 10) / x;
+                lookupIdx = (y << 10) / x;
             }
 
-            ret = 0x400 - RATAN_TABLE[lookup];
+            angle = Q12_ANGLE(90.0f) - RATAN_TABLE[lookupIdx];
         }
 
-        if (flag0)
+        if (isNegY)
         {
-            ret = 0x800 - ret;
+            angle = Q12_ANGLE(180.0f) - angle;
         }
-        if (flag1)
+        if (isNegX)
         {
-            ret = -ret;
+            angle = -angle;
         }
-
-        return ret;
+        return angle;
     }
 }
