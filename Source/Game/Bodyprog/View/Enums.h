@@ -18,6 +18,7 @@ namespace Silent::Game
 
     enum VC_FLAGS
     {
+        VC_NOFLAG                = 0,
         VC_USER_CAM_F            = 1 << 0, /** User in control? */
         VC_USER_WATCH_F          = 1 << 1, /** Lock look-at on player? */
         VC_WARP_CAM_F            = 1 << 2, /** Warp position. */

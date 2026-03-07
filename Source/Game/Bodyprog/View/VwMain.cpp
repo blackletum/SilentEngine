@@ -65,7 +65,8 @@ namespace Silent::Game
         vwSetViewInfoDirectMatrix(nullptr, &viewMat);
     }
 
-    void vwSetCoordRefAndEntou(GsCOORDINATE2* parent_p, q19_12 ref_x, q19_12 ref_y, q19_12 ref_z,
+    void vwSetCoordRefAndEntou(GsCOORDINATE2* parent_p,
+                               q19_12 ref_x, q19_12 ref_y, q19_12 ref_z,
                                q3_12 cam_ang_y, q3_12 cam_ang_z, q19_12 cam_y, q19_12 cam_xz_r) // 0x80048BE0
     {
         SVECTOR view_ang; // Q3.12
@@ -111,7 +112,6 @@ namespace Silent::Game
 
     void vwSetViewInfo() // 0x80048D48
     {
-        // @todo Uncomment when the rest is migrated.
         vbSetRefView(&vwViewPointInfo.rview);
         Math_MatrixToPosition(&vwViewPointInfo.worldpos, &vwViewPointInfo.vwcoord.workm);
         vwMatrixToAngleYXZ(&vwViewPointInfo.worldang, &vwViewPointInfo.vwcoord.workm);
