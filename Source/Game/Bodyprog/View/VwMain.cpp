@@ -112,9 +112,9 @@ namespace Silent::Game
     void vwSetViewInfo(void) // 0x80048D48
     {
         // @todo Uncomment when the rest is migrated.
-        //vbSetRefView(&vwViewPointInfo.rview);
+        vbSetRefView(&vwViewPointInfo.rview);
         Math_MatrixToPosition(&vwViewPointInfo.worldpos, &vwViewPointInfo.vwcoord.workm);
-        //vwMatrixToAngleYXZ(&vwViewPointInfo.worldang, &vwViewPointInfo.vwcoord.workm);
+        vwMatrixToAngleYXZ(&vwViewPointInfo.worldang, &vwViewPointInfo.vwcoord.workm);
     }
 
     void Vw_ClampAngleRange(q3_12* angleMin, q3_12* angleMax, q3_12 angleConstraintMin, q3_12 angleConstraintMax) // 0x80048DA8

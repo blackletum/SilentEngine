@@ -4,7 +4,7 @@
 #include "Game/Bodyprog/View/Structs.h"
 //#include "Game/Bodyprog/View/VcMain.h"
 #include "Game/Bodyprog/View/VcUtil.h"
-//#include "Game/Bodyprog/View/VwCalc.h"
+#include "Game/Bodyprog/View/VwCalc.h"
 #include "Game/Bodyprog/View/VwMain.h"
 
 // TODO:

@@ -175,7 +175,7 @@ namespace Silent::Game
         SVECTOR fpos;     // Q23.8
         VECTOR  vec;
 
-        //Vw_CoordHierarchyMatrixCompute(&g_SysWork.playerBoneCoords_890[HarryBone_Head], &neck_lwm);
+        Vw_CoordHierarchyMatrixCompute(&g_SysWork.playerBoneCoords_890[HarryBone_Head], &neck_lwm);
 
         fpos.vx = Q8(0.0f);
         fpos.vy = Q8(-0.1f);
