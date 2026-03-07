@@ -1,13 +1,16 @@
 #pragma once
 
-#include <psyz.h>
+extern "C" 
+{
+    #include <psyz.h>
 
-#include <libgte.h>
-#include <libgpu.h>
-#include <libgs.h>
+    #include <libgte.h>
+    #include <libgpu.h>
+    #include <libgs.h>
 
-#include <libcd.h>
-#include <libetc.h>
+    #include <libetc.h>
+    #include <libsnd.h>
+}
 
 /** @brief Model primitive material flags. */
 enum e_MaterialFlags

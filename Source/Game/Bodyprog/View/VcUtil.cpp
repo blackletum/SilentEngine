@@ -344,7 +344,7 @@ namespace Silent::Game
 
             sys_p->cameraAngleY_237A   = Math_AngleNormalize(cam_ang.vy + Q12_ANGLE(180.0f));
             sys_p->cameraY_2384        = Q8_TO_Q12(-refOffset.vy);
-            //sys_p->cameraRadiusXz_2380 = Q8_TO_Q12(SquareRoot0(SQUARE(refOffset.vx) + SQUARE(refOffset.vz)));
+            sys_p->cameraRadiusXz_2380 = Q8_TO_Q12(SquareRoot0(SQUARE(refOffset.vx) + SQUARE(refOffset.vz)));
         }
     }
 }

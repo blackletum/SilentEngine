@@ -55,7 +55,7 @@ namespace Silent::Game
         // Compute camera rotation.
         rot.vz = Q12_ANGLE(0.0f);
         rot.vy = Math_Ratan2(deltaX, deltaZ);
-        //rot.vx = Math_Ratan2(-deltaY, SquareRoot0(SQUARE(deltaX) + SQUARE(deltaZ)));
+        rot.vx = Math_Ratan2(-deltaY, SquareRoot0(SQUARE(deltaX) + SQUARE(deltaZ)));
         // @math
         // Compute view transform matrix and set global info.
         //Math_RotMatrixZxyNeg(&rot, &viewMat);
@@ -78,7 +78,7 @@ namespace Silent::Game
 
         view_ang.vy = cam_ang_y;
         view_ang.vz = cam_ang_z;
-        //view_ang.vx = -Math_Ratan2(-cam_y, cam_xz_r);
+        view_ang.vx = -Math_Ratan2(-cam_y, cam_xz_r);
         view_ang.vy = Q12_ANGLE_NORM_U(view_ang.vy + Q12_ANGLE(180.0f));
         // @math
         //Math_RotMatrixZxyNegGte(&view_ang, view_mtx);
