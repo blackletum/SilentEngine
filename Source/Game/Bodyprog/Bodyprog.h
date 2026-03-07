@@ -1363,7 +1363,7 @@ namespace Silent::Game
 
     /** @brief Contains X/Z coordinates and optional 4 bytes of data.
      * Map headers include an array of these, into which `s_EventData` includes an index. */
-    typedef struct _MapPoint2d
+    struct s_MapPoint2d
     {
         q19_12 positionX_0;
 
@@ -1376,7 +1376,7 @@ namespace Silent::Game
         u32   triggerParam1_4_24  : 8;
 
         q19_12 positionZ_8;
-    } s_MapPoint2d;
+    };
 
     typedef struct _SpawnInfo
     {

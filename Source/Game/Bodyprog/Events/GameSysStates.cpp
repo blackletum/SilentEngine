@@ -6,6 +6,7 @@
 
 #include "Game/Bodyprog/Demo.h"
 #include "Game/Bodyprog/Events/MapMsgDisplay.h"
+#include "Game/Bodyprog/Events/EventsMain.h"
 #include "Game/Bodyprog/GameBoot/GameBoot.h"
 #include "Game/Bodyprog/Title.h"
 //#include "Game/Bodyprog/item_screens.h"
@@ -121,7 +122,7 @@ namespace Silent::Game
 
             if (g_SysWork.sysState_8 == SysState_Gameplay)
             {
-                //Event_Update(true);
+                Event_Update(true);
 
                 if (g_MapEventSysState != SysState_Invalid)
                 {
@@ -192,7 +193,7 @@ namespace Silent::Game
 
         player = &g_SysWork.playerWork_4C.player_0;
 
-        //Event_Update(player->attackReceived_41 != NO_VALUE);
+        Event_Update(player->attackReceived_41 != NO_VALUE);
         //Savegame_MapRoomIdxUpdate();
 
         switch (FP_ROUND_SCALED(player->health_B0, 10, Q12_SHIFT))

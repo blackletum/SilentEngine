@@ -1413,8 +1413,6 @@ namespace Silent::Game
         switch (g_MemCard_Work.state_4)
         {
             case MemCardCardState_Idle:
-                // @hack Probably some optimized out code here.
-                g_MemCard_Work.stateResult_C += 0;
                 break;
 
             case MemCardCardState_Init:
