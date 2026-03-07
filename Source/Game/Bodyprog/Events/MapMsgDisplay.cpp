@@ -372,7 +372,7 @@ namespace Silent::Game
         }
     }
 
-    void func_80037124(void) // 0x80037124
+    void func_80037124() // 0x80037124
     {
         g_MapMsg_Select.maxIdx_0 = NO_VALUE;
         //func_8003652C();

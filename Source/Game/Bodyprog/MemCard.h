@@ -386,7 +386,7 @@ namespace Silent::Game
      * This Initializes the entire memory card handling system while
      * `MemCard_Init` exclusively initalizes the memory cards.
      */
-    void MemCard_SysInit(void);
+    void MemCard_SysInit();
 
     /** @brief Clear memory card data in RAM. */
     void MemCard_RamClear(s32 deviceId);
@@ -396,29 +396,29 @@ namespace Silent::Game
 
     bool MemCard_AreAllFilesUsed(s32 deviceId);
 
-    void MemCard_SysInit2(void);
+    void MemCard_SysInit2();
 
     /** @brief Disables memory card. */
-    void MemCard_Disable(void);
+    void MemCard_Disable();
 
-    void MemCard_InitStatus(void);
+    void MemCard_InitStatus();
 
-    void MemCard_StatusInitNotConnected(void);
+    void MemCard_StatusInitNotConnected();
 
-    s32 MemCard_AllMemCardsStatusGet(void);
+    s32 MemCard_AllMemCardsStatusGet();
 
-    void func_8002E8D4(void);
+    void func_8002E8D4();
 
-    void MemCard_StatusInitSuccess(void);
+    void MemCard_StatusInitSuccess();
 
-    s32 func_8002E914(void);
+    s32 func_8002E914();
 
     bool MemCard_ProcessSet(s32 arg0, s32 deviceId, s32 fileIdx, s32 saveIdx);
 
     /** @brief Related to formatting logic.
      * Used in: `SAVELOAD.BIN`
      */
-    s32 MemCard_LastMemCardResultGet(void);
+    s32 MemCard_LastMemCardResultGet();
 
     s32 MemCard_AllFilesStatusGet(s32 deviceId);
 
@@ -433,7 +433,7 @@ namespace Silent::Game
     /** @unused Checks if no save have been done in any inserted memory card. */
     bool MemCard_NoSavesDoneCheck(s32* outDeviceId, s32* outFileIdx, s32* outSaveIdx);
 
-    void MemCard_Update(void); // Return type assumed.
+    void MemCard_Update(); // Return type assumed.
 
     void MemCard_Process_Format(s_MemCard_Process* statusPtr);
 
@@ -487,61 +487,61 @@ namespace Silent::Game
 
     s32 MemCard_FileRename(s32 deviceId, char* prevName, char* newName);
 
-    void MemCard_Init(void);
+    void MemCard_Init();
 
-    void MemCard_EventsInit(void);
+    void MemCard_EventsInit();
 
-    void MemCard_StateInit(void);
+    void MemCard_StateInit();
 
-    void MemCard_SwEventsInit(void);
+    void MemCard_SwEventsInit();
 
-    void MemCard_HwEventsInit(void);
+    void MemCard_HwEventsInit();
 
-    void MemCard_EventsClose(void);
+    void MemCard_EventsClose();
 
-    void MemCard_SwEventsClose(void);
+    void MemCard_SwEventsClose();
 
-    void MemCard_HwEventsClose(void);
+    void MemCard_HwEventsClose();
 
-    s32 MemCard_SwEventsTest(void);
+    s32 MemCard_SwEventsTest();
 
-    void MemCard_SwEventsReset(void);
+    void MemCard_SwEventsReset();
 
-    s32 MemCard_HwEventsTest(void);
+    s32 MemCard_HwEventsTest();
 
-    void MemCard_HwEventsReset(void);
+    void MemCard_HwEventsReset();
 
-    void MemCard_HwEventSpIOE(void);
+    void MemCard_HwEventSpIOE();
 
-    void MemCard_HwEventSpERROR(void);
+    void MemCard_HwEventSpERROR();
 
-    void MemCard_HwEventSpNEW(void);
+    void MemCard_HwEventSpNEW();
 
-    void MemCard_HwEventSpTIMOUT(void);
+    void MemCard_HwEventSpTIMOUT();
 
-    void MemCard_HwEventSpUNKNOWN(void);
+    void MemCard_HwEventSpUNKNOWN();
 
-    s32 MemCard_StateResult(void); /** `e_MemCardResult` */
+    s32 MemCard_StateResult(); /** `e_MemCardResult` */
 
     bool MemCard_WorkSet(e_MemCardIoMode mode, s32 deviceId, s_MemCard_Directory* outDir, char* filename, s32 createBlockCount, s32 fileOffset, void* outBuf, s32 bufSize);
 
-    bool MemCard_MemCardIsIdle(void);
+    bool MemCard_MemCardIsIdle();
 
-    void MemCard_StateUpdate(void);
+    void MemCard_StateUpdate();
 
-    s32 MemCard_State_Init(void);
+    s32 MemCard_State_Init();
 
-    s32 MemCard_State_Check(void);
+    s32 MemCard_State_Check();
 
-    s32 MemCard_State_Load(void);
+    s32 MemCard_State_Load();
 
-    s32 MemCard_State_DirRead(void);
+    s32 MemCard_State_DirRead();
 
-    s32 MemCard_State_FileCreate(void);
+    s32 MemCard_State_FileCreate();
 
-    s32 MemCard_State_FileOpen(void);
+    s32 MemCard_State_FileOpen();
 
-    s32 MemCard_State_FileReadWrite(void);
+    s32 MemCard_State_FileReadWrite();
 
     void MemCard_DevicePathGenerate(s32 deviceId, char* res);
 

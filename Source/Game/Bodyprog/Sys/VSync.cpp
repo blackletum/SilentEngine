@@ -10,7 +10,7 @@
 
 namespace Silent::Game
 {
-    void Screen_VSyncCallback(void) // 0x80032B80
+    void Screen_VSyncCallback() // 0x80032B80
     {
         //g_Demo_FrameCount++; // `extern` from demo.h
         g_WarmBootTimer++;

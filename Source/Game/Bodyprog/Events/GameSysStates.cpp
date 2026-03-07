@@ -40,7 +40,7 @@ namespace Silent::Game
         3, 3, 3, 3, 3, 3, 3, 3
     };
 
-    static void (*g_SysStateFuncs[])(void) =
+    static void (*g_SysStateFuncs[])() =
     {
         SysState_Gameplay_Update,
         SysState_OptionsMenu_Update,
@@ -71,7 +71,7 @@ namespace Silent::Game
     u8           D_800BCDD4;
     s_EventData* g_MapEventData;
 
-    void GameState_InGame_Update(void) // 0x80038BD4
+    void GameState_InGame_Update() // 0x80038BD4
     {
         s_SubCharacter* player;
 
@@ -187,7 +187,7 @@ namespace Silent::Game
         }
     }
 
-    void SysState_Gameplay_Update(void) // 0x80038BD4
+    void SysState_Gameplay_Update() // 0x80038BD4
     {
         s_SubCharacter* player;
 
@@ -273,7 +273,7 @@ namespace Silent::Game
         }
     }
 
-    void SysState_GamePaused_Update(void) // 0x800391E8
+    void SysState_GamePaused_Update() // 0x800391E8
     {
         static s32 D_800A9A68 = 0;
 
@@ -319,7 +319,7 @@ namespace Silent::Game
         }
     }
 
-    void SysState_OptionsMenu_Update(void) // 0x80039344
+    void SysState_OptionsMenu_Update() // 0x80039344
     {
         switch (g_SysWork.sysStateStep_C[0])
         {
@@ -345,7 +345,7 @@ namespace Silent::Game
         }
     }
 
-    void func_8003943C(void) // 0x8003943C
+    void func_8003943C() // 0x8003943C
     {
         s32 roundedVal0;
         s32 roundedVal1;
@@ -432,7 +432,7 @@ namespace Silent::Game
         }
     }
 
-    void SysState_StatusMenu_Update(void) // 0x80039568
+    void SysState_StatusMenu_Update() // 0x80039568
     {
         e_GameState gameState;
 
@@ -452,7 +452,7 @@ namespace Silent::Game
         g_GameWork.gameStateStep_598[0] = 0;
     }
 
-    void GameState_LoadStatusScreen_Update(void) // 0x800395C0
+    void GameState_LoadStatusScreen_Update() // 0x800395C0
     {
         s_Savegame* save;
 
@@ -484,7 +484,7 @@ namespace Silent::Game
         }
     }
 
-    void SysState_MapScreen_Update(void) // 0x800396D4
+    void SysState_MapScreen_Update() // 0x800396D4
     {
         if (!HAS_MAP(g_SavegamePtr->paperMapIdx_A9))
         {
@@ -527,7 +527,7 @@ namespace Silent::Game
         }
     }
 
-    void GameState_LoadMapScreen_Update(void) // 0x8003991C
+    void GameState_LoadMapScreen_Update() // 0x8003991C
     {
         if (g_GameWork.gameStateStep_598[0] == 0)
         {
@@ -554,7 +554,7 @@ namespace Silent::Game
         }
     }
 
-    void SysState_Fmv_Update(void) // 0x80039A58
+    void SysState_Fmv_Update() // 0x80039A58
     {
         constexpr auto BASE_AUDIO_FILE_IDX = FILE_XA_ZC_14392;
 
@@ -613,7 +613,7 @@ namespace Silent::Game
         }
     }
 
-    void SysState_LoadArea_Update(void) // 0x80039C40
+    void SysState_LoadArea_Update() // 0x80039C40
     {
         u32           offsetZ;
         s_MapPoint2d* mapPoint;
@@ -674,17 +674,17 @@ namespace Silent::Game
         //Screen_BackgroundMotionBlur(SyncMode_Immediate);
     }
 
-    void AreaLoad_UpdatePlayerPosition(void) // 0x80039F30
+    void AreaLoad_UpdatePlayerPosition() // 0x80039F30
     {
         //Chara_PositionSet(&D_800BCDB0);
     }
 
-    void AreaLoad_TransitionSound(void) // 0x80039F54
+    void AreaLoad_TransitionSound() // 0x80039F54
     {
         //SD_Call(SfxPairs[g_SysWork.field_2283].sfx_2);
     }
 
-    s8 func_80039F90(void) // 0x80039F90
+    s8 func_80039F90() // 0x80039F90
     {
         if (g_SysWork.processFlags_2298 & (SysWorkProcessFlag_RoomTransition | SysWorkProcessFlag_OverlayTransition))
         {
@@ -694,7 +694,7 @@ namespace Silent::Game
         return 0;
     }
 
-    void SysState_ReadMessage_Update(void) // 0x80039FB8
+    void SysState_ReadMessage_Update() // 0x80039FB8
     {
         s32 i;
         void (**unfreezePlayerFunc)(bool);
@@ -750,7 +750,7 @@ namespace Silent::Game
         }
     }
 
-    void SysWork_SavegameUpdatePlayer(void) // 0x8003A120
+    void SysWork_SavegameUpdatePlayer() // 0x8003A120
     {
         s_Savegame* save;
 
@@ -763,7 +763,7 @@ namespace Silent::Game
         save->playerHealth_240    = g_SysWork.playerWork_4C.player_0.health_B0;
     }
 
-    void func_8003A16C(void) // 0x8003A16C
+    void func_8003A16C() // 0x8003A16C
     {
         if (!(g_SysWork.flags_22A4 & SysFlag2_1))
         {
@@ -774,7 +774,7 @@ namespace Silent::Game
         }
     }
 
-    void SysWork_SavegameReadPlayer(void) // 0x8003A1F4
+    void SysWork_SavegameReadPlayer() // 0x8003A1F4
     {
         g_SysWork.playerWork_4C.player_0.position_18.vx = g_SavegamePtr->playerPositionX_244;
         g_SysWork.playerWork_4C.player_0.position_18.vz = g_SavegamePtr->playerPositionZ_24C;
@@ -782,7 +782,7 @@ namespace Silent::Game
         g_SysWork.playerWork_4C.player_0.health_B0      = g_SavegamePtr->playerHealth_240;
     }
 
-    void SysState_SaveMenu_Update(void) // 0x8003A230
+    void SysState_SaveMenu_Update() // 0x8003A230
     {
         s32 gameState;
 
@@ -839,7 +839,7 @@ namespace Silent::Game
         }
     }
 
-    void SysState_EventCallFunc_Update(void) // 0x8003A3C8
+    void SysState_EventCallFunc_Update() // 0x8003A3C8
     {
         if (g_MapEventData->flags_8_13 != EventParamUnkState_None)
         {
@@ -850,14 +850,14 @@ namespace Silent::Game
         g_MapOverlayHeader.mapEventFuncs_20[g_MapEventParam]();
     }
 
-    void SysState_EventSetFlag_Update(void) // 0x8003A460
+    void SysState_EventSetFlag_Update() // 0x8003A460
     {
         g_DeltaTime = g_DeltaTimeCpy;
         Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag_2);
         g_SysWork.sysState_8 = SysState_Gameplay;
     }
 
-    void SysState_EventPlaySound_Update(void) // 0x8003A4B4
+    void SysState_EventPlaySound_Update() // 0x8003A4B4
     {
         g_DeltaTime = g_DeltaTimeCpy;
 
@@ -867,7 +867,7 @@ namespace Silent::Game
         g_SysWork.sysState_8 = SysState_Gameplay;
     }
 
-    void SysState_GameOver_Update(void) // 0x8003A52C
+    void SysState_GameOver_Update() // 0x8003A52C
     {
         constexpr int TIP_COUNT = 15;
 
@@ -1035,7 +1035,7 @@ namespace Silent::Game
         }
     }
 
-    void GameState_MapEvent_Update(void) // 0x8003AA4C
+    void GameState_MapEvent_Update() // 0x8003AA4C
     {
         if (g_GameWork.gameStateStep_598[0] == 0)
         {

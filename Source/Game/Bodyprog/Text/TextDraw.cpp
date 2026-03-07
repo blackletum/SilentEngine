@@ -76,7 +76,7 @@ namespace Silent::Game
         g_Strings2dLayerIdx = idx;
     }
 
-    void Gfx_StringsReset2dLayerIdx(void) // 0x8004A8CC
+    void Gfx_StringsReset2dLayerIdx() // 0x8004A8CC
     {
         g_Strings2dLayerIdx = 6;
     }
@@ -520,7 +520,7 @@ namespace Silent::Game
         #undef CHARCODE_OFFSET*/
     }
 
-    void func_8004B658(void) // 0x8004B658
+    void func_8004B658() // 0x8004B658
     {
         D_800C38F8.attribute = 64;
         D_800C38F8.cx        = 304;
@@ -528,7 +528,7 @@ namespace Silent::Game
         D_800C38F8.h         = 16;
     }
 
-    void Gfx_MapMsg_DefaultStringInfoSet(void) // 0x8004B684
+    void Gfx_MapMsg_DefaultStringInfoSet() // 0x8004B684
     {
         D_800C38B4               = 1;
         D_800C38B0.field_0                   = 0;

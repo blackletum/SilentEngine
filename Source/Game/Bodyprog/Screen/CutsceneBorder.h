@@ -2,5 +2,5 @@
 
 namespace Silent::Game
 {
-    void Screen_CutsceneCameraStateUpdate(void);
+    void Screen_CutsceneCameraStateUpdate();
 }

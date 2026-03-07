@@ -27,12 +27,12 @@ namespace Silent::Game
         }
     }
 
-    q19_12 Screen_FadeInProgressGet(void) // 0x800325F8
+    q19_12 Screen_FadeInProgressGet() // 0x800325F8
     {
         return Q12(1.0f) - g_PrevScreenFadeProgress;
     }
 
-    void Screen_FadeUpdate(void) // 0x8003260C
+    void Screen_FadeUpdate() // 0x8003260C
     {
         s32 queueLength;
         s32 timestep;

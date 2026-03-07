@@ -58,7 +58,7 @@ namespace Silent::Game
 
     void Gfx_Strings2dLayerIdxSet(s32 idx);
 
-    void Gfx_StringsReset2dLayerIdx(void);
+    void Gfx_StringsReset2dLayerIdx();
 
     /** Sets the color of the next string drawn by `Gfx_StringDraw`.
      *
@@ -78,9 +78,9 @@ namespace Silent::Game
     /** Draws string and returns map message index. */
     s32 Gfx_MapMsg_StringDraw(char* mapMsg, s32 strLength);
 
-    void func_8004B658(void);
+    void func_8004B658();
 
-    void Gfx_MapMsg_DefaultStringInfoSet(void);
+    void Gfx_MapMsg_DefaultStringInfoSet();
 
     /** @unused */
     void func_8004B6D4(s16 arg0, s16 arg1);
@@ -93,5 +93,5 @@ namespace Silent::Game
 
     void Gfx_StringDrawInt(s32 widthMin, s32 strLength);
 
-    void func_8004BB10(void);
+    void func_8004BB10();
 }

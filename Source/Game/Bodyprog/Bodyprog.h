@@ -1496,8 +1496,8 @@ namespace Silent::Game
         const char**           mapMessages_30; // Array of strings.
         s_AnimInfo*            animInfos_34;   // Map-specific anim infos for Harry (for anims 38+).
         s_UnkStruct3_Mo*       field_38; // Array of 40?
-        void                   (*worldObjectsInit_3C)(void); // func(?).
-        void                   (*worldObjectsUpdate_40)(void);
+        void                   (*worldObjectsInit_3C)(); // func(?).
+        void                   (*worldObjectsUpdate_40)();
         void                   (*func_44)();
         void                   (*npcSpawnEvent_48)(); // func(?).
         s_MapHdr_field_4C*     unkTable1_4C; // Related to collision?
@@ -1536,7 +1536,7 @@ namespace Silent::Game
         s32                    (*func_D0)(s32 playerExtraState, VECTOR3* vec, q3_12 angle, s32 vecCount); // 0x800C964C
         s32                    (*func_D4)(s32);                  // Assumed return type.
         void                   (*func_D8)();                     // Assumed return type.
-        void                   (*playerAnimLock_DC)(void);
+        void                   (*playerAnimLock_DC)();
         void                   (*func_E0)(); // func(?).
         s32                    (*playerAnimUnlock_E4)(s_SubCharacter*, s32); // Assumed return type.
         s64                    (*func_E8)(s_SubCharacter*);      // Is it really `s64`???

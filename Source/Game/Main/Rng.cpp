@@ -5,7 +5,7 @@ namespace Silent::Game
 {
     u32 g_RngSeed = 0;
 
-    u32 Rng_Rand32(void)
+    u32 Rng_Rand32()
     {
         u32 nextSeed = g_RngSeed;
 
@@ -15,12 +15,12 @@ namespace Silent::Game
         return nextSeed;
     }
 
-    s32 Rng_Rand16(void)
+    s32 Rng_Rand16()
     {
         return Rng_Rand32() >> 17;
     }
 
-    u32 Rng_GetSeed(void)
+    u32 Rng_GetSeed()
     {
         return g_RngSeed;
     }
@@ -30,7 +30,7 @@ namespace Silent::Game
         g_RngSeed = nextSeed;
     }
 
-    u16 Rng_Rand12(void)
+    u16 Rng_Rand12()
     {
         return Rng_Rand32() >> 20;
     }

@@ -8,7 +8,7 @@ namespace Silent::Game
 {
     VW_VIEW_WORK vwViewPointInfo;
 
-    void vwInitViewInfo(void) // 0x80048A38
+    void vwInitViewInfo() // 0x80048A38
     {
         vwViewPointInfo.rview.vp.vz = Q12(0.0f);
         vwViewPointInfo.rview.vp.vy = Q12(0.0f);
@@ -24,7 +24,7 @@ namespace Silent::Game
         vwSetViewInfo();
     }
 
-    GsCOORDINATE2* vwGetViewCoord(void) // 0x80048A90
+    GsCOORDINATE2* vwGetViewCoord() // 0x80048A90
     {
         return &vwViewPointInfo.vwcoord;
     }
@@ -109,7 +109,7 @@ namespace Silent::Game
         pos->vz = Q8_TO_Q12(mat->t[2]);
     }
 
-    void vwSetViewInfo(void) // 0x80048D48
+    void vwSetViewInfo() // 0x80048D48
     {
         // @todo Uncomment when the rest is migrated.
         vbSetRefView(&vwViewPointInfo.rview);

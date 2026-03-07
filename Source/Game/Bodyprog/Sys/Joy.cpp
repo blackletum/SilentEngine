@@ -11,12 +11,12 @@
 
 namespace Silent::Game
 {
-    void Joy_Init(void) // 0x8003441C
+    void Joy_Init() // 0x8003441C
     {
         // @stub
     }
 
-    void Joy_ReadP1(void) // 0x80034450
+    void Joy_ReadP1() // 0x80034450
     {
         s_ControllerData* cont;
 
@@ -24,13 +24,13 @@ namespace Silent::Game
         memcpy(&cont->analogController_0, &g_GameWork.rawController_5B4, sizeof(s_AnalogController));
     }
 
-    void Joy_Update(void) // 0x8003446C
+    void Joy_Update() // 0x8003446C
     {
         Joy_ReadP1();
         Joy_ControllerDataUpdate();
     }
 
-    void Joy_ControllerDataUpdate(void) // 0x80034494
+    void Joy_ControllerDataUpdate() // 0x80034494
     {
         constexpr int CONTROLLER_COUNT             = 2;
         constexpr int PULSE_INITIAL_INTERVAL_TICKS = TICKS_PER_SECOND / 2;

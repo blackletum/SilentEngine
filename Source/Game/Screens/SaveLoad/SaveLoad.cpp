@@ -214,7 +214,7 @@ namespace Silent::Game
 
     static u8 g_SaveScreen_IsGameSaving;
 
-    void SaveScreen_ScreenInfoClear(void) // 0x801E2D8C
+    void SaveScreen_ScreenInfoClear() // 0x801E2D8C
     {
         s32 i;
         s32 j;
@@ -247,7 +247,7 @@ namespace Silent::Game
         }
     }
 
-    void SaveScreen_SlotStrAndBottomRectDraw(void) // 0x801E2EBC
+    void SaveScreen_SlotStrAndBottomRectDraw() // 0x801E2EBC
     {
         s_Line2d line;
         s32      i;
@@ -786,7 +786,7 @@ namespace Silent::Game
         }
     }
 
-    void SaveScreen_SaveFlash(void) // 0x801E3E78
+    void SaveScreen_SaveFlash() // 0x801E3E78
     {
         s32      slotIdx;
         q19_12   sinFlashTimer;
@@ -822,7 +822,7 @@ namespace Silent::Game
         }
     }
 
-    void SaveScreen_SlotBorder(void) // 0x801E4010
+    void SaveScreen_SlotBorder() // 0x801E4010
     {
         constexpr int BORDER_LINE_COUNT  = 5;
         constexpr int BORDER_PIXEL_WIDTH = 2;
@@ -1674,7 +1674,7 @@ namespace Silent::Game
         }
     }
 
-    void GameState_LoadSavegameScreen_Update(void) // 0x801E6320
+    void GameState_LoadSavegameScreen_Update() // 0x801E6320
     {
         g_SaveScreen_DisplaySaveInfo = true;
 
@@ -1695,7 +1695,7 @@ namespace Silent::Game
         }
     }
 
-    void SaveScreen_Init(void) // 0x801E63C0
+    void SaveScreen_Init() // 0x801E63C0
     {
         if (g_GameWork.gameStatePrev_590 == GameState_MainMenu)
         {
@@ -1729,7 +1729,7 @@ namespace Silent::Game
         g_GameWork.gameStateStep_598[2] = 0;
     }
 
-    void SaveScreen_LogicUpdate(void) // 0x801E649C
+    void SaveScreen_LogicUpdate() // 0x801E649C
     {
         s32               gameStateStep = g_GameWork.gameStateStep_598[1];
         s_SaveScreenElement* saveEntry;
@@ -1925,7 +1925,7 @@ namespace Silent::Game
         }
     }
 
-    void SaveScreen_FormatCard(void) // 0x801E69E8
+    void SaveScreen_FormatCard() // 0x801E69E8
     {
         constexpr int STR_TIMER_MAX = TICKS_PER_SECOND / 2;
 
@@ -1972,7 +1972,7 @@ namespace Silent::Game
         }
     }
 
-    void SaveScreen_SaveGame(void) // 0x801E6B18
+    void SaveScreen_SaveGame() // 0x801E6B18
     {
         s_MemCard_SaveMetadata* saveEntry;
 
@@ -2049,7 +2049,7 @@ namespace Silent::Game
         }
     }
 
-    void SaveScreen_LoadSave(void) // 0x801E6DB0
+    void SaveScreen_LoadSave() // 0x801E6DB0
     {
         s32 memCardStateResult;
 
@@ -2115,7 +2115,7 @@ namespace Silent::Game
         }
     }
 
-    void SaveScreen_Continue(void) // 0x801E6F38
+    void SaveScreen_Continue() // 0x801E6F38
     {
         // Handle continue state.
         switch (g_GameWork.gameStateStep_598[1])
@@ -2151,7 +2151,7 @@ namespace Silent::Game
         }
     }
 
-    void SaveScreen_BackgroundAndInfoDraw(void) // 0x801E709C
+    void SaveScreen_BackgroundAndInfoDraw() // 0x801E709C
     {
         // Draw "SLOT 1"/"SLOT 2" strings and bottom transparent rectangle.
         SaveScreen_SlotStrAndBottomRectDraw();
@@ -2160,7 +2160,7 @@ namespace Silent::Game
         //Screen_BackgroundImgDraw(&g_ItemInspectionImg);
     }
 
-    void SaveScreen_ScreenDraw(void) // 0x801E70C8
+    void SaveScreen_ScreenDraw() // 0x801E70C8
     {
         s32              i;
         s32              j;
@@ -2211,7 +2211,7 @@ namespace Silent::Game
         }
     }
 
-    void SaveScreen_MemCardState(void) // 0x801E7244
+    void SaveScreen_MemCardState() // 0x801E7244
     {
         if (g_SaveScreen_MemCardStateTextTimer <= 0)
         {
@@ -2239,7 +2239,7 @@ namespace Silent::Game
         SaveScreen_WriteOptionsStepDraw(stringIdx, optionSelected);
     }
 
-    void GameState_AutoLoadSavegame_Update(void) // 0x801E72FC
+    void GameState_AutoLoadSavegame_Update() // 0x801E72FC
     {
         if (g_GameWork.gameStateStep_598[0] == 0)
         {
@@ -2253,7 +2253,7 @@ namespace Silent::Game
         SaveScreen_ScreenDraw();
     }
 
-    void func_801E737C(void) // 0x801E737C
+    void func_801E737C() // 0x801E737C
     {
         /*if (!func_80033548())
         {

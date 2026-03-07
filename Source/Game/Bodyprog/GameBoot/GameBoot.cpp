@@ -36,7 +36,7 @@ namespace Silent::Game
         //Game_SavegameResetPlayer();
     }
 
-    void GameBoot_PlayerInit(void) // 0x80035178
+    void GameBoot_PlayerInit() // 0x80035178
     {
         //WorldGfx_MapInit();
         //CharaModel_AllModelsFree();

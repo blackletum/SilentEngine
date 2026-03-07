@@ -32,7 +32,7 @@ namespace Silent::Game
     s8 g_Demo_ReproducedCount = 0;
     s8* D_800BCDE0;
 
-    void GameState_MainMenu_Update(void) // 0x8003AB28
+    void GameState_MainMenu_Update() // 0x8003AB28
     {
         constexpr int MAIN_MENU_GAME_STATE_COUNT = 5;
 
@@ -393,12 +393,12 @@ namespace Silent::Game
         }
     }
 
-    void MainMenu_SelectedOptionIdxReset(void) // 0x8003B550
+    void MainMenu_SelectedOptionIdxReset() // 0x8003B550
     {
         g_MainMenu_SelectedEntry = MainMenuEntry_Continue;
     }
 
-    void MainMenu_MainTextDraw(void) // 0x8003B568
+    void MainMenu_MainTextDraw() // 0x8003B568
     {
         constexpr int COLUMN_POS_X = 158;
         constexpr int COLUMN_POS_Y = 184;
@@ -491,7 +491,7 @@ namespace Silent::Game
         }
     }
 
-    void MainMenu_BackgroundDraw(void) // 0x8003B758
+    void MainMenu_BackgroundDraw() // 0x8003B758
     {
         auto& renderer = g_App.GetRenderer();
 
@@ -511,7 +511,7 @@ namespace Silent::Game
         MainMenu_FogUpdate();
     }
 
-    void func_8003B7BC(void) // 0x8003B7BC
+    void func_8003B7BC() // 0x8003B7BC
     {
         // Can't be `s32*` since 462 doesn't divide by 4, so I'm guessing it's `s8`.
         /*s8* s0 = 0x801E2432;
@@ -617,7 +617,7 @@ namespace Silent::Game
         return packet;
     }
 
-    void MainMenu_FogDraw(void) // 0x8003BA08
+    void MainMenu_FogDraw() // 0x8003BA08
     {
         PACKET*   packet;
         GsOT_TAG* tag;
@@ -629,7 +629,7 @@ namespace Silent::Game
         //GsOUT_PACKET_P = packet + sizeof(DR_MODE);
     }
 
-    void MainMenu_FogRandomize(void) // 0x8003BAC4
+    void MainMenu_FogRandomize() // 0x8003BAC4
     {
         s32 idx;
         s32 i;
@@ -666,7 +666,7 @@ namespace Silent::Game
         }
     }
 
-    void MainMenu_FogScatter(void) // 0x8003BBF4
+    void MainMenu_FogScatter() // 0x8003BBF4
     {
         s32 i;
         s32 j;
@@ -702,7 +702,7 @@ namespace Silent::Game
         }
     }
 
-    void MainMenu_FogUpdate(void) // 0x8003BC8C
+    void MainMenu_FogUpdate() // 0x8003BC8C
     {
         static s32 foxCount = 0;
 
@@ -715,7 +715,7 @@ namespace Silent::Game
         MainMenu_FogDraw();
     }
 
-    void func_8003BCF4(void) // 0x8003BCF4
+    void func_8003BCF4() // 0x8003BCF4
     {
         s32 i;
 

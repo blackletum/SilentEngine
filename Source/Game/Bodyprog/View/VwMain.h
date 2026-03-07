@@ -2,13 +2,13 @@
 
 namespace Silent::Game
 {
-    void vwInitViewInfo(void);
+    void vwInitViewInfo();
 
     /** @brief Gets the camera coordinate.
      *
      * @return Camera coordinate.
      */
-    GsCOORDINATE2* vwGetViewCoord(void);
+    GsCOORDINATE2* vwGetViewCoord();
 
     /** @brief Gets the camera position.
      *
@@ -34,7 +34,7 @@ namespace Silent::Game
      */
     void vwSetViewInfoDirectMatrix(GsCOORDINATE2* pcoord, const MATRIX* cammat);
 
-    void vwSetViewInfo(void);
+    void vwSetViewInfo();
 
     /** @brief Clamps an angle range to be within a given set of constraints.
      *

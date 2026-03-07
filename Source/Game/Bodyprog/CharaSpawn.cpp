@@ -18,7 +18,7 @@ namespace Silent::Game
         return true;
     }
 
-    bool Chara_ProcessLoads(void) // 0x80088D0C
+    bool Chara_ProcessLoads() // 0x80088D0C
     {
         Fs_QueueWaitForEmpty();
         //WorldGfx_CharaModelProcessAllLoads();

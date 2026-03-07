@@ -15,11 +15,11 @@ namespace Silent::Game
      */
     void vcInitVCSystem(VC_ROAD_DATA* vc_road_ary_list);
 
-    void vcStartCameraSystem(void);
+    void vcStartCameraSystem();
 
-    void vcEndCameraSystem(void);
+    void vcEndCameraSystem();
 
-    s32 func_80080A10(void);
+    s32 func_80080A10();
 
     /** @brief Sets the camera's look-at Y position.
      *
@@ -31,7 +31,7 @@ namespace Silent::Game
      *
      * @return Camera look-at Y position.
      */
-    q19_12 Vc_LookAtPositionYGet(void);
+    q19_12 Vc_LookAtPositionYGet();
 
     void vcSetFirstCamWork(VECTOR3* cam_pos, s16 chara_eye_ang_y, bool use_through_door_cam_f);
 
@@ -47,7 +47,7 @@ namespace Silent::Game
 
     void vcChangeProjectionValue(s16 scr_y);
 
-    void func_80080D68(void);
+    void func_80080D68();
 
     /** @brief Gets the current camera look-at position.
      *
@@ -70,9 +70,9 @@ namespace Silent::Game
     void vcSetSubjChara(VECTOR3* chara_pos, q19_12 chara_bottom_y, q19_12 chara_top_y, q19_12 chara_grnd_y, VECTOR3* chara_head_pos,
                         q3_12 chara_mv_spd, q19_12 chara_mv_ang_y, q3_12 chara_ang_spd_y, q3_12 chara_eye_ang_y, q3_12 chara_eye_ang_wy, q19_12 chara_watch_xz_r);
 
-    s32 vcExecCamera(void);
+    s32 vcExecCamera();
 
-    void vcSetAllNpcDeadTimer(void);
+    void vcSetAllNpcDeadTimer();
 
     s32 vcRetSmoothCamMvF(VECTOR3* old_pos, VECTOR3* now_pos, SVECTOR* old_ang, SVECTOR* now_ang);
 

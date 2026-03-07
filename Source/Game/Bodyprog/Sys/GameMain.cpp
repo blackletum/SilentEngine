@@ -36,7 +36,7 @@ namespace Silent::Game
         0
     };
 
-    void (*g_GameStateUpdateFuncs[])(void) =
+    void (*g_GameStateUpdateFuncs[])() =
     {
         GameState_Boot_Update,
         GameState_KonamiLogo_Update,
@@ -62,7 +62,7 @@ namespace Silent::Game
         nullptr,//GameState_Unk15_Update
     };
 
-    void GameState_Boot_Update(void) // 0x80032D1C
+    void GameState_Boot_Update() // 0x80032D1C
     {
         e_GameState gameState;
         s32         vabAudioTaskId;

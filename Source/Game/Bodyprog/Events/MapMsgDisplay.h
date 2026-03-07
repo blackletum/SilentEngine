@@ -10,5 +10,5 @@ namespace Silent::Game
 
     void func_8003708C(s16* ptr0, u16* ptr1);
 
-    void func_80037124(void);
+    void func_80037124();
 }

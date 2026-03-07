@@ -24,7 +24,7 @@ namespace Silent::Game
      *
      * @return Smooth move type (`VC_CAM_MV_TYPE`).
      */
-    s32 vcRetCamMvSmoothF(void);
+    s32 vcRetCamMvSmoothF();
 
     /** @brief Sets the camera's elevation(?) rate to normal or locked. So far @unused.
      * TODO: Is it elevation or something else?

@@ -101,7 +101,7 @@ namespace Silent::Game
         }
     }
 
-    void Screen_CutsceneCameraStateUpdate(void) // 0x80032904
+    void Screen_CutsceneCameraStateUpdate() // 0x80032904
     {
         GsOT*    ot;
         POLY_G4* poly;

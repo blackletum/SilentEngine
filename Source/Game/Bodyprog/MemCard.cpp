@@ -48,7 +48,7 @@ namespace Silent::Game
         ptr->lastMemCardResult_14 = lastMemCardResult;
     }
 
-    void MemCard_SysInit(void) // 0x8002E630
+    void MemCard_SysInit() // 0x8002E630
     {
         s32                   i;
         s_MemCard_SaveHeader* ptr;
@@ -126,7 +126,7 @@ namespace Silent::Game
         return result;
     }
 
-    void MemCard_SysInit2(void) // 0x8002E7BC
+    void MemCard_SysInit2() // 0x8002E7BC
     {
         if (g_MemCard_AvailibityStatus == true)
         {
@@ -141,7 +141,7 @@ namespace Silent::Game
         MemCard_SaveWork_SetParams(&g_MemCard_SaveWork.saveWork_E0[1], 0, 0, 0, 0, 0, MemCardResult_NotConnected);
     }
 
-    void MemCard_Disable(void) // 0x8002E830
+    void MemCard_Disable() // 0x8002E830
     {
         if (g_MemCard_AvailibityStatus != false)
         {
@@ -150,19 +150,19 @@ namespace Silent::Game
         }
     }
 
-    void MemCard_InitStatus(void) // 0x8002E85C
+    void MemCard_InitStatus() // 0x8002E85C
     {
         g_MemCard_SaveWork.memCardInitalized_110 = 1;
     }
 
-    void MemCard_StatusInitNotConnected(void) // 0x8002E86C
+    void MemCard_StatusInitNotConnected() // 0x8002E86C
     {
         g_MemCard_SaveWork.memCardInitalized_110 = 0;
 
         MemCard_SaveWork_SetParams(&g_MemCard_SaveWork.saveWork_E0[1], 0, 0, 0, 0, 0, MemCardResult_NotConnected);
     }
 
-    s32 MemCard_AllMemCardsStatusGet(void) // 0x8002E898
+    s32 MemCard_AllMemCardsStatusGet() // 0x8002E898
     {
         s32 ret;
         s32 i;
@@ -176,12 +176,12 @@ namespace Silent::Game
         return ret;
     }
 
-    void func_8002E8D4(void) // 0x8002E8D4
+    void func_8002E8D4() // 0x8002E8D4
     {
         g_MemCard_SaveWork.memCardInitalized_110 = 1;
     }
 
-    void MemCard_StatusInitSuccess(void) // 0x8002E8E4
+    void MemCard_StatusInitSuccess() // 0x8002E8E4
     {
         g_MemCard_SaveWork.memCardInitalized_110 = 0;
 
@@ -192,7 +192,7 @@ namespace Silent::Game
     // MEMORY CARD - HELPERS
     // ========================================
 
-    s32 func_8002E914(void) // 0x8002E914
+    s32 func_8002E914() // 0x8002E914
     {
         s32 ret;
         s32 i;
@@ -217,7 +217,7 @@ namespace Silent::Game
         return true;
     }
 
-    s32 MemCard_LastMemCardResultGet(void) // 0x8002E990
+    s32 MemCard_LastMemCardResultGet() // 0x8002E990
     {
         return g_MemCard_SaveWork.saveWork_E0[0].lastMemCardResult_14;
     }
@@ -301,7 +301,7 @@ namespace Silent::Game
     // MEMORY CARD - PROCESSES
     // ========================================
 
-    void MemCard_Update(void) // 0x8002EB88
+    void MemCard_Update() // 0x8002EB88
     {
         s_MemCard_Process* statusPtr;
 
@@ -1257,93 +1257,93 @@ namespace Silent::Game
     // MEMORY CARD - EVENTS
     // ========================================
 
-    void MemCard_Init(void) // 0x800303E4
+    void MemCard_Init() // 0x800303E4
     {
         g_MemCard_Work.devicesPending_0 = UINT_MAX; // All bits set.
     }
 
-    void MemCard_EventsInit(void) // 0x80030414
+    void MemCard_EventsInit() // 0x80030414
     {
         MemCard_StateInit();
         MemCard_SwEventsInit();
         MemCard_HwEventsInit();
     }
 
-    void MemCard_StateInit(void) // 0x80030444
+    void MemCard_StateInit() // 0x80030444
     {
         g_MemCard_Work.state_4       = MemCardCardState_Idle;
         g_MemCard_Work.stateStep_8   = 0;
         g_MemCard_Work.stateResult_C = 0;
     }
 
-    void MemCard_SwEventsInit(void) // 0x8003045C
+    void MemCard_SwEventsInit() // 0x8003045C
     {
         // @stub
     }
 
-    void MemCard_HwEventsInit(void) // 0x80030530
+    void MemCard_HwEventsInit() // 0x80030530
     {
         // @stub
     }
 
-    void MemCard_EventsClose(void) // 0x80030640
+    void MemCard_EventsClose() // 0x80030640
     {
         // @stub
     }
 
-    void MemCard_SwEventsClose(void) // 0x80030668
+    void MemCard_SwEventsClose() // 0x80030668
     {
         // @stub
     }
 
-    void MemCard_HwEventsClose(void) // 0x800306C8
+    void MemCard_HwEventsClose() // 0x800306C8
     {
         // @stub
     }
 
-    s32 MemCard_SwEventsTest(void) // 0x80030734
+    s32 MemCard_SwEventsTest() // 0x80030734
     {
         // @stub
         return 0;
     }
 
-    void MemCard_SwEventsReset(void) // 0x800307BC
+    void MemCard_SwEventsReset() // 0x800307BC
     {
         // @stub
     }
 
-    s32 MemCard_HwEventsTest(void) // 0x80030810
+    s32 MemCard_HwEventsTest() // 0x80030810
     {
         // @stub
         return 1;
     }
 
-    void MemCard_HwEventsReset(void) // 0x80030820
+    void MemCard_HwEventsReset() // 0x80030820
     {
         // @stub
     }
 
-    void MemCard_HwEventSpIOE(void) // 0x80030884
+    void MemCard_HwEventSpIOE() // 0x80030884
     {
         // @stub
     }
 
-    void MemCard_HwEventSpERROR(void) // 0x80030894
+    void MemCard_HwEventSpERROR() // 0x80030894
     {
         // @stub
     }
 
-    void MemCard_HwEventSpNEW(void) // 0x800308A4
+    void MemCard_HwEventSpNEW() // 0x800308A4
     {
         // @stub
     }
 
-    void MemCard_HwEventSpTIMOUT(void) // 0x800308B4
+    void MemCard_HwEventSpTIMOUT() // 0x800308B4
     {
         // @stub
     }
 
-    void MemCard_HwEventSpUNKNOWN(void) // 0x800308C4
+    void MemCard_HwEventSpUNKNOWN() // 0x800308C4
     {
         // @stub
     }
@@ -1352,7 +1352,7 @@ namespace Silent::Game
     // MEMORY CARD - STATES WORK
     // ========================================
 
-    s32 MemCard_StateResult(void) // 0x800308D4
+    s32 MemCard_StateResult() // 0x800308D4
     {
         return g_MemCard_Work.stateResult_C;
     }
@@ -1403,12 +1403,12 @@ namespace Silent::Game
         return true;
     }
 
-    bool MemCard_MemCardIsIdle(void) // 0x800309FC
+    bool MemCard_MemCardIsIdle() // 0x800309FC
     {
         return g_MemCard_Work.state_4 == MemCardCardState_Idle;
     }
 
-    void MemCard_StateUpdate(void) // 0x80030A0C
+    void MemCard_StateUpdate() // 0x80030A0C
     {
         switch (g_MemCard_Work.state_4)
         {
@@ -1448,7 +1448,7 @@ namespace Silent::Game
         }
     }
 
-    s32 MemCard_State_Init(void) // 0x80030AD8
+    s32 MemCard_State_Init() // 0x80030AD8
     {
         s32 channel;
         s32 result;
@@ -1504,7 +1504,7 @@ namespace Silent::Game
         return result;
     }
 
-    s32 MemCard_State_Check(void) // 0x80030C88
+    s32 MemCard_State_Check() // 0x80030C88
     {
         s32 channel;
         s32 result;
@@ -1546,7 +1546,7 @@ namespace Silent::Game
         return result;
     }
 
-    s32 MemCard_State_Load(void) // 0x80030DC8
+    s32 MemCard_State_Load() // 0x80030DC8
     {
         s32 channel;
         s32 result;
@@ -1593,7 +1593,7 @@ namespace Silent::Game
         return result;
     }
 
-    s32 MemCard_State_DirRead(void) // 0x80030F7C
+    s32 MemCard_State_DirRead() // 0x80030F7C
     {
         //struct DIRENTRY  fileInfo;
         //struct DIRENTRY* curFile;
@@ -1636,7 +1636,7 @@ namespace Silent::Game
         return result;
     }
 
-    s32 MemCard_State_FileCreate(void) // 0x800310B4
+    s32 MemCard_State_FileCreate() // 0x800310B4
     {
         s32 result;
 
@@ -1673,7 +1673,7 @@ namespace Silent::Game
         return result;
     }
 
-    s32 MemCard_State_FileOpen(void) // 0x80031184
+    s32 MemCard_State_FileOpen() // 0x80031184
     {
         s32 mode;
         s32 result;
@@ -1726,7 +1726,7 @@ namespace Silent::Game
         return result;
     }
 
-    s32 MemCard_State_FileReadWrite(void) // 0x80031260
+    s32 MemCard_State_FileReadWrite() // 0x80031260
     {
         s32 result;
         s32 ioResult;

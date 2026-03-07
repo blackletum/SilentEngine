@@ -10,9 +10,9 @@ namespace Silent::Game
 
     bool Chara_Load(s32 modelIdx, s8 charaId, GsCOORDINATE2* coords, s8 forceFree, s_LmHeader* lmHdr, s_FsImageDesc* tex);
 
-    bool Chara_ProcessLoads(void);
+    bool Chara_ProcessLoads();
 
-    bool Chara_ProcessLoads(void);
+    bool Chara_ProcessLoads();
 
     void func_80088D34(s32 idx);
 

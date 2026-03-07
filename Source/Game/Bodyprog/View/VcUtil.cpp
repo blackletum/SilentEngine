@@ -51,7 +51,7 @@ namespace Silent::Game
         g_SysWork.flags_22A4 &= ~SysFlag2_6;
     }
 
-    s32 vcRetCamMvSmoothF(void) // 0x80040190
+    s32 vcRetCamMvSmoothF() // 0x80040190
     {
         return 0;//g_WorldGfx.vcCameraInternalInfo_1BDC.mv_smooth;
     }
@@ -73,7 +73,7 @@ namespace Silent::Game
         //g_WorldGfx.vcCameraInternalInfo_1BDC.ev_cam_rate = ev_cam_rate;
     }
 
-    void func_800401CC(void) // 0x800401CC
+    void func_800401CC() // 0x800401CC
     {
         //func_80080D68();
     }

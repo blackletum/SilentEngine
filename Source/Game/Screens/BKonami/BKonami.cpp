@@ -22,7 +22,7 @@ using namespace Silent::Renderer;
 
 namespace Silent::Game
 {
-    void GameState_KonamiLogo_Update(void) // 0x800C95AC
+    void GameState_KonamiLogo_Update() // 0x800C95AC
     {
         //while (g_GameWork.gameState_594 == GameState_KonamiLogo)
         {
@@ -95,7 +95,7 @@ namespace Silent::Game
         }
     }
 
-    s32 GameState_KcetLogo_MemCardCheck(void) // 0x800C9874
+    s32 GameState_KcetLogo_MemCardCheck() // 0x800C9874
     {
         // @stub
         return KcetLogoStateStep_HasSavegame;
@@ -143,7 +143,7 @@ namespace Silent::Game
         return KcetLogoStateStep_NoSaveGame;*/
     }
 
-    void GameState_KcetLogo_Update(void) // 0x800C99A4
+    void GameState_KcetLogo_Update() // 0x800C99A4
     {
         static e_GameState nextGameState = GameState_Init;
 
@@ -328,7 +328,7 @@ namespace Silent::Game
         }
     }
 
-    void BootScreen_KonamiScreenDraw(void) // 0x800C9FB8
+    void BootScreen_KonamiScreenDraw() // 0x800C9FB8
     {
         auto& renderer = g_App.GetRenderer();
 
@@ -340,7 +340,7 @@ namespace Silent::Game
         Debug::g_Work.BlendAlpha = std::clamp<float>(1.0f - FP_FLOAT(g_ScreenFadeProgress, Q8_SHIFT), 0, 1);
     }
 
-    void BootScreen_KcetScreenDraw(void) // 0x800CA120
+    void BootScreen_KcetScreenDraw() // 0x800CA120
     {
         auto& renderer = g_App.GetRenderer();
 

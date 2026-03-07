@@ -15,7 +15,7 @@ namespace Silent::Game
     } e_SaveScreenState;
 
     /** @brief Clears all variable states used by the save screen. */
-    void SaveScreen_ScreenInfoClear(void);
+    void SaveScreen_ScreenInfoClear();
 
     /** @brief Draws the bottom information rectangle.
      *
@@ -23,7 +23,7 @@ namespace Silent::Game
      * but a noticiable difference between both games is
      * that SH2 do not feature a background rectangle.
      */
-    void SaveScreen_SlotStrAndBottomRectDraw(void);
+    void SaveScreen_SlotStrAndBottomRectDraw();
 
     /** @brief Updates `g_SaveScreen_VisualElementIdx` based on the slot indicated.
      *
@@ -70,7 +70,7 @@ namespace Silent::Game
     void SaveScreen_WriteOptionsStepDraw(s32 stringIdx, bool optionSelected);
 
     /** @brief Draws the flash that overlap saves after saving. */
-    void SaveScreen_SaveFlash(void); // 0x801E3E78
+    void SaveScreen_SaveFlash(); // 0x801E3E78
 
     /** @brief Draws slot border.
      *
@@ -78,7 +78,7 @@ namespace Silent::Game
      * but in constrast with SH1 it draws the upper
      * text that indicates the slot.
      */
-    void SaveScreen_SlotBorder(void); // 0x801E4010
+    void SaveScreen_SlotBorder(); // 0x801E4010
 
     /** @brief Draws the shine which appears during an unusual
      * state where the memory card is "not formatted" and
@@ -92,7 +92,7 @@ namespace Silent::Game
     void SaveScreen_NavigationDraw(s32 slotIdx, s32 saveCount, s32 selectedSaveIdx, s32 selectedSaveOffsetY);
 
     /** @brief Draws a flash on the selected save menu entry after saving sucessfully. */
-    void Savegame_SaveEntryFlashDraw(void);
+    void Savegame_SaveEntryFlashDraw();
 
     void SaveScreen_SaveBorderDraw(s_SaveScreenElement* saveEntry, s_SaveScreenElement* nextSaveEntry, s32 saveIdx, s32 slotIdx); // 0x801E4D90
 
@@ -115,10 +115,10 @@ namespace Silent::Game
     void SaveScreen_ElementInfoDraw(s32 slotIdx, s32 selectedSaveIdx); // 0x801E5E18
 
     /** @brief Updates the save screen. */
-    void GameState_LoadSavegameScreen_Update(void);
+    void GameState_LoadSavegameScreen_Update();
 
     /** @brief Initialize save screen. */
-    void SaveScreen_Init(void);
+    void SaveScreen_Init();
 
     /** Crucial for working with the overlay.
      *
@@ -127,32 +127,32 @@ namespace Silent::Game
      * 1 - Triggers the overwrite save.
      * 2 - Player leaves the save screen.
      */
-    void SaveScreen_LogicUpdate(void);
+    void SaveScreen_LogicUpdate();
 
-    void SaveScreen_FormatCard(void);
+    void SaveScreen_FormatCard();
 
-    void SaveScreen_SaveGame(void);
+    void SaveScreen_SaveGame();
 
-    void SaveScreen_LoadSave(void);
+    void SaveScreen_LoadSave();
 
-    void SaveScreen_Continue(void);
-
-    /** @brief Draws background and triggers save info draw. */
-    void SaveScreen_BackgroundAndInfoDraw(void);
+    void SaveScreen_Continue();
 
     /** @brief Draws background and triggers save info draw. */
-    void SaveScreen_ScreenDraw(void);
+    void SaveScreen_BackgroundAndInfoDraw();
+
+    /** @brief Draws background and triggers save info draw. */
+    void SaveScreen_ScreenDraw();
 
     /** @brief Handles the text that shows when formatting, saving, or loading a file.
      *
      *  Used in: `GameState_LoadSavegameScreen_Update` and `GameState_AutoLoadSavegame_Update`.
      */
-    void SaveScreen_MemCardState(void);
+    void SaveScreen_MemCardState();
 
     void SaveScreen_WriteOptionsDraw(s32 stringIdx, bool optionSelected);
 
     /** @brief Updates the death load screen. */
-    void GameState_AutoLoadSavegame_Update(void);
+    void GameState_AutoLoadSavegame_Update();
 
-    void func_801E737C(void);
+    void func_801E737C();
 }
