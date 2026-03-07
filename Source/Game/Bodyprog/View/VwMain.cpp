@@ -20,7 +20,7 @@ namespace Silent::Game
         vwViewPointInfo.rview.super = &vwViewPointInfo.vwcoord;
 
         // @math
-        //GsInitCoordinate2(NULL, &vwViewPointInfo.vwcoord);
+        //GsInitCoordinate2(nullptr, &vwViewPointInfo.vwcoord);
         vwSetViewInfo();
     }
 
@@ -62,7 +62,7 @@ namespace Silent::Game
         viewMat.t[0] = Q12_TO_Q8(pos->vx);
         viewMat.t[1] = Q12_TO_Q8(pos->vy);
         viewMat.t[2] = Q12_TO_Q8(pos->vz);
-        vwSetViewInfoDirectMatrix(NULL, &viewMat);
+        vwSetViewInfoDirectMatrix(nullptr, &viewMat);
     }
 
     void vwSetCoordRefAndEntou(GsCOORDINATE2* parent_p, q19_12 ref_x, q19_12 ref_y, q19_12 ref_z,

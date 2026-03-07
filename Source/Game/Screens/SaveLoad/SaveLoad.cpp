@@ -309,7 +309,7 @@ namespace Silent::Game
 
     bool SaveScreen_NextFearModeSave(s_MemCard_SaveMetadata* saveEntry) // 0x801E3078
     {
-        if (saveEntry != NULL && saveEntry->isNextFearMode_B)
+        if (saveEntry != nullptr && saveEntry->isNextFearMode_B)
         {
             Gfx_StringSetColor(StringColorId_Gold);
             return true;

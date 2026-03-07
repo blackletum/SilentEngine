@@ -234,7 +234,7 @@ namespace Silent::Game
         POLY_FT4* glyphPoly;
         SPRT*     glyphSprt;
 
-        packet = NULL;
+        packet = nullptr;
         result = 0;
 
         ot                  = (GsOT*)&g_OtTags0[g_ActiveBufferIdx][6];

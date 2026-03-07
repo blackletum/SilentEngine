@@ -1272,7 +1272,7 @@ namespace Silent::Game
         s16            textureFileIdx         : 16;
         q8_8           field_6                : 10;
         u16            materialBlendMode_6_10 : 6; /** `e_BlendMode` */
-        s_FsImageDesc* field_8;                    // Extra texture pointer? Usually `NULL` in `CHARA_FILE_INFOS`.
+        s_FsImageDesc* field_8;                    // Extra texture pointer? Usually `nullptr` in `CHARA_FILE_INFOS`.
         u16            cameraAnchor_C_0  : 2;      /** `e_CameraAnchor` */
         q19_12         cameraOffsetY_C_2 : 14;
     } s_CharaFileInfo;
@@ -1598,7 +1598,7 @@ namespace Silent::Game
     // TODO: Might just be an array of `char*`, array is in `.data` while strings inside are in `.rodata`?
     typedef struct
     {
-        char* field_0;               // `NULL`
+        char* field_0;               // `nullptr`
         char* savePadName_4;         // "PAD_NEAR"
         char* firstAidKitName_8;     // "AIDKIT_N"
         char* healthDrinkName_C;     // "DRINK_NE"

@@ -17,7 +17,7 @@ namespace Silent::Game
         for (i = 0; i < 5; i++)
         {
             g_ItemTriggerItemIds[i] = NO_VALUE;
-            g_ItemTriggerEvents[i]  = NULL;
+            g_ItemTriggerEvents[i]  = nullptr;
         }
     }
 
@@ -204,7 +204,7 @@ namespace Silent::Game
             return;
         }
 
-        g_MapEventData     = NULL;
+        g_MapEventData     = nullptr;
         g_MapEventSysState = SysState_Invalid;
         g_MapEventParam    = 0;
     }

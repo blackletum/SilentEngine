@@ -41,7 +41,7 @@ namespace Silent::Game
         *velo_x += Q12_MULT(add_spd, Math_Sin(cam2tgt_ang_y));
         *velo_z += Q12_MULT(add_spd, Math_Cos(cam2tgt_ang_y));
 
-        //lim_spd = Vc_VectorMagnitudeCalc(*velo_x, Q12(0.0f), *velo_z);
+        lim_spd = Vc_VectorMagnitudeCalc(*velo_x, Q12(0.0f), *velo_z);
         if (total_max_spd < lim_spd)
         {
             spd      = lim_spd - total_max_spd;
@@ -53,7 +53,7 @@ namespace Silent::Game
         deltaX       = tgt_pos->vx - now_pos->vx;
         deltaZ       = tgt_pos->vz - now_pos->vz;
         to_tgt_ang_y = Math_Ratan2(deltaX, deltaZ);
-        //to_tgt_dist  = Math_MulFixed(dec_forwd_lim_spd, Vc_VectorMagnitudeCalc(deltaX, Q12(0.0f), deltaZ) - tgt_r, Q12_SHIFT);
+        to_tgt_dist  = Math_MulFixed(dec_forwd_lim_spd, Vc_VectorMagnitudeCalc(deltaX, Q12(0.0f), deltaZ) - tgt_r, Q12_SHIFT);
 
         if (to_tgt_dist < Q12(0.0f))
         {
@@ -321,13 +321,13 @@ namespace Silent::Game
         GsCOORDINATE2* curCoord;
 
         // If no root coord provided, set output matrix to identity.
-        if (rootCoord == NULL)
+        if (rootCoord == nullptr)
         {
             //*outMat = GsIDMATRIX;
         }
 
         curCoord  = rootCoord;
-        prevCoord = NULL;
+        prevCoord = nullptr;
 
         // Traverse coord parent hierarchy upward.
         while (true)
@@ -343,7 +343,7 @@ namespace Silent::Game
             prevCoord = curCoord;
 
             // If parent node exists, link it downward for later traversal.
-            if (parentCoord != NULL)
+            if (parentCoord != nullptr)
             {
                 parentCoord->sub = curCoord;
                 curCoord         = parentCoord;
@@ -355,17 +355,17 @@ namespace Silent::Game
         }
 
         // If at least one unprocessed node found, process coord hierarchy downward.
-        if (prevCoord != NULL)
+        if (prevCoord != nullptr)
         {
             curCoord       = prevCoord;
-            rootCoord->sub = NULL; // Detach child link to prevent cycles.
+            rootCoord->sub = nullptr; // Detach child link to prevent cycles.
             do
             {
                 prevCoord = curCoord->super;
                 curCoord->flg++; // Mark node as processed.
 
                 // Compute cumulative transformation matrix.
-                if (prevCoord == NULL)
+                if (prevCoord == nullptr)
                 {
                     curCoord->workm = curCoord->coord;
                 }
@@ -376,7 +376,7 @@ namespace Silent::Game
 
                 curCoord = curCoord->sub;
             }
-            while (curCoord != NULL);
+            while (curCoord != nullptr);
         }
 
         // Set output.

@@ -408,7 +408,7 @@ namespace Silent::Game
             case 0: // Start memcard process initialization.
                 D_800B261C = 0;
 
-                if (MemCard_WorkSet(MemCardIoMode_Init, statusPtr->deviceId_4, NULL, NULL, 0, 0, NULL, 0))
+                if (MemCard_WorkSet(MemCardIoMode_Init, statusPtr->deviceId_4, nullptr, nullptr, 0, 0, nullptr, 0))
                 {
                     statusPtr->processState_10 = 1;
                 }
@@ -453,7 +453,7 @@ namespace Silent::Game
 
             case 2: // Copies memory card directory information.
                 deviceInfoPtr->status_0 = UnkMemCardState1_2;
-                if (MemCard_WorkSet(MemCardIoMode_DirRead, statusPtr->deviceId_4, &directoryInfoCpy, NULL, 0, 0, NULL, 0))
+                if (MemCard_WorkSet(MemCardIoMode_DirRead, statusPtr->deviceId_4, &directoryInfoCpy, nullptr, 0, 0, nullptr, 0))
                 {
                     statusPtr->processState_10 = 3;
                 }
@@ -517,7 +517,7 @@ namespace Silent::Game
             case 6: // Copies memory card header data and ties game directory to file.
                 MemCard_FilenameGenerate(filePath, fileIdx);
 
-                if (MemCard_WorkSet(MemCardIoMode_Read, statusPtr->deviceId_4, NULL, filePath, 0, sizeof(s_MemCard_SaveHeader) * 2, &g_MemCard_SaveWork.devices_0[statusPtr->deviceId_4].saveHeader_14[fileIdx], sizeof(s_MemCard_SaveHeader)))
+                if (MemCard_WorkSet(MemCardIoMode_Read, statusPtr->deviceId_4, nullptr, filePath, 0, sizeof(s_MemCard_SaveHeader) * 2, &g_MemCard_SaveWork.devices_0[statusPtr->deviceId_4].saveHeader_14[fileIdx], sizeof(s_MemCard_SaveHeader)))
                 {
                     statusPtr->processState_10 = 7;
                 }
@@ -685,7 +685,7 @@ namespace Silent::Game
 
                 MemCard_FilenameGenerate(filePath, fileIdx);
 
-                if (MemCard_WorkSet(MemCardIoMode_Read, statusPtr->deviceId_4, NULL, filePath, 0, saveData0Offset, saveData0Buf, saveData0Size) == true)
+                if (MemCard_WorkSet(MemCardIoMode_Read, statusPtr->deviceId_4, nullptr, filePath, 0, saveData0Offset, saveData0Buf, saveData0Size) == true)
                 {
                     statusPtr->processState_10 = 2;
                 }
@@ -839,7 +839,7 @@ namespace Silent::Game
                 MemCard_SaveInfoClear(&g_MemCard_SaveWork.saveInfo_318);
                 MemCard_FilenameGenerate(filePath, fileIdxCpy);
 
-                if (MemCard_WorkSet(MemCardIoMode_Create, statusPtr->deviceId_4, NULL, filePath, 1, 0, &g_MemCard_SaveWork.saveBlock_118, 0x300))
+                if (MemCard_WorkSet(MemCardIoMode_Create, statusPtr->deviceId_4, nullptr, filePath, 1, 0, &g_MemCard_SaveWork.saveBlock_118, 0x300))
                 {
                     statusPtr->processState_10 = 2;
                 }
@@ -895,7 +895,7 @@ namespace Silent::Game
                 MemCard_UserConfigCopy(&g_MemCard_SaveWork.userConfig_418, &g_GameWorkConst->config_0);
                 MemCard_FilenameGenerate(filePath, fileIdxCpy);
 
-                if (MemCard_WorkSet(MemCardIoMode_Write, statusPtr->deviceId_4, NULL, filePath, 0, 0x300, &g_MemCard_SaveWork.userConfig_418, 0x80))
+                if (MemCard_WorkSet(MemCardIoMode_Write, statusPtr->deviceId_4, nullptr, filePath, 0, 0x300, &g_MemCard_SaveWork.userConfig_418, 0x80))
                 {
                     statusPtr->processState_10 = 4;
                 }
@@ -932,7 +932,7 @@ namespace Silent::Game
                 MemCard_FilenameGenerate(filePath, fileIdxCpy);
                 MemCard_GameDataCopy(&g_MemCard_SaveWork.saveGame_498, g_SavegamePtr);
 
-                if (MemCard_WorkSet(MemCardIoMode_Write, statusPtr->deviceId_4, NULL, filePath, 0, (statusPtr->saveIdx_C * 0x280) + 0x380, &g_MemCard_SaveWork.saveGame_498, 0x280))
+                if (MemCard_WorkSet(MemCardIoMode_Write, statusPtr->deviceId_4, nullptr, filePath, 0, (statusPtr->saveIdx_C * 0x280) + 0x380, &g_MemCard_SaveWork.saveGame_498, 0x280))
                 {
                     statusPtr->processState_10 = 6;
                 }
@@ -969,7 +969,7 @@ namespace Silent::Game
             case 8: // Saves header information progress.
                 MemCard_FilenameGenerate(filePath, fileIdxCpy);
 
-                if (MemCard_WorkSet(MemCardIoMode_Write, statusPtr->deviceId_4, NULL, filePath, 0, 512, (u8*)g_MemCard_SaveWork.devices_0[statusPtr->deviceId_4].saveHeader_14 + (fileIdxCpy * sizeof(s_MemCard_SaveHeader)), sizeof(s_MemCard_SaveHeader)))
+                if (MemCard_WorkSet(MemCardIoMode_Write, statusPtr->deviceId_4, nullptr, filePath, 0, 512, (u8*)g_MemCard_SaveWork.devices_0[statusPtr->deviceId_4].saveHeader_14 + (fileIdxCpy * sizeof(s_MemCard_SaveHeader)), sizeof(s_MemCard_SaveHeader)))
                 {
                     statusPtr->processState_10 = 9;
                 }
@@ -1619,7 +1619,7 @@ namespace Silent::Game
                 curFile = nextfile(&fileInfo);
             }
 
-            if (curFile == NULL)
+            if (curFile == nullptr)
             {
                 break;
             }

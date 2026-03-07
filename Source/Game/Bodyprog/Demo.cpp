@@ -91,8 +91,8 @@ namespace Silent::Game
 
             // Call optional funcptr associated with this demo.
             // If funcptr is set, return whether demo is eligible to play, possibly based on game progress or other conditions.
-            // In retail demos this pointer is always `NULL`.
-            if (DEMO_FILE_INFOS[g_Demo_DemoId].canPlayDemo_4 == NULL ||
+            // In retail demos this pointer is always `nullptr`.
+            if (DEMO_FILE_INFOS[g_Demo_DemoId].canPlayDemo_4 == nullptr ||
                 DEMO_FILE_INFOS[g_Demo_DemoId].canPlayDemo_4())
             {
                 break;
@@ -260,7 +260,7 @@ namespace Silent::Game
     void Demo_ExitDemo() // 0x8008F4E4
     {
         g_Demo_FrameCount     = 999 * TICKS_PER_SECOND;
-        g_Demo_CurFrameData   = NULL;
+        g_Demo_CurFrameData   = nullptr;
         g_Demo_DemoStep       = 0;
         g_SysWork.flags_22A4 |= SysFlag2_8;
     }
@@ -312,14 +312,14 @@ namespace Silent::Game
 
         if (!(g_SysWork.flags_22A4 & SysFlag2_1))
         {
-            g_Demo_CurFrameData = NULL;
+            g_Demo_CurFrameData = nullptr;
             g_Demo_DemoStep     = 0;
             return true;
         }
 
-        if (g_Demo_PlayFileBufferPtr == NULL)
+        if (g_Demo_PlayFileBufferPtr == nullptr)
         {
-            g_Demo_CurFrameData = NULL;
+            g_Demo_CurFrameData = nullptr;
             return false;
         }
 
@@ -333,7 +333,7 @@ namespace Silent::Game
 
         if (!Gfx_ScreenFadeIn_IsInProgress(prevScreenFadeCpy) || !Gfx_ScreenFadeIn_IsInProgress(g_Screen_FadeStatus) || cond)
         {
-            g_Demo_CurFrameData = NULL;
+            g_Demo_CurFrameData = nullptr;
             return true;
         }
 
@@ -354,7 +354,7 @@ namespace Silent::Game
                     //Text_Debug_Draw(Text_Debug_IntToString(2, gameWork->gameState_594));
                     //Text_Debug_Draw("]");
 
-                    g_Demo_CurFrameData = NULL;
+                    g_Demo_CurFrameData = nullptr;
                 }
 
                 g_Demo_DemoStep++;
@@ -368,7 +368,7 @@ namespace Silent::Game
                 break;
         }
 
-        g_Demo_CurFrameData = NULL;
+        g_Demo_CurFrameData = nullptr;
         return true;
     }
 
@@ -392,7 +392,7 @@ namespace Silent::Game
 
         g_Demo_FrameCount = 0;
 
-        if (g_Demo_CurFrameData != NULL)
+        if (g_Demo_CurFrameData != nullptr)
         {
             g_Controller0->analogController_0 = g_Demo_CurFrameData->analogController_0;
             return true;
@@ -411,7 +411,7 @@ namespace Silent::Game
     {
         g_Demo_VideoPresentInterval = 1;
 
-        if (g_Demo_CurFrameData == NULL)
+        if (g_Demo_CurFrameData == nullptr)
         {
             return false;
         }
@@ -426,7 +426,7 @@ namespace Silent::Game
         {
             return true;
         }
-        else if (g_Demo_CurFrameData == NULL)
+        else if (g_Demo_CurFrameData == nullptr)
         {
             Rng_SetSeed(g_Demo_RandSeed);
             return false;

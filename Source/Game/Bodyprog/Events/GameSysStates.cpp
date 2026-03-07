@@ -134,7 +134,7 @@ namespace Silent::Game
 
         D_800A9A0C = ScreenFade_IsFinished() && Fs_QueueDoThingWhenEmpty();
 
-        if (!(g_SysWork.sysFlags_22A0 & SysFlag_Freeze) && g_MapOverlayHeader.worldObjectsUpdate_40 != NULL)
+        if (!(g_SysWork.sysFlags_22A0 & SysFlag_Freeze) && g_MapOverlayHeader.worldObjectsUpdate_40 != nullptr)
         {
             g_MapOverlayHeader.worldObjectsUpdate_40();
         }
@@ -149,7 +149,7 @@ namespace Silent::Game
             //func_80040014();
             vcMoveAndSetCamera(false, false, false, false, false, false, false, false);
 
-            if (g_MapOverlayHeader.func_44 != NULL)
+            if (g_MapOverlayHeader.func_44 != nullptr)
             {
                 g_MapOverlayHeader.func_44();
             }

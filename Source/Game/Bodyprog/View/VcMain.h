@@ -1,10 +1,12 @@
 #pragma once
 
+#include "Game/Bodyprog/View/Enums.h"
+
 namespace Silent::Game
 {
-    enum   VC_CAM_MV_TYPE;
-    enum   VC_FLAGS;
     struct VC_CAM_MV_PARAM;
+    struct VC_LIMIT_AREA;
+    struct VC_NEAR_ROAD_DATA;
     struct VC_ROAD_DATA;
     struct VC_WATCH_MV_PARAM;
     struct VC_WORK;
@@ -96,13 +98,14 @@ namespace Silent::Game
 
     void vcSetNearRoadAryByCharaPos(VC_WORK* w_p, VC_ROAD_DATA* road_ary_list, s32 half_w, s32 unused, bool near_enemy_f);
 
-    s32  vcRetRoadUsePriority(VC_ROAD_TYPE rd_type, s32 unused);
+    s32 vcRetRoadUsePriority(VC_ROAD_TYPE rd_type, s32 unused);
 
     bool vcSetCurNearRoadInVC_WORK(VC_WORK* w_p);
 
     s32 vcGetBestNewCurNearRoad(VC_NEAR_ROAD_DATA** new_cur_pp, VC_CAM_CHK_TYPE chk_type, VECTOR3* pos, VC_WORK* w_p);
 
-    /** @brief Gets the closest camera path collision, outputting the result to `out_nearest_p_addr` and returning the distance to it.
+    /** @brief Gets the closest camera path collision, outputting the result to `out_nearest_p_addr` and returning the
+     * distance to it.
      * TODO
      *
      * @param out_nearest_p_addr Output for the closest camera path collision.
@@ -116,11 +119,12 @@ namespace Silent::Game
      */
     q19_12 vcGetNearestNEAR_ROAD_DATA(VC_NEAR_ROAD_DATA** out_nearest_p_addr, VC_CAM_CHK_TYPE chk_type, VC_ROAD_TYPE rd_type, VECTOR3* pos, VC_WORK* w_p, bool chk_only_set_marge_f);
 
-    s32  vcAdvantageDistOfOldCurRoad(VC_NEAR_ROAD_DATA* old_cur_p);
+    s32 vcAdvantageDistOfOldCurRoad(VC_NEAR_ROAD_DATA* old_cur_p);
 
     void vcAutoRenewalWatchTgtPosAndAngZ(VC_WORK* w_p, VC_CAM_MV_TYPE cam_mv_type, VC_AREA_SIZE_TYPE cur_rd_area_size, s32 far_watch_rate, s32 self_view_eff_rate);
 
-    void vcMakeNormalWatchTgtPos(VECTOR3* watch_tgt_pos, s16* watch_tgt_ang_z_p, VC_WORK* w_p, VC_CAM_MV_TYPE cam_mv_type, VC_AREA_SIZE_TYPE cur_rd_area_size);
+    void vcMakeNormalWatchTgtPos(VECTOR3* watch_tgt_pos, s16* watch_tgt_ang_z_p, VC_WORK* w_p,
+                                 VC_CAM_MV_TYPE cam_mv_type, VC_AREA_SIZE_TYPE cur_rd_area_size);
 
     void vcMixSelfViewEffectToWatchTgtPos(VECTOR3* watch_tgt_pos, s16* watch_tgt_ang_z_p, s16 effect_rate, VC_WORK* w_p, MATRIX* head_mat, s32 anim_status);
 
@@ -176,8 +180,8 @@ namespace Silent::Game
     void vcMakeOfsCamTgtAng(SVECTOR* ofs_tgt_ang, MATRIX* base_matT, VC_WORK* w_p);
 
     void vcMakeOfsCam2CharaBottomAndTopAngByBaseMatT(SVECTOR* ofs_cam2chara_btm_ang, SVECTOR* ofs_cam2chara_top_ang,
-                                                    MATRIX* base_matT, VECTOR3* cam_pos, VECTOR3* chara_pos,
-                                                    s32 chara_bottom_y, s32 chara_top_y);
+                                                     MATRIX* base_matT, VECTOR3* cam_pos, VECTOR3* chara_pos,
+                                                     s32 chara_bottom_y, s32 chara_top_y);
 
     void vcAdjCamOfsAngByCharaInScreen(SVECTOR* cam_ang, SVECTOR* ofs_cam2chara_btm_ang, SVECTOR* ofs_cam2chara_top_ang, VC_WORK* w_p);
 

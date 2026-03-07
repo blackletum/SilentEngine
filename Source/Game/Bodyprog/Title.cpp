@@ -624,7 +624,7 @@ namespace Silent::Game
 
         //tag    = g_OrderingTable2[g_ActiveBufferIdx].org;
         //packet = MainMenu_FogPacketGet((GsOT*)&tag[6], (PACKET*)GsOUT_PACKET_P);
-        //SetDrawMode((DR_MODE*)packet, 0, 1, 42, NULL);
+        //SetDrawMode((DR_MODE*)packet, 0, 1, 42, nullptr);
         //addPrim(&tag[6], packet);
         //GsOUT_PACKET_P = packet + sizeof(DR_MODE);
     }

@@ -12,7 +12,7 @@ namespace Silent::Game
 
     extern s32 g_VBlanks;
 
-    void vcInitCamera(struct _MapOverlayHeader* map_overlay_ptr, const VECTOR3* chr_pos) // 0x8004004C
+    void vcInitCamera(s_MapOverlayHeader* map_overlay_ptr, const VECTOR3* chr_pos) // 0x8004004C
     {
         //g_WorldGfx.vcCameraInternalInfo_1BDC.mv_smooth   = VC_MV_CHASE;
         //g_WorldGfx.vcCameraInternalInfo_1BDC.ev_cam_rate = Q12(0.0f);
@@ -21,8 +21,8 @@ namespace Silent::Game
         vcSetCameraUseWarp(chr_pos, g_SysWork.cameraAngleY_237A);
         //SetGeomScreen(g_GameWork.gsScreenHeight_58A);
         vwInitViewInfo();
-        //vcInitVCSystem(map_overlay_ptr->roadDataList_3CC);
-        //vcStartCameraSystem();
+        vcInitVCSystem(map_overlay_ptr->roadDataList_3CC);
+        vcStartCameraSystem();
 
         g_SysWork.cameraAngleZ_237C   = Q12_ANGLE(0.0f);
         g_SysWork.cameraRadiusXz_2380 = Q12(3.0f);
@@ -47,7 +47,7 @@ namespace Silent::Game
         cam_pos.vy = chr_pos->vy - HEIGHT;
         cam_pos.vz = chr_pos->vz - Q12_MULT(Math_Cos(chr_ang_y), RADIUS);
 
-        //vcSetFirstCamWork(&cam_pos, chr_ang_y, g_SysWork.flags_22A4 & SysFlag2_6);
+        vcSetFirstCamWork(&cam_pos, chr_ang_y, g_SysWork.flags_22A4 & SysFlag2_6);
         g_SysWork.flags_22A4 &= ~SysFlag2_6;
     }
 
@@ -105,7 +105,7 @@ namespace Silent::Game
                 first_cam_pos.vx = g_SysWork.playerWork_4C.player_0.position_18.vx + Q12(7.0f);
                 first_cam_pos.vz = g_SysWork.playerWork_4C.player_0.position_18.vz;
 
-                //vcSetFirstCamWork(&first_cam_pos, g_SysWork.playerWork_4C.player_0.rotation_24.vy, false);
+                vcSetFirstCamWork(&first_cam_pos, g_SysWork.playerWork_4C.player_0.rotation_24.vy, false);
 
             case DebugCameraMode_Collision:
                 hr_p = &g_SysWork.playerWork_4C.player_0;
@@ -131,23 +131,23 @@ namespace Silent::Game
 
                 //if (g_WorldGfx.vcCameraInternalInfo_1BDC.ev_cam_rate > Q12(0.0f))
                 {
-                    //vcWorkSetFlags(VC_INHIBIT_FAR_WATCH_F, 0);
+                    vcWorkSetFlags(VC_INHIBIT_FAR_WATCH_F, 0);
                 }
                 //else
                 {
-                    //vcWorkSetFlags(0, VC_INHIBIT_FAR_WATCH_F);
+                    vcWorkSetFlags(0, VC_INHIBIT_FAR_WATCH_F);
                 }
 
-                //vcSetSubjChara(&hr_p->position_18, hero_bottom_y, hero_top_y, grnd_y,
-                //            &hr_head_pos, hr_p->moveSpeed_38, hr_p->headingAngle_3C, hr_p->rotationSpeed_2C.vy, hr_p->rotation_24.vy,
-                //            Q12_ANGLE(120.0f), Q12(11.0f));
+                vcSetSubjChara(&hr_p->position_18, hero_bottom_y, hero_top_y, grnd_y,
+                            &hr_head_pos, hr_p->moveSpeed_38, hr_p->headingAngle_3C, hr_p->rotationSpeed_2C.vy, hr_p->rotation_24.vy,
+                            Q12_ANGLE(120.0f), Q12(11.0f));
 
-                //g_WorldGfx.vcCameraInternalInfo_1BDC.mv_smooth = vcExecCamera();
+                g_WorldGfx.vcCameraInternalInfo_1BDC.mv_smooth = vcExecCamera();
                 break;
 
             case DebugCameraMode_SetReference:
                 vcSetRefPosAndSysRef2CamParam(&vcRefPosSt, &g_SysWork, for_f, back_f, right_f, left_f, up_f, down_f);
-                vwSetCoordRefAndEntou(NULL,
+                vwSetCoordRefAndEntou(nullptr,
                                     vcRefPosSt.vx, vcRefPosSt.vy, vcRefPosSt.vz,
                                     g_SysWork.cameraAngleY_237A, g_SysWork.cameraAngleZ_237C, g_SysWork.cameraY_2384, g_SysWork.cameraRadiusXz_2380);
                 break;
@@ -324,7 +324,7 @@ namespace Silent::Game
         lookAtMat.t[0] = newCamPos.vx;
         lookAtMat.t[1] = newCamPos.vy;
         lookAtMat.t[2] = newCamPos.vz;
-        vwSetViewInfoDirectMatrix(NULL, &lookAtMat);
+        vwSetViewInfoDirectMatrix(nullptr, &lookAtMat);
 
         if (g_Controller1->btnsHeld_C & (ControllerFlag_LStickUp |
                                          ControllerFlag_LStickRight |

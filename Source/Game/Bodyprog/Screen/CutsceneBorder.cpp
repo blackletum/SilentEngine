@@ -171,7 +171,7 @@ namespace Silent::Game
 
         if (!(g_SysWork.flags_22A4 & SysFlag2_3))
         {
-            //vcChangeProjectionValue(g_GameWork.gsScreenHeight_58A + Q12_MULT(377 - g_GameWork.gsScreenHeight_58A, g_BlackBorderShade));
+            vcChangeProjectionValue(g_GameWork.gsScreenHeight_58A + Q12_MULT(377 - g_GameWork.gsScreenHeight_58A, g_BlackBorderShade));
         }
     }
 }
