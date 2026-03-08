@@ -303,6 +303,12 @@ namespace Silent
         // Update audio.
         _work.Audio.Update();
 
+        // @debug
+        if (_work.Input.GetAction(In::Up).IsClicked())
+        {
+            _work.Toaster.Add("Hello I am a toast.");
+        }
+
         // Update debug and toasts.
         Debug::Update();
         _work.Toaster.Update();
