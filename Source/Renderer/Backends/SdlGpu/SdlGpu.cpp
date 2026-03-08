@@ -403,15 +403,15 @@ namespace Silent::Renderer::SdlGpu
         auto uni1 = UniformPrimitive3d{};
         memcpy(&uni0.ViewProjMat, &viewProj[0][0], 64);
         memcpy(&uni1.ModelMat, &model[0][0], 64);
-        PushVertexUniform(uni0, UniformSlot::PerFrame);
-        PushVertexUniform(uni1, UniformSlot::PerObject);
+        PushVertexUniform(uni0, 0);
+        PushVertexUniform(uni1, 1);
 
         // Push uniform.
         auto uni = UniformModel
         {
             .IsFastAlpha = false
         };
-        PushFragmentUniform(uni, UniformSlot::PerObject);
+        PushFragmentUniform(uni, 0);
 
         // Draw.
         //const auto* mesh = GetMeshes()["CHARA/DOC.ILM_0"];
@@ -515,7 +515,7 @@ namespace Silent::Renderer::SdlGpu
             _pipelines.Bind(renderPass, batch.RenderStg, batch.BlendMd);
 
             // Push uniform.
-            PushFragmentUniform(batch.Uniform, UniformSlot::PerObject);
+            PushFragmentUniform(batch.Uniform, 0);
 
             // Bind texture.
             if (!batch.TextureName.empty())
@@ -594,7 +594,7 @@ namespace Silent::Renderer::SdlGpu
                 .FadeAlpha = Debug::g_Work.BlendAlpha,
                 .IsWhite   = false
             };
-            PushFragmentUniform(uni, UniformSlot::PerFrame);
+            PushFragmentUniform(uni, 0);
 
             // Bind render texture.
             auto binding = SDL_GPUTextureSamplerBinding
@@ -621,7 +621,7 @@ namespace Silent::Renderer::SdlGpu
                 .Resolution = GetViewportResolution().ToVector2(),
                 .Time       = 0.0f
             };
-            PushFragmentUniform(uni, UniformSlot::PerFrame);
+            PushFragmentUniform(uni, 0);
 
             // Bind render texture.
             auto binding = SDL_GPUTextureSamplerBinding
@@ -648,7 +648,7 @@ namespace Silent::Renderer::SdlGpu
                 .Resolution = GetViewportResolution().ToVector2(),
                 .Time       = 0.0f
             };
-            PushFragmentUniform(uni, UniformSlot::PerFrame);
+            PushFragmentUniform(uni, 0);
 
             // Bind render texture.
             auto binding = SDL_GPUTextureSamplerBinding
@@ -693,7 +693,7 @@ namespace Silent::Renderer::SdlGpu
         {
             .Brightness = (options->BrightnessLevel * BRIGHTNESS_STEP) - BRIGHTNESS_MIDDLE
         };
-        PushFragmentUniform(uni, UniformSlot::PerFrame);
+        PushFragmentUniform(uni, 0);
 
         // Bind render texture.
         auto binding = SDL_GPUTextureSamplerBinding
@@ -948,19 +948,19 @@ namespace Silent::Renderer::SdlGpu
         _gpuBuffers.ViewportVertices2d.UpdateIdxs(copyPass, ToSpan(BUFFER_IDXS), 0);
     }
 
-    void Renderer::PushVertexUniform(const UniformType& uni, UniformSlot slot)
+    void Renderer::PushVertexUniform(const UniformType& uni, int slotIdx)
     {
         std::visit([&](auto&& arg)
         {
-            SDL_PushGPUVertexUniformData(_commandBuffer, (int)slot, &arg, sizeof(arg));
+            SDL_PushGPUVertexUniformData(_commandBuffer, slotIdx, &arg, sizeof(arg));
         }, uni);
     }
 
-    void Renderer::PushFragmentUniform(const UniformType& uni, UniformSlot slot)
+    void Renderer::PushFragmentUniform(const UniformType& uni, int slotIdx)
     {
         std::visit([&](auto&& arg)
         {
-            SDL_PushGPUFragmentUniformData(_commandBuffer, (int)slot, &arg, sizeof(arg));
+            SDL_PushGPUFragmentUniformData(_commandBuffer, slotIdx, &arg, sizeof(arg));
         }, uni);
     }
 

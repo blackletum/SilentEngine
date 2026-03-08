@@ -142,16 +142,16 @@ namespace Silent::Renderer::SdlGpu
         /** @brief Pushes uniform data to the GPU for the vertex shader.
          *
          * @param uni Uniform buffer to push.
-         * @param slot Vertex uniform shader slot to push data to.
+         * @param slotIdx Vertex uniform shader slot to push data to.
          */
-        void PushVertexUniform(const UniformType& uni, UniformSlot slot);
+        void PushVertexUniform(const UniformType& uni, int slotIdx);
 
         /** @brief Pushes uniform data to the GPU for the fragment shader.
          *
          * @param uni Uniform buffer to push.
-         * @param slot Fragment uniform shader slot to push data to.
+         * @param slotIdx Fragment uniform shader slot to push data to.
          */
-        void PushFragmentUniform(const UniformType& uni, UniformSlot slot);
+        void PushFragmentUniform(const UniformType& uni, int slotIdx);
 
         /** @brief Clears draw batches for reuse. */
         void ClearDrawBatches();

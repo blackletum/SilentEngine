@@ -5,7 +5,7 @@ struct Input
     float4 Color    : COLOR0;
 };
 
-cbuffer PerObject : register(b1, space3)
+cbuffer PerObject : register(b0, space3)
 {
     uint IsFastAlpha;
 };
