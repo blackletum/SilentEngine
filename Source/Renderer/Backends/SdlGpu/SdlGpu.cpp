@@ -313,7 +313,7 @@ namespace Silent::Renderer::SdlGpu
         auto renderTexInfo = SDL_GPUTextureCreateInfo
         {
             .type                 = SDL_GPU_TEXTURETYPE_2D,
-            .format               = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+            .format               = SDL_GetGPUSwapchainTextureFormat(_device, _window),
             .usage                = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER,
             .width                = (uint)viewportRes.x,
             .height               = (uint)viewportRes.y,
