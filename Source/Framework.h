@@ -67,7 +67,7 @@
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlgpu3.h>
 
-// ImGuizmo @todo Issues on Windows build.
+// ImGuizmo
 #include <ImGuizmo.h>
 
 // json
@@ -77,6 +77,9 @@ using json = nlohmann::json;
 
 // LuaJIT
 #include <lua.hpp>
+
+// PL_MPEG
+#include <pl_mpeg.h>
 
 // SDL
 #include <SDL3/SDL.h>

@@ -140,6 +140,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} SYSTEM PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/ImGuizmo
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/json/include
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/LuaJIT/src
+    ${CMAKE_CURRENT_LIST_DIR}/Libraries/pl_mpeg
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/psyz/psyz/include
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/SDL/include
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/smol-atlas/src
