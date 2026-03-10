@@ -207,9 +207,9 @@ namespace Silent
 
         Debug::Log("Startup complete.");
 
-        // Load temp. video.
+        // Play temp. video.
         auto& video = g_App.GetVideo();
-        video.Load("HILL.[729].mpg");
+        video.Play("HILL.[729].mpg");
     }
 
     void ApplicationManager::Deinitialize()

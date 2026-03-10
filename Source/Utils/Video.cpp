@@ -34,7 +34,7 @@ namespace Silent::Utils
 
     VideoPlayer::~VideoPlayer()
     {
-        Close();
+        Stop();
     }
 
     Vector2i VideoPlayer::GetResolution() const
@@ -81,9 +81,14 @@ namespace Silent::Utils
         }
     }
 
+    bool VideoPlayer::IsLoaded() const
+    {
+        return _plm != nullptr;
+    }
+
     bool VideoPlayer::IsPlaying() const
     {
-        if (_plm == nullptr)
+        if (!IsLoaded())
         {
             return false;
         }
@@ -96,7 +101,7 @@ namespace Silent::Utils
         _videosPath = videosPath;
     }
 
-    bool VideoPlayer::Load(const std::string& filename)
+    void VideoPlayer::Play(const std::string& filename)
     {
         const auto& fs = g_App.GetFilesystem();
 
@@ -105,12 +110,18 @@ namespace Silent::Utils
         {
             Debug::Log(Fmt("Attempted to load video `{}` in uninitialized video player.", filename),
                        Debug::LogLevel::Warning);
-            return false;
+            return;
         }
 
-        Close();
+        // Check is same video is already playing.
+        if (filename == _activeVideoName)
+        {
+            Debug::Log(Fmt("Video `{}` is already playing.", filename), Debug::LogLevel::Warning);
+            return;
+        }
 
-        _activeVideoName = filename;
+        // Interrupt previous active video.
+        Stop();
 
         // Open video file.
         auto videoPath = fs.GetAssetsDirectory() / ASSETS_VIDEO_DIR_NAME / filename;
@@ -118,8 +129,11 @@ namespace Silent::Utils
         if (_plm == nullptr)
         {
             Debug::Log(Fmt("Failed to load video `{}`.", filename), Debug::LogLevel::Warning);
-            return false;
+            return;
         }
+
+        // Set active video name.
+        _activeVideoName = filename;
 
         // Allocate frame buffer.
         auto res     = GetResolution();
@@ -131,31 +145,30 @@ namespace Silent::Utils
         plm_set_audio_decode_callback(_plm, OnAudioFrame, this);
 
         Debug::Log(Fmt("Loaded video `{}`.", filename));
-        return true;
+    }
+
+    void VideoPlayer::Stop()
+    {
+        if (IsLoaded())
+        {
+            plm_destroy(_plm);
+            _plm = nullptr;
+        }
+
+        _frameBuffer     = {};
+        _audioBuffer     = {};
+        _activeVideoName = {};
     }
 
     void VideoPlayer::Update(float deltaTime)
     {
-        if (_plm == nullptr)
+        if (!IsLoaded())
         {
             Debug::Log("Attempted to update video with no video playing.", Debug::LogLevel::Warning);
             return;
         }
 
         plm_decode(_plm, deltaTime);
-    }
-
-    void VideoPlayer::Close()
-    {
-        if (_plm != nullptr)
-        {
-            plm_destroy(_plm);
-            _plm = nullptr;
-        }
-
-        _frameBuffer = {};
-        _audioBuffer = {};
-        _activeVideoName   = {};
     }
 
     void VideoPlayer::AppendAudio(const float* samples, int count)

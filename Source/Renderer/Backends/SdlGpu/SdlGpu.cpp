@@ -870,12 +870,9 @@ namespace Silent::Renderer::SdlGpu
             }
         }
         // Release video texture.
-        else
+        else if (video.IsLoaded())
         {
-            if (!videoName.empty())
-            {
-                GetTextures().Release(videoName);
-            }
+            GetTextures().Release(videoName);
         }
     }
 

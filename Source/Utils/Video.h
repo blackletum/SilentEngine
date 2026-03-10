@@ -2,7 +2,8 @@
 
 namespace Silent::Utils
 {
-    // @todo Export "AVI: Uncompressed RGB" using jPSXdec and run this command:
+    // @todo Need to be able to extract XA video somehow.
+    // For now, use "AVI: Uncompressed RGB" export in jPSXdec and run this command to convert to a compatible format:
     // ffmpeg -i INPUT.avi -r 30 -c:v mpeg1video -q:v 1 -c:a mp2 -ar 44100 -ac 2 OUTPUT.mpg
 
     /** @brief MPEG1 video player. */
@@ -42,19 +43,19 @@ namespace Silent::Utils
          */
         Vector2i GetResolution() const;
 
-        /** @brief Gets the name of the active video.
+        /** @brief Gets the active video's name.
          *
          * @return Active video name.
          */
         const std::string& GetVideoName() const;
 
-        /** @brief Gets the video frame image for the current time in the video.
+        /** @brief Gets the RGBA video frame image for the current time in the active video.
          *
          * @return RGBA video frame image.
          */
         const std::vector<byte>& GetVideoFrame() const;
 
-        /** @brief Gets the audio frame samples for the current time in the video.
+        /** @brief Gets the L/R interlaced audio frame samples for the current time in the active video.
          *
          * @return Audio frame samples.
          */
@@ -64,9 +65,15 @@ namespace Silent::Utils
         // Inquirers
         // ==========
 
-        /** @brief Checks if a video is playing and hasn't ended.
+        /** @brief Checks if an active video is loaded.
          *
-         * @return `true` if a video is playing and hasn't ended, `false` otherwise.
+         * @param `true` if an active video is loaded, `false` otherwise.
+         */
+        bool IsLoaded() const;
+
+        /** @brief Checks if an active video is playing and hasn't ended.
+         *
+         * @return `true` if an active video is playing, `false` otherwise.
          */
         bool IsPlaying() const;
 
@@ -74,29 +81,30 @@ namespace Silent::Utils
         // Utilities
         // ==========
 
-        /** @brief Initializes the instance with a reference videos path
+        /** @brief Initializes the instance with a reference videos folder path.
          *
-         * @param videosPath Path containing videos.
+         * @param videosPath Folder path containing videos.
          */
         void Initialize(const std::filesystem::path& videosPath);
 
-        /** @brief Loads a new video to play.
+        /** @brief Starts a new active video.
          *
-         * @param filename Video filename.
+         * @param filename Filename of the video to play.
          * @return `true` if the video loaded successfully, `false` otherwise.
          */
-        bool Load(const std::string& filename);
+        void Play(const std::string& filename);
 
-        /** @brief Progresses the video stream.
+        /** @brief Stops the active video and frees resources. */
+        void Stop();
+
+        /** @brief Progresses the active video.
          *
          * @param deltaTime Progression time in seconds.
          */
         void Update(float deltaTime);
 
-        /** @brief Closes the active video and  frees resources. */
-        void Close();
-
         /** @brief Appends interleaved audio samples to the internal playback buffer.
+         * Called by the `OnAudioFrame` callback.
          *
          * @param samples Array of float samples (L/R interleaved).
          * @param count Number of individual float values to append (`frames * channels`).
