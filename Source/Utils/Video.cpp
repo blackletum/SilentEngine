@@ -48,7 +48,37 @@ namespace Silent::Utils
         return Vector2i(plm_get_width(_plm), plm_get_height(_plm));
     }
 
-    const std::string& VideoPlayer::GetVideoName() const
+    float VideoPlayer::GetAspectRatio() const
+    {
+        if (!IsLoaded())
+        {
+            return 1.0f;
+        }
+
+        return plm_get_pixel_aspect_ratio(_plm);
+    }
+
+    float VideoPlayer::GetTime() const
+    {
+        if (!IsLoaded())
+        {
+            return 0.0f;
+        }
+
+        return plm_get_time(_plm);
+    }
+
+    float VideoPlayer::GetDuration() const
+    {
+        if (!IsLoaded())
+        {
+            return 0.0f;
+        }
+
+        return plm_get_duration(_plm);
+    }
+
+    const std::string& VideoPlayer::GetName() const
     {
         return _activeVideoName;
     }

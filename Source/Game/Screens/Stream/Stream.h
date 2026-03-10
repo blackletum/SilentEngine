@@ -18,5 +18,5 @@ namespace Silent::Game
     // MOVIESYS code
 
     void open_main(s32 file_idx, s16 num_frames);
-    void movie_main(char* file_name, s32 f_size, s32 sector);
+    bool movie_main(char* file_name, s32 f_size, s32 sector);
 }

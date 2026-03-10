@@ -37,17 +37,35 @@ namespace Silent::Utils
         // Getters
         // ========
 
-        /** @brief Gets the active video's resolution.
+        /** @brief Gets the active video's pixel resolution.
          *
          * @return Video pixel resolution.
          */
         Vector2i GetResolution() const;
 
+        /** @brief Gets the active video's aspect ratio.
+         *
+         * @return Video aspect ratio.
+         */
+        float GetAspectRatio() const;
+
+        /** @brief Gets the active video's current time in seconds.
+         *
+         * @return Current video time in seconds.
+         */
+        float GetTime() const;
+
+        /** @brief Gets the active video's duration in seconds.
+         *
+         * @return Video duration in seconds.
+         */
+        float GetDuration() const;
+
         /** @brief Gets the active video's name.
          *
          * @return Active video name.
          */
-        const std::string& GetVideoName() const;
+        const std::string& GetName() const;
 
         /** @brief Gets the RGBA video frame image for the current time in the active video.
          *

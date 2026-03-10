@@ -388,7 +388,7 @@ namespace Silent::Renderer::SdlGpu
         //---------------------------
 
         // Use video as texture, or placeholder if not playing.
-        auto* tex = GetTextures()[g_App.GetVideo().GetVideoName()];
+        auto* tex = GetTextures()[g_App.GetVideo().GetName()];
         if (tex != nullptr)
         {
             tex->Bind(renderPass, GetActiveSampler());
@@ -855,7 +855,7 @@ namespace Silent::Renderer::SdlGpu
         }
 
         // Upload/update video texture.
-        const auto& videoName = video.GetVideoName();
+        const auto& videoName = video.GetName();
         if (video.IsPlaying())
         {
             auto* tex = GetTextures()[videoName];
@@ -866,7 +866,7 @@ namespace Silent::Renderer::SdlGpu
             }
             else
             {
-                GetTextures().Upload(copyPass, ToSpan(video.GetVideoFrame()), video.GetResolution(), video.GetVideoName());
+                GetTextures().Upload(copyPass, ToSpan(video.GetVideoFrame()), video.GetResolution(), video.GetName());
             }
         }
         // Release video texture.

@@ -98,7 +98,7 @@ namespace Silent::Math
 
     Vector2 Vector2i::ToVector2(int shift) const
     {
-        return (shift != NO_VALUE) ? Vector2(FP_FLOAT(x, shift), FP_FLOAT(y, shift)) :
+        return (shift != NO_VALUE) ? Vector2(FP_TO_FLT(x, shift), FP_TO_FLT(y, shift)) :
                                      Vector2((float)x, (float)y);
     }
 

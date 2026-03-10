@@ -5,12 +5,15 @@
 #include "Game/Bodyprog/Bodyprog.h"
 
 #include "Application.h"
+#include "Game/Bodyprog/Screen/ScreenData.h"
 #include "Game/Bodyprog/Screen/ScreenDraw.h"
 #include "Game/Bodyprog/Sys/FsScreens.h"
 #include "Game/Bodyprog/Sys/Joy.h"
 #include "Game/Bodyprog/Text/TextDraw.h"
 #include "Game/Main/FileInfo.h"
 #include "Input/Input.h"
+#include "Renderer/Renderer.h"
+#include "Utils/Video.h"
 //#include "bodyprog/libsd.h"
 
 using namespace Silent::Input;
@@ -69,8 +72,10 @@ namespace Silent::Game
 
     void GameState_MovieOpening_Update() // 0x801E2838
     {
-        open_main(FILE_XA_M1_03500, 0);
-        Game_StateSetNext(GameState_MainLoadScreen);
+        if (!movie_main("C1_20670.MPG", 0, 0))
+        {
+            Game_StateSetNext(GameState_MainLoadScreen);
+        }
     }
 
     void GameState_ExitMovie_Update() // 0x801E28B0
@@ -80,7 +85,9 @@ namespace Silent::Game
 
     void GameState_DebugMoviePlayer_Update() // 0x801E2908
     {
-        static s32 g_Debug_MoviePlayerIdx = 0; // 0x801E3F3C
+        // @stub
+
+        /*static s32 g_Debug_MoviePlayerIdx = 0; // 0x801E3F3C
 
         const auto& input = g_App.GetInput();
 
@@ -102,30 +109,57 @@ namespace Silent::Game
         if (input.GetAction(In::Enter).IsClicked())
         {
             open_main(FILE_XA_ZC_14392 - g_Debug_MoviePlayerIdx, 0);
-        }
+        }*/
     }
 
     void GameState_MovieIntroAlternate_Update() // 0x801E2A24
     {
-        open_main(FILE_XA_C1_20670, 2060); // Second param looks like file ID for `FILE_XA_M6_02112`, but is actually frame count?
-        Game_StateSetNext(GameState_MainMenu);
-
-        g_ScreenFadeTimestep = Q12(1.0f);
+        if (!movie_main("C1_20670.MPG", 0, 0))
+        {
+            Game_StateSetNext(GameState_MainMenu);
+            g_ScreenFadeTimestep = Q12(1.0f);
+        }
     }
 
     void open_main(s32 file_idx, s16 num_frames) // 0x801E2AA4
     {
-        Fs_QueueWaitForEmpty();
-        movie_main(nullptr, num_frames, g_FileTable[file_idx].startSector_0_0);
+
+        //Fs_QueueWaitForEmpty();
+        //movie_main(nullptr, num_frames, g_FileTable[file_idx].startSector_0_0);
     }
 
-    void movie_main(char* file_name, s32 f_size, s32 sector) // 0x801E2B9C
+    bool movie_main(char* file_name, s32 f_size, s32 sector) // 0x801E2B9C
     {
-        // @todo Video streaming.
-        /*do
+        const auto& input    = g_App.GetInput();
+        auto&       renderer = g_App.GetRenderer();
+        auto&       video    = g_App.GetVideo();
+
+        // Start playing new video.
+        if (!video.IsLoaded() || file_name != video.GetName())
         {
+            video.Play(file_name);
         }
-        while (!input.GetAction(In::Enter).IsClicked() &&
-            MainLoop_ShouldWarmReset() <= ResetType_None);*/
+        // Update active video playback.
+        else
+        {
+            if (!video.IsPlaying() || input.GetAction(In::Enter).IsClicked())
+            {
+                video.Stop();
+                return false;
+            }
+            else
+            {
+                video.Update(Q12_TO_FLT(g_DeltaTime));
+            }
+        }
+
+        // Submit fullscreen video sprite.
+        float aspect = video.GetAspectRatio();
+        auto  scale  = Vector2(std::min(aspect, 1.0f), std::max(aspect, 1.0f));
+        auto  sprite = Sprite2d::CreateSprite2d(video.GetName(), Vector2::Zero, Vector2::One,
+                                                SCREEN_SPACE_RES / 2.0f, DEG_TO_RAD(0.0f), scale, Color::White,
+                                                DEPTH_MAX, AlignMode::Center, ScaleMode::ShortEdge, BlendMode::Opaque);
+        renderer.SubmitSprite2d(sprite);
+        return true;
     }
 }

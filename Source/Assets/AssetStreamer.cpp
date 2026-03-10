@@ -172,7 +172,7 @@ namespace Silent::Assets
             _assets.emplace_back(std::make_unique<Asset>());
 
             // Define asset entry.
-            auto& asset  = *_assets.back();
+            auto& asset = *_assets.back();
             asset.Name  = std::filesystem::relative(file, assetsPath).generic_string();
             asset.Type  = ASSET_TYPES.at(ext);
             asset.File  = file;
@@ -182,7 +182,7 @@ namespace Silent::Assets
 
             // Add asset index and name to maps.
             _idxs[asset.Name] = i;
-            _names[i]          = asset.Name;
+            _names[i]         = asset.Name;
         }
 
         // Create fallback ready future.

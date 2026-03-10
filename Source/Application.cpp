@@ -209,7 +209,7 @@ namespace Silent
 
         // Play temp. video.
         auto& video = g_App.GetVideo();
-        video.Play("HILL.[729].mpg");
+        video.Play("C1_20670.MPG");
     }
 
     void ApplicationManager::Deinitialize()

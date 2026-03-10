@@ -214,7 +214,7 @@ namespace Silent::Game
                                                        100, AlignMode::Center, ScaleMode::ShortEdge, BlendMode::Opaque);
                 renderer.SubmitSprite2d(sprite);
 
-                Debug::g_Work.BlendAlpha = std::clamp<float>(1.0f - FP_FLOAT(fade, Q8_SHIFT), 0, 1);
+                Debug::g_Work.BlendAlpha = std::clamp<float>(1.0f - Q8_TO_FLT(fade), 0, 1);
                 fade = std::clamp(fade + FADE_STEP, Q8(0.0f), Q8(1.0f));
             }
         }
