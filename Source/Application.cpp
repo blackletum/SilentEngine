@@ -42,6 +42,11 @@ namespace Silent
         return _work.Audio;
     }
 
+    ClockManager& ApplicationManager::GetClock()
+    {
+        return _work.Clock;
+    }
+
     ParallelExecutor& ApplicationManager::GetExecutor()
     {
         return _work.Executor;
@@ -77,14 +82,14 @@ namespace Silent
         return _work.Savegame;
     }
 
-    ClockManager& ApplicationManager::GetClock()
-    {
-        return _work.Clock;
-    }
-
     ToastManager& ApplicationManager::GetToaster()
     {
         return _work.Toaster;
+    }
+
+    VideoPlayer& ApplicationManager::GetVideo()
+    {
+        return _work.Video;
     }
 
     TranslationManager& ApplicationManager::GetTranslator()
@@ -158,6 +163,9 @@ namespace Silent
         // Assets.
         _work.Assets.Initialize(_work.Filesystem.GetAssetsDirectory() / ASSETS_PSX_DIR_NAME);
         _work.Translator.Initialize(_work.Filesystem.GetAssetsDirectory() / ASSETS_LOCALES_DIR_NAME, LOCALE_NAMES);
+        _work.Video.Initialize(_work.Filesystem.GetAssetsDirectory() / ASSETS_VIDEO_DIR_NAME);
+
+        // Fonts.
         for (const auto& fontMetadata : FONTS_METADATA)
         {
             _work.Fonts.LoadFont(fontMetadata, _work.Filesystem.GetAssetsDirectory() / ASSETS_FONTS_DIR_NAME, GLYPH_PRECACHE);
@@ -198,6 +206,10 @@ namespace Silent
                                                                                     KEY_SYS_FULLSCREEN_HINT_GENERIC));
 
         Debug::Log("Startup complete.");
+
+        // Load temp. video.
+        auto& video = g_App.GetVideo();
+        video.Load("HILL.[729].mpg");
     }
 
     void ApplicationManager::Deinitialize()
@@ -297,7 +309,7 @@ namespace Silent
         if (_work.Clock.GetTicks() > 0)
         //for (int i = 0; i < _work.Clock.GetTicks(); i++)
         {
-            Entry();
+            //Entry();
         }
 
         // Update audio.

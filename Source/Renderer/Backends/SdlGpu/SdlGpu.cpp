@@ -15,6 +15,7 @@
 #include "Services/Options.h"
 #include "Services/Platform.h"
 #include "Utils/Utils.h"
+#include "Utils/Video.h"
 
 using namespace Silent::Assets;
 using namespace Silent::Services;
@@ -386,10 +387,19 @@ namespace Silent::Renderer::SdlGpu
         // @temp
         //---------------------------
 
-        auto* tex = GetTextures()["TIM/BG_ETC.TIM"];
+        // Use video as texture, or placeholder if not playing.
+        auto* tex = GetTextures()[g_App.GetVideo().GetVideoName()];
         if (tex != nullptr)
         {
             tex->Bind(renderPass, GetActiveSampler());
+        }
+        else
+        {
+            auto* tex = GetTextures()["TIM/BG_ETC.TIM"];
+            if (tex != nullptr)
+            {
+                tex->Bind(renderPass, GetActiveSampler());
+            }
         }
 
         _view.Move();
@@ -787,7 +797,10 @@ namespace Silent::Renderer::SdlGpu
 
     void Renderer::UpdateResources(SDL_GPUCopyPass& copyPass)
     {
+        constexpr auto FONT_ATLAS_RES = Vector2i(Font::ATLAS_SIZE);
+
         auto& fonts = g_App.GetFonts();
+        auto& video = g_App.GetVideo();
 
         // Release/upload textures.
         auto& texs = GetTextures();
@@ -815,27 +828,53 @@ namespace Silent::Renderer::SdlGpu
         for (const auto& metadata : FONTS_METADATA)
         {
             auto* font = fonts.GetFont(metadata.Name);
-            if (font != nullptr)
+            if (font == nullptr)
             {
-                const auto& atlases = font->GetTextureAtlases();
-                for (int atlasIdx : font->GetDirtyGpuAtlasIdxs())
+                continue;
+            }
+
+            const auto& atlases = font->GetTextureAtlases();
+            for (int atlasIdx : font->GetDirtyGpuAtlasIdxs())
+            {
+                const auto& atlas = atlases[atlasIdx];
+
+                // Upload/update font atlas texture.
+                auto  name = metadata.Name + std::to_string(atlasIdx);
+                auto* tex  = GetTextures()[name];
+                if (tex != nullptr)
                 {
-                    const auto& atlas = atlases[atlasIdx];
-
-                    // Initialize new or update existing GPU font atlas textures.
-                    auto  name = metadata.Name + std::to_string(atlasIdx);
-                    auto* tex  = GetTextures()[name];
-                    if (tex != nullptr)
-                    {
-                        tex->Update(copyPass, ToSpan(atlas), Vector2i::Zero, Vector2i(Font::ATLAS_SIZE));
-                    }
-                    else
-                    {
-                        GetTextures().Upload(copyPass, ToSpan(atlas), Vector2i(Font::ATLAS_SIZE), name);
-                    }
+                    tex->Update(copyPass, ToSpan(atlas), Vector2i::Zero, FONT_ATLAS_RES);
                 }
+                else
+                {
+                    GetTextures().Upload(copyPass, ToSpan(atlas), FONT_ATLAS_RES, name);
+                }
+            }
 
-                font->ClearDirtyGpuAtlasIdxs();
+            font->ClearDirtyGpuAtlasIdxs();
+        }
+
+        // Upload/update video texture.
+        const auto& videoName = video.GetVideoName();
+        if (video.IsPlaying())
+        {
+            auto* tex = GetTextures()[videoName];
+            if (tex != nullptr)
+            {
+                video.Update(1.0f / 30.0f); // @temp
+                tex->Update(copyPass, ToSpan(video.GetVideoFrame()), Vector2i::Zero, video.GetResolution());
+            }
+            else
+            {
+                GetTextures().Upload(copyPass, ToSpan(video.GetVideoFrame()), video.GetResolution(), video.GetVideoName());
+            }
+        }
+        // Release video texture.
+        else
+        {
+            if (!videoName.empty())
+            {
+                GetTextures().Release(videoName);
             }
         }
     }

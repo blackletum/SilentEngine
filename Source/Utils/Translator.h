@@ -25,7 +25,7 @@ namespace Silent::Utils
         /** @brief Creates a default uninitialized instance. */
         TranslationManager() = default;
 
-        /** @brief Initializes the `Translator` with locales from a path.
+        /** @brief Initializes the instance with locales from a path.
          *
          * @param localesPath Path containing locale folders.
          * @param localeNames Locale names to register.
