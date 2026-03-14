@@ -12,13 +12,13 @@ namespace Silent::Game
 {
     bool Chara_Load(s32 modelIdx, s8 charaId, GsCOORDINATE2* coords, s8 forceFree, s_LmHeader* lmHdr, s_FsImageDesc* tex) // 0x80088C7C
     {
-        //Fs_CharaAnimDataAlloc(modelIdx + 1, charaId, NULL, coords);
+        //Fs_CharaAnimDataAlloc(modelIdx + 1, charaId, nullptr, coords);
         //WorldGfx_CharaLmBufferAssign(forceFree);
         //WorldGfx_CharaLoad(charaId, modelIdx, lmHdr, tex);
         return true;
     }
 
-    bool Chara_ProcessLoads(void) // 0x80088D0C
+    bool Chara_ProcessLoads() // 0x80088D0C
     {
         Fs_QueueWaitForEmpty();
         //WorldGfx_CharaModelProcessAllLoads();
@@ -120,7 +120,7 @@ namespace Silent::Game
 
     void func_80088F94(s_SubCharacter* chara, s32 unused1, s32 unused2) // 0x80088F94
     {
-        if (chara == NULL)
+        if (chara == nullptr)
         {
             return;
         }

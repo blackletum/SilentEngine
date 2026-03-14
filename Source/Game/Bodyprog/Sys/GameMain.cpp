@@ -8,6 +8,8 @@
 #include "Assets/AssetStreamer.h"
 #include "Game/Bodyprog/MemCard.h"
 #include "Game/Bodyprog/Demo.h"
+#include "Game/Bodyprog/Events/GameSysStates.h"
+#include "Game/Bodyprog/GameBoot/GameLoad.h"
 #include "Game/Bodyprog/Screen/ScreenDraw.h"
 #include "Game/Bodyprog/Sys/Joy.h"
 #include "Game/Bodyprog/Text/TextDraw.h"
@@ -35,7 +37,7 @@ namespace Silent::Game
         0
     };
 
-    void (*g_GameStateUpdateFuncs[])(void) =
+    void (*g_GameStateUpdateFuncs[])() =
     {
         GameState_Boot_Update,
         GameState_KonamiLogo_Update,
@@ -47,21 +49,21 @@ namespace Silent::Game
         GameState_MainMenu_Update,
         GameState_LoadSavegameScreen_Update,
         GameState_MovieOpening_Update,
-        nullptr,//GameState_LoadScreen_Update,
-        nullptr,//GameState_InGame_Update,
-        nullptr,//GameState_MapEvent_Update,
+        GameState_LoadScreen_Update,
+        GameState_InGame_Update,
+        GameState_MapEvent_Update,
         GameState_ExitMovie_Update,
         nullptr,//GameState_ItemScreens_Update,
         nullptr,//GameState_MapScreen_Update,
         GameState_LoadSavegameScreen_Update,
         GameState_DebugMoviePlayer_Update,
         GameState_Options_Update,
-        nullptr,//GameState_LoadStatusScreen_Update,
-        nullptr,//GameState_LoadMapScreen_Update,
+        GameState_LoadStatusScreen_Update,
+        GameState_LoadMapScreen_Update,
         nullptr,//GameState_Unk15_Update
     };
 
-    void GameState_Boot_Update(void) // 0x80032D1C
+    void GameState_Boot_Update() // 0x80032D1C
     {
         e_GameState gameState;
         s32         vabAudioTaskId;
@@ -143,7 +145,7 @@ namespace Silent::Game
                                                 SCREEN_SPACE_RES / 2.0f, DEG_TO_RAD(0.0f), 1.0f, Color::White,
                                                 100, AlignMode::Center, ScaleMode::ShortEdge, BlendMode::Opaque);
         renderer.SubmitSprite2d(sprite);
-        Debug::g_Work.BlendAlpha = std::clamp<float>(1.0f - FP_FLOAT(g_ScreenFadeProgress, Q8_SHIFT), 0, 1);
+        Debug::g_Work.BlendAlpha = std::clamp<float>(1.0f - Q8_TO_FLT(g_ScreenFadeProgress), 0, 1);
         //Screen_BackgroundImgDraw(&g_MainImg0);
     }
 }

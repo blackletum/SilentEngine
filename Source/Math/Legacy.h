@@ -121,8 +121,8 @@ namespace Silent::Math
      * @return Y axis angle between positions (Q19.12).
      */
     #define Math_AngleBetweenPositionsGet(from, to) \
-        ratan2(to.vx - from.vx,                     \
-               to.vz - from.vz)                     \
+        Math_Ratan2(to.vx - from.vx,                \
+                    to.vz - from.vz)                \
 
     /** @brief Computes the magnitude of a 2D vector in Q19.12, using intermediate components in Q25.6
      * to avoid overflow.
@@ -270,4 +270,12 @@ namespace Silent::Math
     //MATRIX* Math_RotMatrixZ(int, MATRIX*);
 
     //void Math_RotMatrixXyz(SVECTOR* rot, MATRIX* mat);
+
+    /** @brief Computes the real arc tangent in Q19.12, integer range `[0, 4096]`.
+     *
+     * @param x Fixed-point X component.
+     * @param y Fixed-point Y component.
+     * @return Real arc tangent of `x` and `y`.
+     */
+    q19_12 Math_Ratan2(int x, int y);
 }

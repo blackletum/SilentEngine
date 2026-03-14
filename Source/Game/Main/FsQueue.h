@@ -270,18 +270,18 @@ namespace Silent::Game
     /** @brief Get number of operations currently in the queue.
      * @return Number of operations in the queue. Includes both pending reads and pending post-loads.
      */
-    s32 Fs_QueueGetLength(void);
+    s32 Fs_QueueGetLength();
 
     /** @brief TODO: Unknown. If queue is empty, call `func_8003C850`.
      * @return `true` when queue is empty and the call succeeds, `false` otherwise.
      */
-    bool Fs_QueueDoThingWhenEmpty(void);
+    bool Fs_QueueDoThingWhenEmpty();
 
     /** @brief Spin-waits for the queue to become empty while calling `Fs_QueueUpdate`.
      * Calls some bodyprog functions before and after the wait, `VSync` during the waits and `DrawSync`
      * after the wait.
      */
-    void Fs_QueueWaitForEmpty(void);
+    void Fs_QueueWaitForEmpty();
 
     /** @brief Add a new seek operation to the queue.
      *
@@ -342,10 +342,10 @@ namespace Silent::Game
     /** @brief Initialize FS queue and FS memory.
      * Initializes `g_FsQueue` and calls `Fs_InitializeMem`.
      */
-    void Fs_QueueInitialize(void);
+    void Fs_QueueInitialize();
 
     /** Seems to clear the queue. */
-    void Fs_QueueReset(void);
+    void Fs_QueueReset();
 
     /** @brief Ticks the FS queue once.
      *
@@ -355,7 +355,7 @@ namespace Silent::Game
      * Regardless of the outcome of the above, also ticks post-loading (`Fs_QueueUpdatePostLoad`) if there is an entry to post-load.
      * If that reports that the current post-load entry is done post-loading, advances `g_FsQueue.postLoad.idx` and `g_FsQueue.postLoad.ptr`.
      */
-    void Fs_QueueUpdate(void);
+    void Fs_QueueUpdate();
 
     /** @brief Ticks a seek operation once.
      *

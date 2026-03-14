@@ -26,6 +26,10 @@
     path = Libraries/LuaJIT
     url = https://github.com/LuaJIT/LuaJIT.git
 
+[submodule "Libraries/pl_mpeg"]
+    path = Libraries/pl_mpeg
+    url = https://github.com/phoboslab/pl_mpeg.git
+
 [submodule "Libraries/psyz"]
     path = Libraries/psyz
     url = https://github.com/Xeeynamo/psyz.git
@@ -57,10 +61,6 @@
 [submodule "Libraries/utfcpp"]
     path = Libraries/utfcpp
     url = https://github.com/nemtrif/utfcpp.git
-
-[submodule "Libraries/vlc"]
-    path = Libraries/vlc
-    url = https://github.com/videolan/vlc.git
 
 [submodule "Libraries/yalantinglibs"]
     path = Libraries/yalantinglibs

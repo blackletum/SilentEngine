@@ -8,7 +8,7 @@ namespace Silent::Game
 {
     VW_VIEW_WORK vwViewPointInfo;
 
-    void vwInitViewInfo(void) // 0x80048A38
+    void vwInitViewInfo() // 0x80048A38
     {
         vwViewPointInfo.rview.vp.vz = Q12(0.0f);
         vwViewPointInfo.rview.vp.vy = Q12(0.0f);
@@ -20,11 +20,11 @@ namespace Silent::Game
         vwViewPointInfo.rview.super = &vwViewPointInfo.vwcoord;
 
         // @math
-        //GsInitCoordinate2(NULL, &vwViewPointInfo.vwcoord);
+        //GsInitCoordinate2(nullptr, &vwViewPointInfo.vwcoord);
         vwSetViewInfo();
     }
 
-    GsCOORDINATE2* vwGetViewCoord(void) // 0x80048A90
+    GsCOORDINATE2* vwGetViewCoord() // 0x80048A90
     {
         return &vwViewPointInfo.vwcoord;
     }
@@ -54,18 +54,19 @@ namespace Silent::Game
 
         // Compute camera rotation.
         rot.vz = Q12_ANGLE(0.0f);
-        //rot.vy = ratan2(deltaX, deltaZ);
-        //rot.vx = ratan2(-deltaY, SquareRoot0(SQUARE(deltaX) + SQUARE(deltaZ)));
+        rot.vy = Math_Ratan2(deltaX, deltaZ);
+        rot.vx = Math_Ratan2(-deltaY, SquareRoot0(SQUARE(deltaX) + SQUARE(deltaZ)));
         // @math
         // Compute view transform matrix and set global info.
         //Math_RotMatrixZxyNeg(&rot, &viewMat);
         viewMat.t[0] = Q12_TO_Q8(pos->vx);
         viewMat.t[1] = Q12_TO_Q8(pos->vy);
         viewMat.t[2] = Q12_TO_Q8(pos->vz);
-        vwSetViewInfoDirectMatrix(NULL, &viewMat);
+        vwSetViewInfoDirectMatrix(nullptr, &viewMat);
     }
 
-    void vwSetCoordRefAndEntou(GsCOORDINATE2* parent_p, q19_12 ref_x, q19_12 ref_y, q19_12 ref_z,
+    void vwSetCoordRefAndEntou(GsCOORDINATE2* parent_p,
+                               q19_12 ref_x, q19_12 ref_y, q19_12 ref_z,
                                q3_12 cam_ang_y, q3_12 cam_ang_z, q19_12 cam_y, q19_12 cam_xz_r) // 0x80048BE0
     {
         SVECTOR view_ang; // Q3.12
@@ -78,7 +79,7 @@ namespace Silent::Game
 
         view_ang.vy = cam_ang_y;
         view_ang.vz = cam_ang_z;
-        //view_ang.vx = -ratan2(-cam_y, cam_xz_r);
+        view_ang.vx = -Math_Ratan2(-cam_y, cam_xz_r);
         view_ang.vy = Q12_ANGLE_NORM_U(view_ang.vy + Q12_ANGLE(180.0f));
         // @math
         //Math_RotMatrixZxyNegGte(&view_ang, view_mtx);
@@ -109,12 +110,11 @@ namespace Silent::Game
         pos->vz = Q8_TO_Q12(mat->t[2]);
     }
 
-    void vwSetViewInfo(void) // 0x80048D48
+    void vwSetViewInfo() // 0x80048D48
     {
-        // @todo Uncomment when the rest is migrated.
-        //vbSetRefView(&vwViewPointInfo.rview);
+        vbSetRefView(&vwViewPointInfo.rview);
         Math_MatrixToPosition(&vwViewPointInfo.worldpos, &vwViewPointInfo.vwcoord.workm);
-        //vwMatrixToAngleYXZ(&vwViewPointInfo.worldang, &vwViewPointInfo.vwcoord.workm);
+        vwMatrixToAngleYXZ(&vwViewPointInfo.worldang, &vwViewPointInfo.vwcoord.workm);
     }
 
     void Vw_ClampAngleRange(q3_12* angleMin, q3_12* angleMax, q3_12 angleConstraintMin, q3_12 angleConstraintMax) // 0x80048DA8

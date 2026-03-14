@@ -55,7 +55,7 @@ namespace Silent::Math
      * @param shift Fixed-point shift.
      * @return `x` converted to floating-point.
      */
-    constexpr float FP_FLOAT(int x, int shift)
+    constexpr float FP_TO_FLT(int x, int shift)
     {
         return (float)x / (float)FP_TO(1.0f, shift);
     }
@@ -321,6 +321,16 @@ namespace Silent::Math
         return TO_FIXED(x, Q4_SHIFT);
     }
 
+    /** @brief Converts Q27.4 fixed-point value to floating-point.
+     *
+     * @param x Q27.4 fixedd-point value to convert.
+     * @return `x` converted to floating-point.
+     */
+    constexpr float Q4_TO_FLT(q27_4 x)
+    {
+        return FP_TO_FLT(x, Q4_SHIFT);
+    }
+
     /** @brief Converts a floating-point value to Q25.6 fixed-point.
      *
      * @param x Value to convert.
@@ -329,6 +339,16 @@ namespace Silent::Math
     constexpr q25_6 Q6(float x)
     {
         return TO_FIXED(x, Q6_SHIFT);
+    }
+
+    /** @brief Converts Q25.6 fixed-point value to floating-point.
+     *
+     * @param x Q25.6 fixedd-point value to convert.
+     * @return `x` converted to floating-point.
+     */
+    constexpr float Q6_TO_FLT(q25_6 x)
+    {
+        return FP_TO_FLT(x, Q6_SHIFT);
     }
 
     /** @brief Converts a floating-point value to Q23.8 fixed-point.
@@ -351,6 +371,16 @@ namespace Silent::Math
         return CLAMP(Q8(x), Q8(0.0f), Q8(1.0f) - 1);
     }
 
+    /** @brief Converts Q23.8 fixed-point value to floating-point.
+     *
+     * @param x Q23.8 fixedd-point value to convert.
+     * @return `x` converted to floating-point.
+     */
+    constexpr float Q8_TO_FLT(q23_8 x)
+    {
+        return FP_TO_FLT(x, Q8_SHIFT);
+    }
+
     /** @brief Converts a floating-point value to Q19.12 fixed-point.
      *
      * @param x Value to convert (`float`).
@@ -369,6 +399,16 @@ namespace Silent::Math
     constexpr q19_12 Q12_CLAMPED(float x)
     {
         return CLAMP(Q12(x), Q12(0.0f), (Q12(1.0f) - 1));
+    }
+
+    /** @brief Converts Q19.12 fixed-point value to floating-point.
+     *
+     * @param x Q19.12 fixedd-point value to convert.
+     * @return `x` converted to floating-point.
+     */
+    constexpr float Q12_TO_FLT(q19_12 x)
+    {
+        return FP_TO_FLT(x, Q12_SHIFT);
     }
 
     /** @brief Converts a fixed-point value from Q27.4 to Q23.8.

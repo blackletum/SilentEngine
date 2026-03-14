@@ -4,25 +4,24 @@
 
 #include "Game/Bodyprog/Bodyprog.h"
 
+#include "Game/Bodyprog/Screen/ScreenData.h"
 #include "Game/Bodyprog/View/VwSystem.h"
 
 namespace Silent::Game
 {
     constexpr int V_BLANKS_MULT = 11;
 
-    extern s32 g_VBlanks;
-
-    void vcInitCamera(struct _MapOverlayHeader* map_overlay_ptr, const VECTOR3* chr_pos) // 0x8004004C
+    void vcInitCamera(s_MapOverlayHeader* map_overlay_ptr, const VECTOR3* chr_pos) // 0x8004004C
     {
-        //g_WorldGfx.vcCameraInternalInfo_1BDC.mv_smooth   = VC_MV_CHASE;
-        //g_WorldGfx.vcCameraInternalInfo_1BDC.ev_cam_rate = Q12(0.0f);
-        //g_WorldGfx.vcCameraInternalInfo_1BDC.mode        = 0;
+        g_WorldGfxWork.vcCameraInternalInfo_1BDC.mv_smooth   = VC_MV_CHASE;
+        g_WorldGfxWork.vcCameraInternalInfo_1BDC.ev_cam_rate = Q12(0.0f);
+        g_WorldGfxWork.vcCameraInternalInfo_1BDC.mode        = 0;
 
         vcSetCameraUseWarp(chr_pos, g_SysWork.cameraAngleY_237A);
         //SetGeomScreen(g_GameWork.gsScreenHeight_58A);
         vwInitViewInfo();
-        //vcInitVCSystem(map_overlay_ptr->roadDataList_3CC);
-        //vcStartCameraSystem();
+        vcInitVCSystem(map_overlay_ptr->roadDataList_3CC);
+        vcStartCameraSystem();
 
         g_SysWork.cameraAngleZ_237C   = Q12_ANGLE(0.0f);
         g_SysWork.cameraRadiusXz_2380 = Q12(3.0f);
@@ -47,33 +46,33 @@ namespace Silent::Game
         cam_pos.vy = chr_pos->vy - HEIGHT;
         cam_pos.vz = chr_pos->vz - Q12_MULT(Math_Cos(chr_ang_y), RADIUS);
 
-        //vcSetFirstCamWork(&cam_pos, chr_ang_y, g_SysWork.flags_22A4 & SysFlag2_6);
+        vcSetFirstCamWork(&cam_pos, chr_ang_y, g_SysWork.flags_22A4 & SysFlag2_6);
         g_SysWork.flags_22A4 &= ~SysFlag2_6;
     }
 
-    s32 vcRetCamMvSmoothF(void) // 0x80040190
+    s32 vcRetCamMvSmoothF() // 0x80040190
     {
-        return 0;//g_WorldGfx.vcCameraInternalInfo_1BDC.mv_smooth;
+        return g_WorldGfxWork.vcCameraInternalInfo_1BDC.mv_smooth;
     }
 
     void Vc_CameraElevationRateLockSet(bool isUnlocked) // 0x800401A0
     {
         if (isUnlocked)
         {
-            //g_WorldGfx.vcCameraInternalInfo_1BDC.ev_cam_rate = Q12(1.0f);
+            g_WorldGfxWork.vcCameraInternalInfo_1BDC.ev_cam_rate = Q12(1.0f);
         }
         else
         {
-            //g_WorldGfx.vcCameraInternalInfo_1BDC.ev_cam_rate = Q12(0.0f);
+            g_WorldGfxWork.vcCameraInternalInfo_1BDC.ev_cam_rate = Q12(0.0f);
         }
     }
 
     void vcSetEvCamRate(q3_12 ev_cam_rate) // 0x800401C0
     {
-        //g_WorldGfx.vcCameraInternalInfo_1BDC.ev_cam_rate = ev_cam_rate;
+        g_WorldGfxWork.vcCameraInternalInfo_1BDC.ev_cam_rate = ev_cam_rate;
     }
 
-    void func_800401CC(void) // 0x800401CC
+    void func_800401CC() // 0x800401CC
     {
         //func_80080D68();
     }
@@ -92,20 +91,20 @@ namespace Silent::Game
         // Step to next debug mode.
         if (change_debug_mode)
         {
-            //g_WorldGfx.vcCameraInternalInfo_1BDC.mode++;
+            g_WorldGfxWork.vcCameraInternalInfo_1BDC.mode++;
         }
 
         // Handle debug mode.
-        /*switch (g_WorldGfx.vcCameraInternalInfo_1BDC.mode)
+        switch (g_WorldGfxWork.vcCameraInternalInfo_1BDC.mode)
         {
             default: // `DebugCameraMode_Init`
-                //g_WorldGfx.vcCameraInternalInfo_1BDC.mode = 0;
+                g_WorldGfxWork.vcCameraInternalInfo_1BDC.mode = 0;
 
                 first_cam_pos.vy = Q12(-2.2f);
                 first_cam_pos.vx = g_SysWork.playerWork_4C.player_0.position_18.vx + Q12(7.0f);
                 first_cam_pos.vz = g_SysWork.playerWork_4C.player_0.position_18.vz;
 
-                //vcSetFirstCamWork(&first_cam_pos, g_SysWork.playerWork_4C.player_0.rotation_24.vy, false);
+                vcSetFirstCamWork(&first_cam_pos, g_SysWork.playerWork_4C.player_0.rotation_24.vy, false);
 
             case DebugCameraMode_Collision:
                 hr_p = &g_SysWork.playerWork_4C.player_0;
@@ -127,29 +126,30 @@ namespace Silent::Game
                 }
 
                 hero_top_y    = hr_p->position_18.vy + Q12(-1.7f);
-                //hero_bottom_y = hr_p->position_18.vy + Q12_MULT(g_WorldGfx.vcCameraInternalInfo_1BDC.ev_cam_rate, Q12(-0.5f));
+                hero_bottom_y = hr_p->position_18.vy + Q12_MULT(g_WorldGfxWork.vcCameraInternalInfo_1BDC.ev_cam_rate, Q12(-0.5f));
 
-                //if (g_WorldGfx.vcCameraInternalInfo_1BDC.ev_cam_rate > Q12(0.0f))
+                if (g_WorldGfxWork.vcCameraInternalInfo_1BDC.ev_cam_rate > Q12(0.0f))
                 {
-                    //vcWorkSetFlags(VC_INHIBIT_FAR_WATCH_F, 0);
+                    vcWorkSetFlags(VC_INHIBIT_FAR_WATCH_F, VC_NOFLAG);
                 }
-                //else
+                else
                 {
-                    //vcWorkSetFlags(0, VC_INHIBIT_FAR_WATCH_F);
+                    vcWorkSetFlags(VC_NOFLAG, VC_INHIBIT_FAR_WATCH_F);
                 }
 
-                //vcSetSubjChara(&hr_p->position_18, hero_bottom_y, hero_top_y, grnd_y,
-                //            &hr_head_pos, hr_p->moveSpeed_38, hr_p->headingAngle_3C, hr_p->rotationSpeed_2C.vy, hr_p->rotation_24.vy,
-                //            Q12_ANGLE(120.0f), Q12(11.0f));
+                vcSetSubjChara(&hr_p->position_18, hero_bottom_y, hero_top_y, grnd_y,
+                               &hr_head_pos,
+                               hr_p->moveSpeed_38, hr_p->headingAngle_3C, hr_p->rotationSpeed_2C.vy,
+                               hr_p->rotation_24.vy, Q12_ANGLE(120.0f), Q12(11.0f));
 
-                //g_WorldGfx.vcCameraInternalInfo_1BDC.mv_smooth = vcExecCamera();
+                g_WorldGfxWork.vcCameraInternalInfo_1BDC.mv_smooth = vcExecCamera();
                 break;
 
             case DebugCameraMode_SetReference:
                 vcSetRefPosAndSysRef2CamParam(&vcRefPosSt, &g_SysWork, for_f, back_f, right_f, left_f, up_f, down_f);
-                vwSetCoordRefAndEntou(NULL,
-                                    vcRefPosSt.vx, vcRefPosSt.vy, vcRefPosSt.vz,
-                                    g_SysWork.cameraAngleY_237A, g_SysWork.cameraAngleZ_237C, g_SysWork.cameraY_2384, g_SysWork.cameraRadiusXz_2380);
+                vwSetCoordRefAndEntou(nullptr,
+                                      vcRefPosSt.vx, vcRefPosSt.vy, vcRefPosSt.vz,
+                                      g_SysWork.cameraAngleY_237A, g_SysWork.cameraAngleZ_237C, g_SysWork.cameraY_2384, g_SysWork.cameraRadiusXz_2380);
                 break;
 
             case DebugCameraMode_AnalogStickControl:
@@ -162,20 +162,20 @@ namespace Silent::Game
                                       Q12(0.0f), Q12(-0.15f), Q12(1.0f),
                                       Q12_ANGLE(165.0f), Q12_ANGLE(0.0f), Q12(-0.2f), Q12(1.0f));
                 break;
-        }*/
+        }
 
         vwSetViewInfo();
     }
 
     void vcMakeHeroHeadPos(VECTOR3* head_pos) // 0x8004047C
     {
-        constexpr q19_12 Y_OFFSET = Q12(-0.3f);
+        constexpr q19_12 OFFSET_Y = Q12(-0.3f);
 
         MATRIX  neck_lwm; // Q23.8
         SVECTOR fpos;     // Q23.8
         VECTOR  vec;
 
-        //Vw_CoordHierarchyMatrixCompute(&g_SysWork.playerBoneCoords_890[HarryBone_Head], &neck_lwm);
+        Vw_CoordHierarchyMatrixCompute(&g_SysWork.playerBoneCoords_890[HarryBone_Head], &neck_lwm);
 
         fpos.vx = Q8(0.0f);
         fpos.vy = Q8(-0.1f);
@@ -183,7 +183,7 @@ namespace Silent::Game
         //ApplyMatrix(&neck_lwm, &fpos, &vec);
 
         head_pos->vx = Q8_TO_Q12(vec.vx + neck_lwm.t[0]);
-        head_pos->vy = Q8_TO_Q12(vec.vy + neck_lwm.t[1]) + Y_OFFSET;
+        head_pos->vy = Q8_TO_Q12(vec.vy + neck_lwm.t[1]) + OFFSET_Y;
         head_pos->vz = Q8_TO_Q12(vec.vz + neck_lwm.t[2]);
     }
 
@@ -324,19 +324,19 @@ namespace Silent::Game
         lookAtMat.t[0] = newCamPos.vx;
         lookAtMat.t[1] = newCamPos.vy;
         lookAtMat.t[2] = newCamPos.vz;
-        vwSetViewInfoDirectMatrix(NULL, &lookAtMat);
+        vwSetViewInfoDirectMatrix(nullptr, &lookAtMat);
 
-        if (g_Controller1->btnsHeld_C & (ControllerFlag_LStickUp |
+        if (g_Controller1->btnsHeld_C & (ControllerFlag_LStickUp    |
                                          ControllerFlag_LStickRight |
-                                         ControllerFlag_LStickDown |
-                                         ControllerFlag_LStickLeft |
-                                         ControllerFlag_Cross |
+                                         ControllerFlag_LStickDown  |
+                                         ControllerFlag_LStickLeft  |
+                                         ControllerFlag_Cross       |
                                          ControllerFlag_Triangle))
         {
             SVECTOR refOffset; // Q3.12
 
             // @bug? `vwAngleToVector` expects `Q12`. Possible typo.
-            //vwAngleToVector(&vec1, &cam_ang, Q8(5.0f));
+            vwAngleToVector(&refOffset, &cam_ang, Q8(5.0f));
 
             ref_pos->vx = Q8_TO_Q12(newCamPos.vx + refOffset.vx);
             ref_pos->vy = Q8_TO_Q12(newCamPos.vy + refOffset.vy);
@@ -344,7 +344,7 @@ namespace Silent::Game
 
             sys_p->cameraAngleY_237A   = Math_AngleNormalize(cam_ang.vy + Q12_ANGLE(180.0f));
             sys_p->cameraY_2384        = Q8_TO_Q12(-refOffset.vy);
-            //sys_p->cameraRadiusXz_2380 = Q8_TO_Q12(SquareRoot0(SQUARE(refOffset.vx) + SQUARE(refOffset.vz)));
+            sys_p->cameraRadiusXz_2380 = Q8_TO_Q12(SquareRoot0(SQUARE(refOffset.vx) + SQUARE(refOffset.vz)));
         }
     }
 }

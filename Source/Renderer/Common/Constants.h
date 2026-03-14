@@ -11,6 +11,7 @@ namespace Silent::Renderer
 
     constexpr int TRI_IDX_COUNT   = 3;
     constexpr int QUAD_IDX_COUNT  = 6;
+    constexpr int RGB_COMP_COUNT  = 3;
     constexpr int RGBA_COMP_COUNT = 4;
 
     constexpr std::array<int, TRI_VERTEX_COUNT * 2> QUAD_TRI_IDXS = { 0, 1, 2, 0, 2, 3 };

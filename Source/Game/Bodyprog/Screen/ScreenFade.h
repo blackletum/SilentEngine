@@ -6,7 +6,7 @@ namespace Silent::Game
 
     void Screen_FadeDrawModeSet(DR_MODE* drMode);
 
-    q19_12 Screen_FadeInProgressGet(void);
+    q19_12 Screen_FadeInProgressGet();
 
-    void Screen_FadeUpdate(void);
+    void Screen_FadeUpdate();
 }

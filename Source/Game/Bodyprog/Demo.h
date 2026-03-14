@@ -35,25 +35,25 @@ namespace Silent::Game
 
     bool Demo_SequenceAdvance(s32 incrementAmt);
 
-    void Demo_DemoDataRead(void);
+    void Demo_DemoDataRead();
 
-    void Demo_PlayDataRead(void);
+    void Demo_PlayDataRead();
 
-    s32 Demo_PlayFileBufferSetup(void);
+    s32 Demo_PlayFileBufferSetup();
 
-    void Demo_DemoFileSavegameUpdate(void);
+    void Demo_DemoFileSavegameUpdate();
 
-    void Demo_GameGlobalsUpdate(void);
+    void Demo_GameGlobalsUpdate();
 
-    void Demo_GameGlobalsRestore(void);
+    void Demo_GameGlobalsRestore();
 
-    void Demo_GameRandSeedUpdate(void);
+    void Demo_GameRandSeedUpdate();
 
-    void Demo_GameRandSeedRestore(void);
+    void Demo_GameRandSeedRestore();
 
-    void Demo_Start(void);
+    void Demo_Start();
 
-    void Demo_Stop(void);
+    void Demo_Stop();
 
     bool func_8008F434(s32 arg0);
 
@@ -64,24 +64,24 @@ namespace Silent::Game
      */
     s32 Demo_StateGet(s32 gameState);
 
-    void Demo_ExitDemo(void);
+    void Demo_ExitDemo();
 
-    bool func_8008F520(void);
+    bool func_8008F520();
 
     /** Generates the backup random demo seed and stores it in `Demo_RandSeedBackup`. */
-    void Demo_DemoRandSeedBackup(void);
+    void Demo_DemoRandSeedBackup();
 
-    void Demo_DemoRandSeedRestore(void);
+    void Demo_DemoRandSeedRestore();
 
-    void Demo_DemoRandSeedAdvance(void);
+    void Demo_DemoRandSeedAdvance();
 
-    bool Demo_Update(void);
+    bool Demo_Update();
 
-    bool Demo_ControllerDataUpdate(void);
+    bool Demo_ControllerDataUpdate();
 
-    bool Demo_PresentIntervalUpdate(void);
+    bool Demo_PresentIntervalUpdate();
 
-    bool Demo_GameRandSeedSet(void);
+    bool Demo_GameRandSeedSet();
 
     bool func_8008F914(q19_12 posX, q19_12 posZ);
 }

@@ -4,5 +4,6 @@
 
 namespace Silent::Game
 {
+    VC_WORK vcWork;
     VECTOR3 vcRefPosSt; /** Q19.12 */
 }

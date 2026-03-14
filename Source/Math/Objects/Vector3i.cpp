@@ -102,7 +102,7 @@ namespace Silent::Math
     {
         if (shift != NO_VALUE)
         {
-            return Vector3(FP_FLOAT(x, shift), FP_FLOAT(y, shift), FP_FLOAT(z, shift));
+            return Vector3(FP_TO_FLT(x, shift), FP_TO_FLT(y, shift), FP_TO_FLT(z, shift));
         }
 
         return Vector3(x, y, z);

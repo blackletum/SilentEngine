@@ -20,14 +20,14 @@ namespace Silent::Game
         return queueIdx < g_FsQueue.postLoad.idx;
     }
 
-    s32 Fs_QueueGetLength(void)
+    s32 Fs_QueueGetLength()
     {
         const auto& assets = g_App.GetAssets();
 
         return assets.GetLoadingCount();
     }
 
-    bool Fs_QueueDoThingWhenEmpty(void)
+    bool Fs_QueueDoThingWhenEmpty()
     {
         // @todo
         //D_800C489C = true;
@@ -42,7 +42,7 @@ namespace Silent::Game
         return result;
     }
 
-    void Fs_QueueWaitForEmpty(void)
+    void Fs_QueueWaitForEmpty()
     {
         const auto& assets = g_App.GetAssets();
 
@@ -119,18 +119,18 @@ namespace Silent::Game
         return 0;
     }
 
-    void Fs_QueueInitialize(void)
+    void Fs_QueueInitialize()
     {
         // @stub
     }
 
-    void Fs_QueueReset(void)
+    void Fs_QueueReset()
     {
         // @stub
         // @todo Previously cleared the queue, should that translate to clearing all loaded assets?
     }
 
-    void Fs_QueueUpdate(void)
+    void Fs_QueueUpdate()
     {
         // @stub
         // @todo `Fs_QueueUpdatePostLoad` call seemed important.

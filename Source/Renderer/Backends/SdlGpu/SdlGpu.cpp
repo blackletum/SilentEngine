@@ -15,6 +15,7 @@
 #include "Services/Options.h"
 #include "Services/Platform.h"
 #include "Utils/Utils.h"
+#include "Utils/Video.h"
 
 using namespace Silent::Assets;
 using namespace Silent::Services;
@@ -151,8 +152,8 @@ namespace Silent::Renderer::SdlGpu
         GetMeshes().Upload(*copyPass, bufferVertsTest, bufferIdxsTest, "TestCube");
 
         // Load temp. textures.
-        GetTextures().Upload(*copyPass, "TIM/HERO_PIC.TIM");
-        GetTextures().Upload(*copyPass, "1ST/2ZANKO_E.TIM");
+        //GetTextures().Upload(*copyPass, "TIM/HERO_PIC.TIM");
+        //GetTextures().Upload(*copyPass, "1ST/2ZANKO_E.TIM");
         GetTextures().Upload(*copyPass, "TIM/BG_ETC.TIM");
 
         // @todo If atlas textures aren't updated and the texture is missing, for some reason
@@ -313,7 +314,7 @@ namespace Silent::Renderer::SdlGpu
         auto renderTexInfo = SDL_GPUTextureCreateInfo
         {
             .type                 = SDL_GPU_TEXTURETYPE_2D,
-            .format               = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+            .format               = SDL_GetGPUSwapchainTextureFormat(_device, _window),
             .usage                = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER,
             .width                = (uint)viewportRes.x,
             .height               = (uint)viewportRes.y,
@@ -386,41 +387,46 @@ namespace Silent::Renderer::SdlGpu
         // @temp
         //---------------------------
 
-        auto* tex = GetTextures()["TIM/BG_ETC.TIM"];
+        //auto* tex = GetTextures()[g_App.GetVideo().GetName()];
+        //if (tex == nullptr)
+        //{
+            auto* tex = GetTextures()["TIM/BG_ETC.TIM"];
+        //}
+
         if (tex != nullptr)
         {
             tex->Bind(renderPass, GetActiveSampler());
-        }
+            
+            _view.Move();
 
-        _view.Move();
+            auto model = Matrix::Identity;
+            model.Rotate(DEG_TO_RAD(45.0f), Vector3::UnitX);
 
-        auto model = Matrix::Identity;
-        model.Rotate(DEG_TO_RAD(45.0f), Vector3::UnitX);
+            auto viewProj = _view.GetMatrix(glm::radians(45.0f), GetViewportAspectRatio(), 0.1f, 100.0f);
 
-        auto viewProj = _view.GetMatrix(glm::radians(45.0f), GetViewportAspectRatio(), 0.1f, 100.0f);
+            auto uni0 = UniformView{};
+            auto uni1 = UniformPrimitive3d{};
+            memcpy(&uni0.ViewProjMat, &viewProj[0][0], 64);
+            memcpy(&uni1.ModelMat, &model[0][0], 64);
+            PushVertexUniform(uni0, 0);
+            PushVertexUniform(uni1, 1);
 
-        auto uni0 = UniformView{};
-        auto uni1 = UniformPrimitive3d{};
-        memcpy(&uni0.ViewProjMat, &viewProj[0][0], 64);
-        memcpy(&uni1.ModelMat, &model[0][0], 64);
-        PushVertexUniform(uni0, UniformSlot::PerFrame);
-        PushVertexUniform(uni1, UniformSlot::PerObject);
+            // Push uniform.
+            auto uni = UniformModel
+            {
+                .IsFastAlpha = false
+            };
+            PushFragmentUniform(uni, 0);
 
-        // Push uniform.
-        auto uni = UniformModel
-        {
-            .IsFastAlpha = false
-        };
-        PushFragmentUniform(uni, UniformSlot::PerObject);
-
-        // Draw.
-        //const auto* mesh = GetMeshes()["CHARA/DOC.ILM_0"];
-        //const auto* mesh = GetMeshes()["ITEM/UNQE1.TMD_1"];
-        const auto* mesh = GetMeshes()["TestCube"];
-        if (mesh != nullptr && mesh->IsValid())
-        {
-            SDL_DrawGPUIndexedPrimitives(&renderPass, mesh->IdxCount, 1, mesh->IdxOffset, mesh->VertexOffset, 0);
-            _doubleBuffer.Active.DrawCallCount++;
+            // Draw.
+            //const auto* mesh = GetMeshes()["CHARA/DOC.ILM_0"];
+            //const auto* mesh = GetMeshes()["ITEM/UNQE1.TMD_1"];
+            const auto* mesh = GetMeshes()["TestCube"];
+            if (mesh != nullptr && mesh->IsValid())
+            {
+                SDL_DrawGPUIndexedPrimitives(&renderPass, mesh->IdxCount, 1, mesh->IdxOffset, mesh->VertexOffset, 0);
+                _doubleBuffer.Active.DrawCallCount++;
+            }
         }
 
         //---------------------------
@@ -515,7 +521,7 @@ namespace Silent::Renderer::SdlGpu
             _pipelines.Bind(renderPass, batch.RenderStg, batch.BlendMd);
 
             // Push uniform.
-            PushFragmentUniform(batch.Uniform, UniformSlot::PerObject);
+            PushFragmentUniform(batch.Uniform, 0);
 
             // Bind texture.
             if (!batch.TextureName.empty())
@@ -594,7 +600,7 @@ namespace Silent::Renderer::SdlGpu
                 .FadeAlpha = Debug::g_Work.BlendAlpha,
                 .IsWhite   = false
             };
-            PushFragmentUniform(uni, UniformSlot::PerFrame);
+            PushFragmentUniform(uni, 0);
 
             // Bind render texture.
             auto binding = SDL_GPUTextureSamplerBinding
@@ -621,7 +627,7 @@ namespace Silent::Renderer::SdlGpu
                 .Resolution = GetViewportResolution().ToVector2(),
                 .Time       = 0.0f
             };
-            PushFragmentUniform(uni, UniformSlot::PerFrame);
+            PushFragmentUniform(uni, 0);
 
             // Bind render texture.
             auto binding = SDL_GPUTextureSamplerBinding
@@ -648,7 +654,7 @@ namespace Silent::Renderer::SdlGpu
                 .Resolution = GetViewportResolution().ToVector2(),
                 .Time       = 0.0f
             };
-            PushFragmentUniform(uni, UniformSlot::PerFrame);
+            PushFragmentUniform(uni, 0);
 
             // Bind render texture.
             auto binding = SDL_GPUTextureSamplerBinding
@@ -693,7 +699,7 @@ namespace Silent::Renderer::SdlGpu
         {
             .Brightness = (options->BrightnessLevel * BRIGHTNESS_STEP) - BRIGHTNESS_MIDDLE
         };
-        PushFragmentUniform(uni, UniformSlot::PerFrame);
+        PushFragmentUniform(uni, 0);
 
         // Bind render texture.
         auto binding = SDL_GPUTextureSamplerBinding
@@ -787,7 +793,10 @@ namespace Silent::Renderer::SdlGpu
 
     void Renderer::UpdateResources(SDL_GPUCopyPass& copyPass)
     {
+        constexpr auto FONT_ATLAS_RES = Vector2i(Font::ATLAS_SIZE);
+
         auto& fonts = g_App.GetFonts();
+        auto& video = g_App.GetVideo();
 
         // Release/upload textures.
         auto& texs = GetTextures();
@@ -815,28 +824,50 @@ namespace Silent::Renderer::SdlGpu
         for (const auto& metadata : FONTS_METADATA)
         {
             auto* font = fonts.GetFont(metadata.Name);
-            if (font != nullptr)
+            if (font == nullptr)
             {
-                const auto& atlases = font->GetTextureAtlases();
-                for (int atlasIdx : font->GetDirtyGpuAtlasIdxs())
-                {
-                    const auto& atlas = atlases[atlasIdx];
-
-                    // Initialize new or update existing GPU font atlas textures.
-                    auto  name = metadata.Name + std::to_string(atlasIdx);
-                    auto* tex  = GetTextures()[name];
-                    if (tex != nullptr)
-                    {
-                        tex->Update(copyPass, ToSpan(atlas), Vector2i::Zero, Vector2i(Font::ATLAS_SIZE));
-                    }
-                    else
-                    {
-                        GetTextures().Upload(copyPass, ToSpan(atlas), Vector2i(Font::ATLAS_SIZE), name);
-                    }
-                }
-
-                font->ClearDirtyGpuAtlasIdxs();
+                continue;
             }
+
+            const auto& atlases = font->GetTextureAtlases();
+            for (int atlasIdx : font->GetDirtyGpuAtlasIdxs())
+            {
+                const auto& atlas = atlases[atlasIdx];
+
+                // Upload/update font atlas texture.
+                auto  name = metadata.Name + std::to_string(atlasIdx);
+                auto* tex  = GetTextures()[name];
+                if (tex != nullptr)
+                {
+                    tex->Update(copyPass, ToSpan(atlas), Vector2i::Zero, FONT_ATLAS_RES);
+                }
+                else
+                {
+                    GetTextures().Upload(copyPass, ToSpan(atlas), FONT_ATLAS_RES, name);
+                }
+            }
+
+            font->ClearDirtyGpuAtlasIdxs();
+        }
+
+        // Upload/update video texture.
+        const auto& videoName = video.GetName();
+        if (video.IsPlaying())
+        {
+            auto* tex = GetTextures()[videoName];
+            if (tex != nullptr)
+            {
+                tex->Update(copyPass, ToSpan(video.GetVideoFrame()), Vector2i::Zero, video.GetResolution());
+            }
+            else
+            {
+                GetTextures().Upload(copyPass, ToSpan(video.GetVideoFrame()), video.GetResolution(), video.GetName());
+            }
+        }
+        // Release video texture.
+        else if (video.IsLoaded())
+        {
+            GetTextures().Release(videoName);
         }
     }
 
@@ -948,19 +979,19 @@ namespace Silent::Renderer::SdlGpu
         _gpuBuffers.ViewportVertices2d.UpdateIdxs(copyPass, ToSpan(BUFFER_IDXS), 0);
     }
 
-    void Renderer::PushVertexUniform(const UniformType& uni, UniformSlot slot)
+    void Renderer::PushVertexUniform(const UniformType& uni, int slotIdx)
     {
         std::visit([&](auto&& arg)
         {
-            SDL_PushGPUVertexUniformData(_commandBuffer, (int)slot, &arg, sizeof(arg));
+            SDL_PushGPUVertexUniformData(_commandBuffer, slotIdx, &arg, sizeof(arg));
         }, uni);
     }
 
-    void Renderer::PushFragmentUniform(const UniformType& uni, UniformSlot slot)
+    void Renderer::PushFragmentUniform(const UniformType& uni, int slotIdx)
     {
         std::visit([&](auto&& arg)
         {
-            SDL_PushGPUFragmentUniformData(_commandBuffer, (int)slot, &arg, sizeof(arg));
+            SDL_PushGPUFragmentUniformData(_commandBuffer, slotIdx, &arg, sizeof(arg));
         }, uni);
     }
 

@@ -977,9 +977,9 @@ namespace Silent::Game
     // or `s_AnimMetadata`?
     typedef struct _CharaAnimDataInfo
     {
-        s8             charaId0_0;  /** `e_CharacterId` */
-        s8             charaId1_1;  /** `e_CharacterId` */
-        s32            animFile0_4; // s_AnmHeader* animFile0_4; // TODO: Needs to be a pointer.
+        e_CharacterId  charaId0_0;
+        e_CharacterId  charaId1_1;
+        s_AnmHeader*   animFile0_4;
         s_AnmHeader*   animFile1_8;
         s32            animBufferSize1_C;
         s32            animBufferSize2_10;
@@ -989,23 +989,23 @@ namespace Silent::Game
     /** Related to weapon attacks. Stats, SFX IDs, damange values, etc.? */
     typedef struct
     {
-        q4_12 field_0;
-        s16   field_2;
-        u16   field_4;  // Related to damage. Multiplier?
-        s8    field_6;  // Accessed by `func_8008BF84` as `u16`
-        s8    unk_7;
-        u8    field_8;  // Accessed by `func_8008BF84` as `u16`
-        u8    field_9;  /** `e_CharacterId` */
-        u8    field_A;  // Accessed by `func_8008BF84` as `u16`
-        u8    field_B;
-        u16   field_C;
-        u8    field_E;  // Keyframe index offset?
-        u8    field_F;  // Keyframe index offset?
-        u8    field_10; // State.
-        u8    field_11;
-        u8    field_12;
-        u8    unk_13;
-        u32*  unk_14; // Some pointer. All entries have the same value `D_800AD4C4`.
+        q4_12         field_0;
+        s16           field_2;
+        u16           field_4;  // Related to damage. Multiplier?
+        s8            field_6;  // Accessed by `func_8008BF84` as `u16`
+        s8            unk_7;
+        u8            field_8;  // Accessed by `func_8008BF84` as `u16`
+        e_CharacterId field_9;
+        u8            field_A;  // Accessed by `func_8008BF84` as `u16`
+        u8            field_B;
+        u16           field_C;
+        u8            field_E;  // Keyframe index offset?
+        u8            field_F;  // Keyframe index offset?
+        u8            field_10; // State.
+        u8            field_11;
+        u8            field_12;
+        u8            unk_13;
+        u32*          unk_14; // Some pointer. All entries have the same value `D_800AD4C4`.
     } s_800AD4C8;
 
     /** @brief Collision point data. */
@@ -1272,7 +1272,7 @@ namespace Silent::Game
         s16            textureFileIdx         : 16;
         q8_8           field_6                : 10;
         u16            materialBlendMode_6_10 : 6; /** `e_BlendMode` */
-        s_FsImageDesc* field_8;                    // Extra texture pointer? Usually `NULL` in `CHARA_FILE_INFOS`.
+        s_FsImageDesc* field_8;                    // Extra texture pointer? Usually `nullptr` in `CHARA_FILE_INFOS`.
         u16            cameraAnchor_C_0  : 2;      /** `e_CameraAnchor` */
         q19_12         cameraOffsetY_C_2 : 14;
     } s_CharaFileInfo;
@@ -1363,7 +1363,7 @@ namespace Silent::Game
 
     /** @brief Contains X/Z coordinates and optional 4 bytes of data.
      * Map headers include an array of these, into which `s_EventData` includes an index. */
-    typedef struct _MapPoint2d
+    struct s_MapPoint2d
     {
         q19_12 positionX_0;
 
@@ -1376,7 +1376,7 @@ namespace Silent::Game
         u32   triggerParam1_4_24  : 8;
 
         q19_12 positionZ_8;
-    } s_MapPoint2d;
+    };
 
     typedef struct _SpawnInfo
     {
@@ -1496,8 +1496,8 @@ namespace Silent::Game
         const char**           mapMessages_30; // Array of strings.
         s_AnimInfo*            animInfos_34;   // Map-specific anim infos for Harry (for anims 38+).
         s_UnkStruct3_Mo*       field_38; // Array of 40?
-        void                   (*worldObjectsInit_3C)(void); // func(?).
-        void                   (*worldObjectsUpdate_40)(void);
+        void                   (*worldObjectsInit_3C)(); // func(?).
+        void                   (*worldObjectsUpdate_40)();
         void                   (*func_44)();
         void                   (*npcSpawnEvent_48)(); // func(?).
         s_MapHdr_field_4C*     unkTable1_4C; // Related to collision?
@@ -1536,7 +1536,7 @@ namespace Silent::Game
         s32                    (*func_D0)(s32 playerExtraState, VECTOR3* vec, q3_12 angle, s32 vecCount); // 0x800C964C
         s32                    (*func_D4)(s32);                  // Assumed return type.
         void                   (*func_D8)();                     // Assumed return type.
-        void                   (*playerAnimLock_DC)(void);
+        void                   (*playerAnimLock_DC)();
         void                   (*func_E0)(); // func(?).
         s32                    (*playerAnimUnlock_E4)(s_SubCharacter*, s32); // Assumed return type.
         s64                    (*func_E8)(s_SubCharacter*);      // Is it really `s64`???
@@ -1598,7 +1598,7 @@ namespace Silent::Game
     // TODO: Might just be an array of `char*`, array is in `.data` while strings inside are in `.rodata`?
     typedef struct
     {
-        char* field_0;               // `NULL`
+        char* field_0;               // `nullptr`
         char* savePadName_4;         // "PAD_NEAR"
         char* firstAidKitName_8;     // "AIDKIT_N"
         char* healthDrinkName_C;     // "DRINK_NE"
@@ -2078,10 +2078,6 @@ namespace Silent::Game
 
     extern s_800A99E4 D_800A99E4;
 
-    extern s32 g_MapMsg_CurrentIdx;
-
-    extern s16 g_MapMsg_SelectFlashTimer;
-
     extern s8 g_PaperMapFileIdxs[];
 
     extern s8 g_PaperMapMarkingFileIdxs[];
@@ -2096,8 +2092,6 @@ namespace Silent::Game
 
     /** Radio pitch state based on the distance from the player to an enemy. Range: `[0, 3]`. */
     extern s32 g_RadioPitchState;
-
-    extern void (*g_SysStateFuncs[])(void);
 
     extern s32 D_800A9A68;
 
@@ -2213,12 +2207,6 @@ namespace Silent::Game
     extern u8 D_800AE186;
 
     extern u8 g_SysState_GameOver_TipIdx;
-
-    /** Copy of delta timers.
-     * Appears to be used as save of the delta timer currently used as some instances where 2D backgrounds
-     * are drawn uses `g_DeltaTimeRaw` while `g_DeltaTime` is being stopped.
-     */
-    extern s32 g_DeltaTimeCpy;
 
     extern s_EventData* g_ItemTriggerEvents[];
 
@@ -2355,8 +2343,6 @@ namespace Silent::Game
 
     extern s_MapMsgSelect g_MapMsg_Select;
 
-    extern u8 g_MapMsg_AudioLoadBlock;
-
     extern s8 g_MapMsg_SelectCancelIdx;
 
     extern s32 D_800BCD84;
@@ -2369,8 +2355,7 @@ namespace Silent::Game
 
     extern u16 D_800BCE14;
 
-    // TODO: Rename to `g_WorldGfxWork`.
-    extern s_WorldGfxWork g_WorldGfx;
+    extern s_WorldGfxWork g_WorldGfxWork;
 
     extern s_IpdCollisionData* D_800C1010[4];
 

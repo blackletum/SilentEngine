@@ -42,6 +42,11 @@ namespace Silent
         return _work.Audio;
     }
 
+    ClockManager& ApplicationManager::GetClock()
+    {
+        return _work.Clock;
+    }
+
     ParallelExecutor& ApplicationManager::GetExecutor()
     {
         return _work.Executor;
@@ -77,14 +82,14 @@ namespace Silent
         return _work.Savegame;
     }
 
-    ClockManager& ApplicationManager::GetClock()
-    {
-        return _work.Clock;
-    }
-
     ToastManager& ApplicationManager::GetToaster()
     {
         return _work.Toaster;
+    }
+
+    VideoPlayer& ApplicationManager::GetVideo()
+    {
+        return _work.Video;
     }
 
     TranslationManager& ApplicationManager::GetTranslator()
@@ -152,12 +157,15 @@ namespace Silent
         {
             throw std::runtime_error(Fmt("Failed to create window: {}", SDL_GetError()));
         }
-        SDL_SetWindowMinimumSize(_window, (int)RETRO_SCREEN_SPACE_RES.x, (int)RETRO_SCREEN_SPACE_RES.y);
-        SDL_SetWindowAspectRatio(_window, WINDOW_ASPECT_RATIO_MIN, WINDOW_ASPECT_RATIO_MAX);
+        //SDL_SetWindowMinimumSize(_window, (int)RETRO_SCREEN_SPACE_RES.x, (int)RETRO_SCREEN_SPACE_RES.y);
+        //SDL_SetWindowAspectRatio(_window, WINDOW_ASPECT_RATIO_MIN, WINDOW_ASPECT_RATIO_MAX);
 
         // Assets.
         _work.Assets.Initialize(_work.Filesystem.GetAssetsDirectory() / ASSETS_PSX_DIR_NAME);
         _work.Translator.Initialize(_work.Filesystem.GetAssetsDirectory() / ASSETS_LOCALES_DIR_NAME, LOCALE_NAMES);
+        _work.Video.Initialize(_work.Filesystem.GetAssetsDirectory() / ASSETS_VIDEO_DIR_NAME);
+
+        // Fonts.
         for (const auto& fontMetadata : FONTS_METADATA)
         {
             _work.Fonts.LoadFont(fontMetadata, _work.Filesystem.GetAssetsDirectory() / ASSETS_FONTS_DIR_NAME, GLYPH_PRECACHE);
@@ -302,6 +310,12 @@ namespace Silent
 
         // Update audio.
         _work.Audio.Update();
+
+        // @debug
+        if (_work.Input.GetAction(In::Up).IsClicked())
+        {
+            _work.Toaster.Add("Hello I am a toast.");
+        }
 
         // Update debug and toasts.
         Debug::Update();

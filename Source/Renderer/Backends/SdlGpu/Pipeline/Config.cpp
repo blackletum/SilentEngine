@@ -173,7 +173,7 @@ namespace Silent::Renderer::SdlGpu
             .Stage                    = RenderStage::Shape2d,
             .VertShaderName           = "Primitive2d.vert",
             .FragShaderName           = "Shape2d.frag",
-            .FragShaderUniBufferCount = 2,
+            .FragShaderUniBufferCount = 1,
             .VertBufferDescs          = BUFFER_VERTEX_2D_DESCS,
             .VertBufferAttribs        = BUFFER_VERTEX_2D_ATTRIBS,
             .BlendModes               =
@@ -194,7 +194,7 @@ namespace Silent::Renderer::SdlGpu
             .VertShaderName           = "Primitive2d.vert",
             .FragShaderName           = "Sprite2d.frag",
             .FragShaderSamplerCount   = 1,
-            .FragShaderUniBufferCount = 2,
+            .FragShaderUniBufferCount = 1,
             .VertBufferDescs          = BUFFER_VERTEX_2D_DESCS,
             .VertBufferAttribs        = BUFFER_VERTEX_2D_ATTRIBS,
             .BlendModes               =
@@ -215,7 +215,7 @@ namespace Silent::Renderer::SdlGpu
             .VertShaderName           = "Primitive2d.vert",
             .FragShaderName           = "Glyph2d.frag",
             .FragShaderSamplerCount   = 1,
-            .FragShaderUniBufferCount = 2,
+            .FragShaderUniBufferCount = 1,
             .VertBufferDescs          = BUFFER_VERTEX_2D_DESCS,
             .VertBufferAttribs        = BUFFER_VERTEX_2D_ATTRIBS,
             .BlendModes               =
@@ -232,7 +232,7 @@ namespace Silent::Renderer::SdlGpu
             .VertShaderUniBufferCount = 2,
             .FragShaderName           = "Model.frag",
             .FragShaderSamplerCount   = 1,
-            .FragShaderUniBufferCount = 2,
+            .FragShaderUniBufferCount = 1,
             .VertBufferDescs          = BUFFER_VERTEX_3D_DESCS,
             .VertBufferAttribs        = BUFFER_VERTEX_3D_ATTRIBS,
             .BlendModes               =
@@ -258,7 +258,6 @@ namespace Silent::Renderer::SdlGpu
             .VertShaderName           = "Primitive2d.vert",
             .FragShaderName           = "Dither.frag",
             .FragShaderSamplerCount   = 1,
-            .FragShaderUniBufferCount = 1,
             .VertBufferDescs          = BUFFER_VERTEX_2D_DESCS,
             .VertBufferAttribs        = BUFFER_VERTEX_2D_ATTRIBS,
             .BlendModes               =

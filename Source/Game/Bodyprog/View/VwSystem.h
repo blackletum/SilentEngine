@@ -2,9 +2,9 @@
 
 #include "Game/Bodyprog/View/Enums.h"
 #include "Game/Bodyprog/View/Structs.h"
-//#include "Game/Bodyprog/View/VcMain.h"
+#include "Game/Bodyprog/View/VcMain.h"
 #include "Game/Bodyprog/View/VcUtil.h"
-//#include "Game/Bodyprog/View/VwCalc.h"
+#include "Game/Bodyprog/View/VwCalc.h"
 #include "Game/Bodyprog/View/VwMain.h"
 
 // TODO:
@@ -20,7 +20,7 @@
  * CIR:   Circle
  * DEFLT: Default
  * EFF:   Effective?
- * EV:    Elevation?
+ * EV:    Elevation
  * EXCL:  Exclusion
  * F:     Boolean or bit flag
  * FIX:   Fixed in place

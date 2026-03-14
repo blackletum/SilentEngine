@@ -149,7 +149,7 @@ namespace Silent::Utils
 
                     auto kerningDelta = FT_Vector{};
                     FT_Get_Kerning(ftFont, charIdx0, charIdx1, FT_KERNING_DEFAULT, &kerningDelta);
-                    spacing += FP_FLOAT(kerningDelta.x, Q6_SHIFT) + (_pointSize * _tracking);
+                    spacing += Q6_TO_FLT(kerningDelta.x) + (_pointSize * _tracking);
                 }
 
                 // Add shaped glyph.
@@ -217,7 +217,7 @@ namespace Silent::Utils
 
         // Get metrics.
         const auto& metrics = ftFont->glyph->metrics;
-        auto        size    = Vector2i(FP_FROM(metrics.width, Q6_SHIFT), FP_FROM(metrics.height, Q6_SHIFT)) +
+        auto        size    = Vector2i(Q6_TO_FLT(metrics.width), Q6_TO_FLT(metrics.height)) +
                               Vector2i(GLYPH_PADDING * 2);
 
         // Insert new rectangle.
@@ -238,12 +238,12 @@ namespace Silent::Utils
             .AtlasIdx      = _activeAtlasIdx,
             .AtlasPosition = Vector2i(sma_item_x(&rect), sma_item_y(&rect)) + Vector2i(GLYPH_PADDING),
             .AtlasSize     = size - Vector2i(GLYPH_PADDING * 2),
-            .Bearing       = Vector2(FP_FLOAT(metrics.horiBearingX, Q6_SHIFT), FP_FLOAT(metrics.horiBearingY, Q6_SHIFT)),
-            .Spacing       = FP_FLOAT(metrics.horiAdvance, Q6_SHIFT) + (_pointSize * _tracking),
-            .Ascender      = FP_FLOAT(ftFont->ascender, Q6_SHIFT),
-            .Descender     = FP_FLOAT(ftFont->descender, Q6_SHIFT),
-            .MinY          = FP_FLOAT(ftBox.yMin, Q6_SHIFT),
-            .MaxY          = FP_FLOAT(ftBox.yMax, Q6_SHIFT)
+            .Bearing       = Vector2(Q6_TO_FLT(metrics.horiBearingX), Q6_TO_FLT(metrics.horiBearingY)),
+            .Spacing       = Q6_TO_FLT(metrics.horiAdvance) + (_pointSize * _tracking),
+            .Ascender      = Q6_TO_FLT(ftFont->ascender),
+            .Descender     = Q6_TO_FLT(ftFont->descender),
+            .MinY          = Q6_TO_FLT(ftBox.yMin),
+            .MaxY          = Q6_TO_FLT(ftBox.yMax)
         };
         const auto& glyph = _glyphs[codePoint];
 
@@ -341,7 +341,8 @@ namespace Silent::Utils
     {
         if (metadata.Filenames.empty())
         {
-            Debug::Log(Fmt("Attempted to load font chain `{}` without font files.", metadata.Name), Debug::LogLevel::Warning);
+            Debug::Log(Fmt("Attempted to load font chain `{}` without font files.", metadata.Name),
+                       Debug::LogLevel::Warning);
             return;
         }
 

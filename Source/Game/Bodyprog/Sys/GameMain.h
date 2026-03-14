@@ -11,31 +11,31 @@ namespace Silent::Game
 
     extern s32 g_WarmBootTimer;
 
-    extern void (*g_GameStateUpdateFuncs[])(void); // Not originally extern.
+    extern void (*g_GameStateUpdateFuncs[])(); // Not originally extern.
 
     /** @brief Checks for a specific combination of inputs to determine if a soft reboot should take place.
      *
      * @return `ResetType_WarmBoot` if a soft reboot should take place, `ResetType_None` otherwise.
      * @note OPM counterpart of this function also returns `4` which is used to kill game's process.
      */
-    s32 MainLoop_ShouldWarmReset(void);
+    s32 MainLoop_ShouldWarmReset();
 
-    void GameState_Boot_Update(void);
-    void GameState_MovieIntroFadeIn_Update(void);
-    void GameState_AutoLoadSavegame_Update(void);
-    void GameState_MovieIntroAlternate_Update(void);
-    void GameState_MovieIntro_Update(void);
-    void GameState_MainMenu_Update(void);
-    void GameState_MovieOpening_Update(void);
-    void GameState_LoadScreen_Update(void);
-    void GameState_InGame_Update(void);
-    void GameState_MapEvent_Update(void);
-    void GameState_ExitMovie_Update(void);
-    void GameState_ItemScreens_Update(void);
-    void GameState_MapScreen_Update(void);
-    void GameState_LoadSavegameScreen_Update(void);
-    void GameState_DebugMoviePlayer_Update(void);
-    void GameState_Options_Update(void);
-    void GameState_LoadMapScreen_Update(void);
-    void GameState_Unk15_Update(void);
+    void GameState_Boot_Update();
+    void GameState_MovieIntroFadeIn_Update();
+    void GameState_AutoLoadSavegame_Update();
+    void GameState_MovieIntroAlternate_Update();
+    void GameState_MovieIntro_Update();
+    void GameState_MainMenu_Update();
+    void GameState_MovieOpening_Update();
+    void GameState_LoadScreen_Update();
+    void GameState_InGame_Update();
+    void GameState_MapEvent_Update();
+    void GameState_ExitMovie_Update();
+    void GameState_ItemScreens_Update();
+    void GameState_MapScreen_Update();
+    void GameState_LoadSavegameScreen_Update();
+    void GameState_DebugMoviePlayer_Update();
+    void GameState_Options_Update();
+    void GameState_LoadMapScreen_Update();
+    void GameState_Unk15_Update();
 }

@@ -19,7 +19,8 @@ namespace Silent::Renderer::SdlGpu
         // Constructors
         // =============
 
-        IndirectBuffer(SDL_GPUDevice& device, SDL_GPUCopyPass& copyPass, const std::vector<SDL_GPUIndexedIndirectDrawCommand>& commands,
+        IndirectBuffer(SDL_GPUDevice& device, SDL_GPUCopyPass& copyPass,
+                       const std::vector<SDL_GPUIndexedIndirectDrawCommand>& commands,
                        const std::string& name = {});
 
         // ========

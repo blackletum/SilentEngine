@@ -19,20 +19,20 @@ namespace Silent::Game
     {
         if (IS_SCREEN_FADE_WHITE(g_Screen_FadeStatus))
         {
-            //SetDrawMode(drMode, 0, 1, 32, NULL);
+            //SetDrawMode(drMode, 0, 1, 32, nullptr);
         }
         else
         {
-            //SetDrawMode(drMode, 0, 1, 64, NULL);
+            //SetDrawMode(drMode, 0, 1, 64, nullptr);
         }
     }
 
-    q19_12 Screen_FadeInProgressGet(void) // 0x800325F8
+    q19_12 Screen_FadeInProgressGet() // 0x800325F8
     {
         return Q12(1.0f) - g_PrevScreenFadeProgress;
     }
 
-    void Screen_FadeUpdate(void) // 0x8003260C
+    void Screen_FadeUpdate() // 0x8003260C
     {
         s32 queueLength;
         s32 timestep;

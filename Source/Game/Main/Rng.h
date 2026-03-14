@@ -112,7 +112,7 @@ namespace Silent::Game
      *
      * @return New pseudo-random 32-bit unsigned integer (`u32`).
      */
-    u32 Rng_Rand32(void);
+    u32 Rng_Rand32();
 
     /** @brief Generates a new random 16-bit unsigned integer.
      *
@@ -123,7 +123,7 @@ namespace Silent::Game
      * @return Random positive 16-bit unsigned integer as a 32-bit signed
      * integer (`s32`).
      */
-    s32 Rng_Rand16(void);
+    s32 Rng_Rand16();
 
     /** @brief Returns the current random seed value.
      *
@@ -132,7 +132,7 @@ namespace Silent::Game
      *
      * @return Current random seed as a 32-bit unsigned integer (`u32`).
      */
-    u32 Rng_GetSeed(void);
+    u32 Rng_GetSeed();
 
     /** @brief Sets the random seed to a specified value.
      *
@@ -152,5 +152,5 @@ namespace Silent::Game
      *
      * @return Random 12-bit short integer in the range `[0, 0xFFF]`.
      */
-    u16 Rng_Rand12(void);
+    u16 Rng_Rand12();
 }

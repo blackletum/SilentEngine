@@ -105,7 +105,6 @@ file(GLOB LIB_SOURCES
     "${CMAKE_CURRENT_LIST_DIR}/Libraries/imgui/backends/imgui_impl_sdlgpu3.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/Libraries/ImGuizmo/*.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/Libraries/smol-atlas/src/*.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/Libraries/vlc/lib/*.cpp"
 )
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${LIB_SOURCES})
 
@@ -140,6 +139,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} SYSTEM PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/ImGuizmo
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/json/include
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/LuaJIT/src
+    ${CMAKE_CURRENT_LIST_DIR}/Libraries/pl_mpeg
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/psyz/psyz/include
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/SDL/include
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/smol-atlas/src
@@ -147,7 +147,6 @@ target_include_directories(${CMAKE_PROJECT_NAME} SYSTEM PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/spdlog
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/stb
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/utfcpp/source
-    ${CMAKE_CURRENT_LIST_DIR}/Libraries/vlc/include
     ${CMAKE_CURRENT_LIST_DIR}/Libraries/yalantinglibs/include
 )
 

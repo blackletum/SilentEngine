@@ -11,8 +11,6 @@ namespace Silent::Utils
 {
     void TranslationManager::Initialize(const std::filesystem::path& localesPath, const std::vector<std::string>& localeNames)
     {
-        constexpr char LOCALE_FILENAME[] = "Locale";
-
         // Set path.
         _localesPath = localesPath;
 
@@ -94,10 +92,8 @@ namespace Silent::Utils
 
     void TranslationManager::LoadActiveLocale(const std::string& localeName)
     {
-        constexpr char LOCALE_FILENAME[] = "Locale";
-
         // Open locale file stream and set new locale.
-        auto localePath = _localesPath / localeName / Fmt("{}{}", LOCALE_FILENAME, JSON_FILE_EXT);
+        auto localePath = _localesPath / localeName / Fmt("{}{}", ASSETS_LOCALE_FILENAME, JSON_FILE_EXT);
         auto stream     = Stream(localePath, true, false);
         if (!stream.IsOpen())
         {

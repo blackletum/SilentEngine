@@ -12,6 +12,7 @@
 #include "Utils/Font.h"
 #include "Utils/Parallel.h"
 #include "Utils/Translator.h"
+#include "Utils/Video.h"
 
 namespace Silent
 {
@@ -31,16 +32,17 @@ namespace Silent
     {
         AssetStreamer                 Assets     = AssetStreamer();
         AudioManager                  Audio      = AudioManager();
+        ClockManager                  Clock      = ClockManager();
+        ParallelExecutor              Executor   = ParallelExecutor();
         FilesystemManager             Filesystem = FilesystemManager();
         FontManager                   Fonts      = FontManager();
         InputManager                  Input      = InputManager();
         OptionsManager                Options    = OptionsManager();
-        ParallelExecutor              Executor   = ParallelExecutor();
         std::unique_ptr<RendererBase> Renderer   = nullptr;
         SavegameManager               Savegame   = SavegameManager();
-        ClockManager                  Clock      = ClockManager();
         TranslationManager            Translator = TranslationManager();
         ToastManager                  Toaster    = ToastManager();
+        VideoPlayer                   Video      = VideoPlayer();
     };
 
     class ApplicationManager
@@ -81,6 +83,12 @@ namespace Silent
          * @return Audio instance.
          */
         AudioManager& GetAudio();
+
+        /** @brief Gets the clock subsystem instance.
+         *
+         * @return Clock instance.
+         */
+        ClockManager& GetClock();
 
         /** @brief Gets the executor subsystem instance.
          *
@@ -124,11 +132,11 @@ namespace Silent
          */
         SavegameManager& GetSavegame();
 
-        /** @brief Gets the clock subsystem instance.
+        /** @brief Gets the toaster subsystem instance.
          *
-         * @return Clock instance.
+         * @return Toaster instance.
          */
-        ClockManager& GetClock();
+        ToastManager& GetToaster();
 
         /** @brief Gets the translator subsystem instance.
          *
@@ -136,11 +144,11 @@ namespace Silent
          */
         TranslationManager& GetTranslator();
 
-        /** @brief Gets the toaster subsystem instance.
+        /** @brief Gets the video player instance.
          *
-         * @return Toaster instance.
+         * @return Video player instance.
          */
-        ToastManager& GetToaster();
+        VideoPlayer& GetVideo();
 
         /** @brief Gets the window resolution.
          *

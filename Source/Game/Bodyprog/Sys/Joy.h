@@ -6,13 +6,13 @@ namespace Silent::Game
 
     constexpr q0_7 STICK_THRESHOLD = FP_STICK(0.5f);
 
-    void Joy_Init(void);
+    void Joy_Init();
 
-    void Joy_ReadP1(void);
+    void Joy_ReadP1();
 
-    void Joy_Update(void);
+    void Joy_Update();
 
-    void Joy_ControllerDataUpdate(void);
+    void Joy_ControllerDataUpdate();
 
     void ControllerData_AnalogToDigital(s_ControllerData* cont, bool arg1);
 }
