@@ -1,4 +1,5 @@
 charset-normalizer
 customtkinter
 pyinstaller
+python-dateutil
 static-ffmpeg

@@ -6,7 +6,7 @@
 
 #include "Game/Bodyprog/Screen/ScreenData.h"
 #include "Game/Bodyprog/Screen/ScreenDraw.h"
-//#include "Game/Bodyprog/sound_system.h"
+#include "Game/Bodyprog/Sound/SoundSystem.h"
 #include "Game/Bodyprog/Text/TextDraw.h"
 #include "Game/Main/FsQueue.h"
 
@@ -25,10 +25,10 @@ namespace Silent::Game
         constexpr int    FINISH_CUTSCENE = 0xFF;
         constexpr int    FINISH_MAP_MSG  = 0xFF;
 
-        s32  temp_s1;
-        bool hasInput;
-        s32  temp;
-        s32  var_a1;
+        s32        temp_s1;
+        bool       hasInput;
+        s32        temp;
+        s32        var_a1;
         static s32 stateMachineIdx0;
         static s32 stateMachineIdx1;
         static s32 msgDisplayLength;
@@ -125,7 +125,7 @@ namespace Silent::Game
 
                                 if (g_SysWork.sysFlags_22A0 & SysFlag_5)
                                 {
-                                    //SD_Call(19);
+                                    SD_Call(19);
                                 }
                                 break;
                             }
@@ -193,7 +193,7 @@ namespace Silent::Game
 
                         if (g_SysWork.sysFlags_22A0 & SysFlag_5)
                         {
-                            //SD_Call(19);
+                            SD_Call(19);
                         }
 
                         D_800BCD74 = 1;

@@ -46,6 +46,9 @@
 //#include <assimp/postprocess.h>
 //#include <assimp/scene.h>
 
+// FluidSynth
+//#include <fluidsynth.h>
+
 // FreeType
 #include <ft2build.h>
 #include <freetype/freetype.h>
@@ -68,7 +71,7 @@
 #include <imgui_impl_sdlgpu3.h>
 
 // ImGuizmo
-#include <ImGuizmo.h>
+//#include <ImGuizmo.h>
 
 // json
 #include <nlohmann/json.hpp>

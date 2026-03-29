@@ -30,7 +30,7 @@ SOURCES_PATH     = BASE_PATH / "../Source/Assets/Shaders"
 OUTPUT_PATH      = BASE_PATH / "../Build/Assets/Shaders"
 TEMP_OUTPUT_PATH = OUTPUT_PATH / ".temp"
 
-def _get_shadercross_executable():
+def _get_shadercross_exe():
     """
     Get the path to the appropriate `shadercross` executable based on the system OS.
     """
@@ -81,7 +81,7 @@ def main():
         _cleanup()
 
         # Setup.
-        shadercross_exe = _get_shadercross_executable()
+        shadercross_exe = _get_shadercross_exe()
         formats         = _get_output_formats()
         os.makedirs(OUTPUT_PATH,      exist_ok=True)
         os.makedirs(TEMP_OUTPUT_PATH, exist_ok=True)
@@ -113,9 +113,11 @@ def main():
 
                 # Run generation command.
                 if run_new_build:
-                    command = [shadercross_exe, shader_source,
-                               "-I", SOURCES_PATH,
-                               "-o", temp_shader_output]
+                    command = [
+                        shadercross_exe, shader_source,
+                        "-I", SOURCES_PATH,
+                        "-o", temp_shader_output
+                    ]
                     result  = subprocess.run(command, capture_output=True)
 
                     # Report status.
@@ -141,7 +143,7 @@ def main():
             print("Shaders are up-to-date.")
         else:
             success_str = f"{build_count} shader{"" if build_count == 1 else "s"} built successfully."
-            fail_str = (f" {len(fail_names)} failed:" if len(fail_names) > 0 else "")
+            fail_str    = (f" {len(fail_names)} failed:" if len(fail_names) > 0 else "")
             print(success_str + fail_str)
 
             for fail_name in fail_names:
@@ -151,7 +153,6 @@ def main():
     except Exception as ex:
         _cleanup()
 
-        # Report exception.
         print(f"Error: {ex}")
         sys.exit(1)
 
