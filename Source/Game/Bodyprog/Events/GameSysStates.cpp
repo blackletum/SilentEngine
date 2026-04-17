@@ -5,6 +5,7 @@
 #include "Game/Bodyprog/Bodyprog.h"
 
 #include "Game/Bodyprog/Demo.h"
+#include "Game/Bodyprog/Events/bodyprog_data_800A99B4.h"
 #include "Game/Bodyprog/Events/MapMsgDisplay.h"
 #include "Game/Bodyprog/Events/EventsMain.h"
 #include "Game/Bodyprog/Events/Radio.h"
@@ -50,7 +51,7 @@ namespace Silent::Game
      */
     static s32 g_DeltaTimeCpy;
 
-    s_EventData* g_ItemTriggerEvents[5]; // Guessed size. Check ddecomp later.
+    s_EventData* g_ItemTriggerEvents[5]; // Guessed size. Check decomp later.
     s_800BCDA8   D_800BCDA8[2];
     s_MapPoint2d D_800BCDB0;
     s32          g_ItemTriggerItemIds[5];
@@ -63,12 +64,12 @@ namespace Silent::Game
 
         Demo_DemoRandSeedBackup();
 
-        switch (g_GameWork.gameStateStep_598[0])
+        switch (g_GameWork.gameStateSteps[0])
         {
             case 0:
                 ScreenFade_Start(true, true, false);
                 g_ScreenFadeTimestep            = Q12(3.0f);
-                g_GameWork.gameStateStep_598[0] = 1;
+                g_GameWork.gameStateSteps[0] = 1;
 
             case 1:
                 //DrawSync(SyncMode_Wait);
@@ -77,12 +78,12 @@ namespace Silent::Game
                 //func_800892A4(1);
 
                 g_IntervalVBlanks = 2;
-                g_GameWork.gameStateStep_598[0]++;
-                g_SysWork.sysFlags_22A0 |= SysFlag_6;
+                g_GameWork.gameStateSteps[0]++;
+                g_SysWork.bgmStatusFlags |= BgmStatusFlag_6;
                 break;
         }
 
-        if (g_SysWork.sysState_8 != SysState_Gameplay && g_SysWork.playerWork_4C.player_0.health_B0 <= Q12(0.0f))
+        if (g_SysWork.sysState != SysState_Gameplay && g_SysWork.playerWork.player.health <= Q12(0.0f))
         {
             SysWork_StateSetNext(SysState_Gameplay);
         }
@@ -96,17 +97,17 @@ namespace Silent::Game
             g_DeltaTimeCpy = g_DeltaTimeRaw;
         }
 
-        if (g_SysWork.sysState_8 == SysState_Gameplay)
+        if (g_SysWork.sysState == SysState_Gameplay)
         {
-            g_SysWork.isMgsStringSet_18 = false;
+            g_SysWork.isMgsStringSet = false;
             g_SysStateFuncs[SysState_Gameplay]();
         }
         else
         {
             g_DeltaTime = Q12(0.0f);
-            g_SysStateFuncs[g_SysWork.sysState_8]();
+            g_SysStateFuncs[g_SysWork.sysState]();
 
-            if (g_SysWork.sysState_8 == SysState_Gameplay)
+            if (g_SysWork.sysState == SysState_Gameplay)
             {
                 Event_Update(true);
 
@@ -120,7 +121,7 @@ namespace Silent::Game
 
         D_800A9A0C = ScreenFade_IsFinished() && Fs_QueueDoThingWhenEmpty();
 
-        if (!(g_SysWork.sysFlags_22A0 & SysFlag_Freeze) && g_MapOverlayHeader.worldObjectsUpdate_40 != nullptr)
+        if (!(g_SysWork.bgmStatusFlags & BgmStatusFlag_Pause) && g_MapOverlayHeader.worldObjectsUpdate_40 != nullptr)
         {
             g_MapOverlayHeader.worldObjectsUpdate_40();
         }
@@ -130,7 +131,7 @@ namespace Silent::Game
         Demo_DemoRandSeedRestore();
         Demo_DemoRandSeedRestore();
 
-        if (!(g_SysWork.sysFlags_22A0 & SysFlag_Freeze))
+        if (!(g_SysWork.bgmStatusFlags & BgmStatusFlag_Pause))
         {
             //func_80040014();
             vcMoveAndSetCamera(false, false, false, false, false, false, false, false);
@@ -142,25 +143,25 @@ namespace Silent::Game
 
             Demo_DemoRandSeedRestore();
 
-            player = &g_SysWork.playerWork_4C.player_0;
-            //Player_Update(player, FS_BUFFER_0, g_SysWork.playerBoneCoords_890);
+            player = &g_SysWork.playerWork.player;
+            //Player_Update(player, FS_BUFFER_0, g_SysWork.playerBoneCoords);
 
             Demo_DemoRandSeedRestore();
             //Gfx_FlashlightUpdate();
 
-            if (g_SavegamePtr->mapOverlayId_A4 != MapOverlayId_MAP7_S03)
+            if (g_SavegamePtr->mapOverlayId_A4 != MapIdx_MAP7_S03)
             {
                 g_MapOverlayHeader.particlesUpdate_168(0, g_SavegamePtr->mapOverlayId_A4, 1);
             }
 
             Demo_DemoRandSeedRestore();
 
-            if (player->model_0.anim_4.flags_2 & AnimFlag_Visible)
+            if (player->model.anim.flags & AnimFlag_Visible)
             {
-                //func_8003DA9C(Chara_Harry, g_SysWork.playerBoneCoords_890, 1, g_SysWork.playerWork_4C.player_0.timer_C6, 0);
-                //Chara_Flag8Clear(&g_SysWork.playerWork_4C.player_0);
-                //Player_CombatUpdate(&g_SysWork.playerWork_4C, g_SysWork.playerBoneCoords_890);
-                //func_8008A3AC(&g_SysWork.playerWork_4C.player_0);
+                //func_8003DA9C(Chara_Harry, g_SysWork.playerBoneCoords, 1, g_SysWork.playerWork.player.timer_C6, 0);
+                //Chara_Flag8Clear(&g_SysWork.playerWork.player);
+                //Player_CombatUpdate(&g_SysWork.playerWork, g_SysWork.playerBoneCoords);
+                //func_8008A3AC(&g_SysWork.playerWork.player);
             }
 
             Demo_DemoRandSeedRestore();
@@ -177,12 +178,12 @@ namespace Silent::Game
     {
         s_SubCharacter* player;
 
-        player = &g_SysWork.playerWork_4C.player_0;
+        player = &g_SysWork.playerWork.player;
 
-        Event_Update(player->attackReceived_41 != NO_VALUE);
+        Event_Update(player->attackReceived != NO_VALUE);
         //Savegame_MapRoomIdxUpdate();
 
-        switch (FP_ROUND_SCALED(player->health_B0, 10, Q12_SHIFT))
+        switch (FP_ROUND_SCALED(player->health, 10, Q12_SHIFT))
         {
             case 0:
                 //func_800892A4(17);
@@ -210,12 +211,12 @@ namespace Silent::Game
                 break;
         }
 
-        if (g_SysWork.playerWork_4C.player_0.health_B0 <= Q12(0.0f))
+        if (g_SysWork.playerWork.player.health <= Q12(0.0f))
         {
             return;
         }
 
-        if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config_0.controllerConfig_0.light_A &&
+        if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.light_A &&
             g_SysWork.field_2388.field_154.effectsInfo_0.field_0.s_field_0.field_0 & (1 << 1))
         {
             //Game_FlashlightToggle();
@@ -225,7 +226,7 @@ namespace Silent::Game
         {
             SysWork_StateSetNext((e_SysState)g_MapEventSysState);
         }
-        else if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config_0.controllerConfig_0.pause_14)
+        else if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.pause_14)
         {
             SysWork_StateSetNext(SysState_GamePaused);
         }
@@ -233,29 +234,29 @@ namespace Silent::Game
         {
             return;
         }*/
-        else if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config_0.controllerConfig_0.item_16)
+        else if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.item_16)
         {
             SysWork_StateSetNext(SysState_StatusMenu);
         }
-        else if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config_0.controllerConfig_0.map_18)
+        else if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.map_18)
         {
             SysWork_StateSetNext(SysState_MapScreen);
-            g_SysWork.isMgsStringSet_18 = false;
+            g_SysWork.isMgsStringSet = false;
         }
-        else if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config_0.controllerConfig_0.option_1A)
+        else if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.option_1A)
         {
             SysWork_StateSetNext(SysState_OptionsMenu);
         }
 
-        if (g_SysWork.sysState_8 == SysState_OptionsMenu ||
-            g_SysWork.sysState_8 == SysState_StatusMenu ||
-            g_SysWork.sysState_8 == SysState_MapScreen)
+        if (g_SysWork.sysState == SysState_OptionsMenu ||
+            g_SysWork.sysState == SysState_StatusMenu ||
+            g_SysWork.sysState == SysState_MapScreen)
         {
-            g_SysWork.flags_22A4 |= SysFlag2_MenuOpen;
+            g_SysWork.flags_22A4 |= UnkSysFlag_7;
         }
         else if (ScreenFade_IsNone())
         {
-            g_SysWork.flags_22A4 &= ~SysFlag2_MenuOpen;
+            g_SysWork.flags_22A4 &= ~UnkSysFlag_7;
         }
     }
 
@@ -273,10 +274,10 @@ namespace Silent::Game
         //func_80091380();
         //Game_TimerUpdate();
 
-        if (g_SysWork.sysStateStep_C[0] == 0)
+        if (g_SysWork.sysStateSteps[0] == 0)
         {
             SD_Call(3);
-            g_SysWork.sysStateStep_C[0]++;
+            g_SysWork.sysStateSteps[0]++;
         }
 
         // Debug button combo to bring up save screen from pause screen.
@@ -297,9 +298,10 @@ namespace Silent::Game
             return;
         }
 
-        if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config_0.controllerConfig_0.pause_14)
+        if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.pause_14)
         {
             D_800A9A68 = 0;
+
             SD_Call(4);
             SysWork_StateSetNext(SysState_Gameplay);
         }
@@ -307,12 +309,12 @@ namespace Silent::Game
 
     void SysState_OptionsMenu_Update() // 0x80039344
     {
-        switch (g_SysWork.sysStateStep_C[0])
+        switch (g_SysWork.sysStateSteps[0])
         {
             case 0:
                 ScreenFade_Start(true, false, false);
                 g_ScreenFadeTimestep        = Q12(0.0f);
-                g_SysWork.sysStateStep_C[0] = 1;
+                g_SysWork.sysStateSteps[0] = 1;
 
             case 1:
                 //if (Ipd_ChunkInitCheck() != 0)
@@ -320,7 +322,7 @@ namespace Silent::Game
                     SD_Call(19);
                     //GameFs_OptionBinLoad();
 
-                    g_SysWork.sysStateStep_C[0]++;
+                    g_SysWork.sysStateSteps[0]++;
                 }
                 break;
         }
@@ -338,15 +340,17 @@ namespace Silent::Game
         s32 val0;
         s32 val1;
 
+        bool isRockDrillAttack = g_SysWork.playerCombat.weaponAttack == WEAPON_ATTACK(EquippedWeaponId_RockDrill, AttackInputType_Tap);
+
         //func_8008B3E4(0);
 
         if (g_SysWork.field_275C > Q12(256.0f))
         {
             val0        = g_SysWork.field_275C - Q12(256.0f);
             roundedVal0 = FP_ROUND_TO_ZERO(val0, Q12_SHIFT);
-            //func_8008B438(g_SysWork.playerCombat_38.weaponAttack_F != WEAPON_ATTACK(EquippedWeaponId_RockDrill, AttackInputType_Tap), roundedVal0, 0);
+            //func_8008B438(!isRockDrillAttack, roundedVal0, 0);
 
-            if (g_SysWork.playerCombat_38.weaponAttack_F == WEAPON_ATTACK(EquippedWeaponId_RockDrill, AttackInputType_Tap))
+            if (isRockDrillAttack)
             {
                 val1        = g_SysWork.field_2764 - Q12(256.0f);
                 roundedVal1 = FP_ROUND_TO_ZERO(val1, Q12_SHIFT);
@@ -355,9 +359,9 @@ namespace Silent::Game
         }
         else
         {
-            //func_8008B438(g_SysWork.playerCombat_38.weaponAttack_F != WEAPON_ATTACK(EquippedWeaponId_RockDrill, AttackInputType_Tap), 0, 0);
+            //func_8008B438(!isRockDrillAttack, 0, 0);
 
-            if (g_SysWork.playerCombat_38.weaponAttack_F == WEAPON_ATTACK(EquippedWeaponId_RockDrill, AttackInputType_Tap))
+            if (isRockDrillAttack)
             {
                 //func_8008B40C(0, 0);
             }
@@ -365,55 +369,55 @@ namespace Silent::Game
 
         switch (g_SavegamePtr->mapOverlayId_A4)
         {
-            case MapOverlayId_MAP0_S01:
-            case MapOverlayId_MAP0_S02:
-            case MapOverlayId_MAP1_S00:
-            case MapOverlayId_MAP1_S01:
-            case MapOverlayId_MAP1_S02:
-            case MapOverlayId_MAP1_S03:
-            case MapOverlayId_MAP1_S04:
-            case MapOverlayId_MAP1_S05:
-            case MapOverlayId_MAP1_S06:
-            case MapOverlayId_MAP2_S00:
-            case MapOverlayId_MAP2_S01:
-            case MapOverlayId_MAP2_S02:
-            case MapOverlayId_MAP2_S03:
-            case MapOverlayId_MAP2_S04:
-            case MapOverlayId_MAP3_S00:
-            case MapOverlayId_MAP3_S01:
-            case MapOverlayId_MAP3_S02:
-            case MapOverlayId_MAP3_S04:
-            case MapOverlayId_MAP3_S05:
-            case MapOverlayId_MAP3_S06:
-            case MapOverlayId_MAP4_S00:
-            case MapOverlayId_MAP4_S01:
-            case MapOverlayId_MAP4_S02:
-            case MapOverlayId_MAP4_S03:
-            case MapOverlayId_MAP4_S04:
-            case MapOverlayId_MAP4_S05:
-            case MapOverlayId_MAP4_S06:
-            case MapOverlayId_MAP5_S00:
-            case MapOverlayId_MAP5_S01:
-            case MapOverlayId_MAP5_S02:
-            case MapOverlayId_MAP5_S03:
-            case MapOverlayId_MAP6_S00:
-            case MapOverlayId_MAP6_S01:
-            case MapOverlayId_MAP6_S02:
-            case MapOverlayId_MAP6_S03:
-            case MapOverlayId_MAP6_S04:
-            case MapOverlayId_MAP6_S05:
-            case MapOverlayId_MAP7_S00:
-            case MapOverlayId_MAP7_S01:
-            case MapOverlayId_MAP7_S02:
+            case MapIdx_MAP0_S01:
+            case MapIdx_MAP0_S02:
+            case MapIdx_MAP1_S00:
+            case MapIdx_MAP1_S01:
+            case MapIdx_MAP1_S02:
+            case MapIdx_MAP1_S03:
+            case MapIdx_MAP1_S04:
+            case MapIdx_MAP1_S05:
+            case MapIdx_MAP1_S06:
+            case MapIdx_MAP2_S00:
+            case MapIdx_MAP2_S01:
+            case MapIdx_MAP2_S02:
+            case MapIdx_MAP2_S03:
+            case MapIdx_MAP2_S04:
+            case MapIdx_MAP3_S00:
+            case MapIdx_MAP3_S01:
+            case MapIdx_MAP3_S02:
+            case MapIdx_MAP3_S04:
+            case MapIdx_MAP3_S05:
+            case MapIdx_MAP3_S06:
+            case MapIdx_MAP4_S00:
+            case MapIdx_MAP4_S01:
+            case MapIdx_MAP4_S02:
+            case MapIdx_MAP4_S03:
+            case MapIdx_MAP4_S04:
+            case MapIdx_MAP4_S05:
+            case MapIdx_MAP4_S06:
+            case MapIdx_MAP5_S00:
+            case MapIdx_MAP5_S01:
+            case MapIdx_MAP5_S02:
+            case MapIdx_MAP5_S03:
+            case MapIdx_MAP6_S00:
+            case MapIdx_MAP6_S01:
+            case MapIdx_MAP6_S02:
+            case MapIdx_MAP6_S03:
+            case MapIdx_MAP6_S04:
+            case MapIdx_MAP6_S05:
+            case MapIdx_MAP7_S00:
+            case MapIdx_MAP7_S01:
+            case MapIdx_MAP7_S02:
                 break;
 
-            case MapOverlayId_MAP3_S03:
-                //Sd_SfxStop(Sfx_Unk1525);
-                //Sd_SfxStop(Sfx_Unk1527);
+            case MapIdx_MAP3_S03:
+                Sd_SfxStop(Sfx_Unk1525);
+                Sd_SfxStop(Sfx_Unk1527);
                 break;
 
-            case MapOverlayId_MAP0_S00:
-                //Sd_SfxStop(Sfx_Unk1358);
+            case MapIdx_MAP0_S00:
+                Sd_SfxStop(Sfx_Unk1358);
                 break;
         }
     }
@@ -422,27 +426,27 @@ namespace Silent::Game
     {
         e_GameState gameState;
 
-        gameState = g_GameWork.gameState_594;
+        gameState = g_GameWork.gameState;
 
-        g_GameWork.gameState_594 = GameState_LoadStatusScreen;
+        g_GameWork.gameState = GameState_LoadStatusScreen;
         g_SysWork.counters_1C[0] = 0;
         g_SysWork.counters_1C[1] = 0;
 
-        g_GameWork.gameStateStep_598[1] = 0;
-        g_GameWork.gameStateStep_598[2] = 0;
+        g_GameWork.gameStateSteps[1] = 0;
+        g_GameWork.gameStateSteps[2] = 0;
 
         SysWork_StateSetNext(SysState_Gameplay);
 
-        g_GameWork.gameStateStep_598[0] = gameState;
-        g_GameWork.gameStatePrev_590    = gameState;
-        g_GameWork.gameStateStep_598[0] = 0;
+        g_GameWork.gameStateSteps[0] = gameState;
+        g_GameWork.gameStatePrev    = gameState;
+        g_GameWork.gameStateSteps[0] = 0;
     }
 
     void GameState_LoadStatusScreen_Update() // 0x800395C0
     {
         s_Savegame* save;
 
-        if (g_GameWork.gameStateStep_598[0] == 0)
+        if (g_GameWork.gameStateSteps[0] == 0)
         {
             //DrawSync(SyncMode_Wait);
             g_IntervalVBlanks = 1;
@@ -459,7 +463,7 @@ namespace Silent::Game
             //func_800540A4(save->mapOverlayId_A4);
             //GameFs_MapItemsTextureLoad(save->mapOverlayId_A4);
 
-            g_GameWork.gameStateStep_598[0]++;
+            g_GameWork.gameStateSteps[0]++;
         }
 
         //Screen_BackgroundMotionBlur(SyncMode_Wait2);
@@ -474,7 +478,7 @@ namespace Silent::Game
     {
         if (!HAS_MAP(g_SavegamePtr->paperMapIdx_A9))
         {
-            if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config_0.controllerConfig_0.map_18 ||
+            if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.map_18 ||
                 Gfx_MapMsg_Draw(MapMsgIdx_NoMap) > MapMsgState_Idle)
             {
                 SysWork_StateSetNext(SysState_Gameplay);
@@ -484,7 +488,7 @@ namespace Silent::Game
                 ((g_SysWork.field_2388.field_1C[0].effectsInfo_0.field_0.s_field_0.field_0 & (1 << 0)) ||
                 (g_SysWork.field_2388.field_1C[1].effectsInfo_0.field_0.s_field_0.field_0 & (1 << 0))))
         {
-            if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config_0.controllerConfig_0.map_18 ||
+            if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.map_18 ||
                 Gfx_MapMsg_Draw(MapMsgIdx_TooDarkForMap) > MapMsgState_Idle)
             {
                 SysWork_StateSetNext(SysState_Gameplay);
@@ -492,7 +496,7 @@ namespace Silent::Game
         }
         else
         {
-            if (g_SysWork.sysStateStep_C[0] == 0)
+            if (g_SysWork.sysStateSteps[0] == 0)
             {
                 if (g_PaperMapMarkingFileIdxs[g_SavegamePtr->paperMapIdx_A9] != NO_VALUE)
                 {
@@ -503,7 +507,7 @@ namespace Silent::Game
 
                 ScreenFade_Start(true, false, false);
                 g_ScreenFadeTimestep = Q12(0.0f);
-                g_SysWork.sysStateStep_C[0]++;
+                g_SysWork.sysStateSteps[0]++;
             }
 
             if (D_800A9A0C != 0)
@@ -515,7 +519,7 @@ namespace Silent::Game
 
     void GameState_LoadMapScreen_Update() // 0x8003991C
     {
-        if (g_GameWork.gameStateStep_598[0] == 0)
+        if (g_GameWork.gameStateSteps[0] == 0)
         {
             //DrawSync(SyncMode_Wait);
             g_IntervalVBlanks = 1;
@@ -529,7 +533,7 @@ namespace Silent::Game
             }
 
             Fs_QueueStartReadTim((e_FsFile)((int)FILE_TIM_MP_0TOWN_TIM + g_PaperMapFileIdxs[g_SavegamePtr->paperMapIdx_A9]), FS_BUFFER_2, &g_PaperMapImg);
-            g_GameWork.gameStateStep_598[0]++;
+            g_GameWork.gameStateSteps[0]++;
         }
 
         //Screen_BackgroundMotionBlur(SyncMode_Wait2);
@@ -546,18 +550,18 @@ namespace Silent::Game
 
         static RECT D_800A9A6C = { 320, 256, 160, 240 };
 
-        switch (g_SysWork.sysStateStep_C[0])
+        switch (g_SysWork.sysStateSteps[0])
         {
             case 0:
                 ScreenFade_Start(false, false, false);
                 D_800A9A0C                  = 0;
-                g_SysWork.sysStateStep_C[0] = 1;
+                g_SysWork.sysStateSteps[0] = 1;
 
             case 1:
                 /*if (Ipd_ChunkInitCheck() != 0)
                 {
                     //GameFs_StreamBinLoad();
-                    g_SysWork.sysStateStep_C[0]++;
+                    g_SysWork.sysStateSteps[0]++;
                 }*/
                 break;
         }
@@ -577,7 +581,7 @@ namespace Silent::Game
 
         // Start playing movie. File to play is based on file ID `BASE_AUDIO_FILE_IDX - g_MapEventParam`.
         // Blocks until movie has finished playback or user has skipped it.
-        //open_main(BASE_AUDIO_FILE_IDX - g_MapEventParam, g_FileTable[BASE_AUDIO_FILE_IDX - g_MapEventParam].blockCount_0_19);
+        //open_main(BASE_AUDIO_FILE_IDX - g_MapEventParam, g_FileTable[BASE_AUDIO_FILE_IDX - g_MapEventParam].blockCount);
 
         //func_800892A4(1);
 
@@ -586,8 +590,8 @@ namespace Silent::Game
         //LoadImage(&D_800A9A6C, (u32*)IMAGE_BUFFER_0);
         //DrawSync(SyncMode_Wait);
 
-        // Set savegame flag based on `g_MapEventData->disabledEventFlag_2` flag ID.
-        Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag_2);
+        // Set savegame flag based on `g_MapEventData->disabledEventFlag` flag ID.
+        Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag);
 
         // Return to game.
         Game_StateSetNext(GameState_InGame);
@@ -595,7 +599,7 @@ namespace Silent::Game
         // If flag is set, returns to `GameState_InGame` with `gameStateStep[0]` = 1.
         if (g_MapEventData->flags_8_13 & EventParamUnkState_1)
         {
-            g_GameWork.gameStateStep_598[0] = 1;
+            g_GameWork.gameStateSteps[0] = 1;
         }
     }
 
@@ -605,57 +609,57 @@ namespace Silent::Game
         s_MapPoint2d* mapPoint;
 
         g_SysWork.field_229C            = 0;
-        g_SysWork.loadingScreenIdx_2281 = D_800BCDB0.loadingScreenId_4_9;
-        g_SysWork.field_2283            = g_MapEventData->field_8_19;
+        g_SysWork.loadingScreenIdx = D_800BCDB0.loadingScreenId_4_9;
+        g_SysWork.sfxPairIdx_2283            = g_MapEventData->sfxPairIdx_8_19;
         g_SysWork.field_2282            = g_MapEventData->flags_8_13;
 
-        SD_Call(SfxPairs[g_SysWork.field_2283].sfx_0);
+        SD_Call(SFX_PAIRS[g_SysWork.sfxPairIdx_2283].sfx_0);
 
-        if (g_SysWork.field_2283 == 7)
+        if (g_SysWork.sfxPairIdx_2283 == SfxPairIdx_7)
         {
             D_800BCDD4            = 0;
-            g_SysWork.flags_22A4 |= SysFlag2_10;
+            g_SysWork.flags_22A4 |= UnkSysFlag_10;
         }
 
-        D_800BCDB0 = g_MapOverlayHeader.mapPointsOfInterest_1C[g_MapEventData->eventParam_8_5];
+        D_800BCDB0 = g_MapOverlayHeader.mapPointsOfInterest_1C[g_MapEventData->eventParam];
 
         if (D_800BCDB0.triggerParam1_4_24 == 1)
         {
-            mapPoint                = &g_MapOverlayHeader.mapPointsOfInterest_1C[g_MapEventData->pointOfInterestIdx_5];
-            offsetZ                 = g_SysWork.playerWork_4C.player_0.position_18.vz - mapPoint->positionZ_8;
-            D_800BCDB0.positionX_0 += g_SysWork.playerWork_4C.player_0.position_18.vx - mapPoint->positionX_0;
+            mapPoint                = &g_MapOverlayHeader.mapPointsOfInterest_1C[g_MapEventData->pointOfInterestIdx];
+            offsetZ                 = g_SysWork.playerWork.player.position.vz - mapPoint->positionZ_8;
+            D_800BCDB0.positionX_0 += g_SysWork.playerWork.player.position.vx - mapPoint->positionX_0;
             D_800BCDB0.positionZ_8 += offsetZ;
         }
 
-        if (g_SysWork.sysState_8 == SysState_LoadOverlay)
+        if (g_SysWork.sysState == SysState_LoadOverlay)
         {
-            g_SysWork.processFlags_2298    = SysWorkProcessFlag_OverlayTransition;
-            g_SavegamePtr->mapOverlayId_A4 = g_MapEventData->mapOverlayIdx_8_25;
+            g_SysWork.processFlags    = ProcessFlag_OverlayTransition;
+            g_SavegamePtr->mapOverlayId_A4 = g_MapEventData->mapOverlayIdx;
             GameBoot_MapLoad(g_SavegamePtr->mapOverlayId_A4);
         }
         else
         {
-            g_SysWork.processFlags_2298 = SysWorkProcessFlag_RoomTransition;
-            //Bgm_TrackChange(g_MapEventData->mapOverlayIdx_8_25);
+            g_SysWork.processFlags = ProcessFlag_RoomTransition;
+            //Bgm_TrackChange(g_MapEventData->mapOverlayIdx);
 
-            if (g_MapOverlayHeader.mapPointsOfInterest_1C[g_MapEventData->eventParam_8_5].field_4_5 != 0)
+            if (g_MapOverlayHeader.mapPointsOfInterest_1C[g_MapEventData->eventParam].field_4_5 != 0)
             {
-                g_SysWork.field_2349 = g_MapOverlayHeader.mapPointsOfInterest_1C[g_MapEventData->eventParam_8_5].field_4_5 - 1;
+                g_SysWork.field_2349 = g_MapOverlayHeader.mapPointsOfInterest_1C[g_MapEventData->eventParam].field_4_5 - 1;
             }
         }
 
-        Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag_2);
+        Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag);
 
         if (g_MapEventData->field_8_24)
         {
-            g_SysWork.flags_22A4 |= SysFlag2_6;
+            g_SysWork.flags_22A4 |= UnkSysFlag_6;
         }
         else
         {
-            g_SysWork.flags_22A4 &= ~SysFlag2_6;
+            g_SysWork.flags_22A4 &= ~UnkSysFlag_6;
         }
 
-        g_SysWork.sysFlags_22A0 |= SysFlag_Freeze;
+        g_SysWork.bgmStatusFlags |= BgmStatusFlag_Pause;
         Game_StateSetNext(GameState_MainLoadScreen);
         //Screen_BackgroundMotionBlur(SyncMode_Immediate);
     }
@@ -667,12 +671,12 @@ namespace Silent::Game
 
     void AreaLoad_TransitionSound() // 0x80039F54
     {
-        SD_Call(SfxPairs[g_SysWork.field_2283].sfx_2);
+        SD_Call(SFX_PAIRS[g_SysWork.sfxPairIdx_2283].sfx_2);
     }
 
     s8 func_80039F90() // 0x80039F90
     {
-        if (g_SysWork.processFlags_2298 & (SysWorkProcessFlag_RoomTransition | SysWorkProcessFlag_OverlayTransition))
+        if (g_SysWork.processFlags & (ProcessFlag_RoomTransition | ProcessFlag_OverlayTransition))
         {
             return g_SysWork.field_2282;
         }
@@ -690,18 +694,18 @@ namespace Silent::Game
         // - A specific event related flag is disenabled.
         // - A specific camera related flag is disenabled.
         // - There is no alive enemy.
-        if (!(g_MapEventData->flags_8_13 & EventParamUnkState_0) && !(g_SysWork.flags_22A4 & SysFlag2_5))
+        if (!(g_MapEventData->flags_8_13 & EventParamUnkState_0) && !(g_SysWork.flags_22A4 & UnkSysFlag_5))
         {
-            for (i = 0; i < ARRAY_SIZE(g_SysWork.npcs_1A0); i++)
+            for (i = 0; i < ARRAY_SIZE(g_SysWork.npcs); i++)
             {
-                if (g_SysWork.npcs_1A0[i].model_0.charaId_0 >= Chara_Harry && g_SysWork.npcs_1A0[i].model_0.charaId_0 <= Chara_MonsterCybil &&
-                    g_SysWork.npcs_1A0[i].health_B0 > Q12(0.0f))
+                if (g_SysWork.npcs[i].model.charaId >= Chara_Harry && g_SysWork.npcs[i].model.charaId <= Chara_MonsterCybil &&
+                    g_SysWork.npcs[i].health > Q12(0.0f))
                 {
                     break;
                 }
             }
 
-            if (i == ARRAY_SIZE(g_SysWork.npcs_1A0))
+            if (i == ARRAY_SIZE(g_SysWork.npcs))
             {
                 g_DeltaTime = g_DeltaTimeCpy;
             }
@@ -711,7 +715,7 @@ namespace Silent::Game
             g_DeltaTime = g_DeltaTimeCpy;
         }
 
-        if (!g_SysWork.isMgsStringSet_18)
+        if (!g_SysWork.isMgsStringSet)
         {
             g_MapOverlayHeader.playerControlFreeze_C8();
         }
@@ -725,7 +729,7 @@ namespace Silent::Game
                 break;
 
             case MapMsgState_SelectEntry0:
-                Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag_2);
+                Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag);
 
                 unfreezePlayerFunc = &g_MapOverlayHeader.playerControlUnfreeze_CC;
 
@@ -743,29 +747,29 @@ namespace Silent::Game
         save = g_SavegamePtr;
 
         save->locationId_A8       = g_MapEventParam;
-        save->playerPositionX_244 = g_SysWork.playerWork_4C.player_0.position_18.vx;
-        save->playerPositionZ_24C = g_SysWork.playerWork_4C.player_0.position_18.vz;
-        save->playerRotationY_248 = g_SysWork.playerWork_4C.player_0.rotation_24.vy;
-        save->playerHealth_240    = g_SysWork.playerWork_4C.player_0.health_B0;
+        save->playerPositionX_244 = g_SysWork.playerWork.player.position.vx;
+        save->playerPositionZ_24C = g_SysWork.playerWork.player.position.vz;
+        save->playerRotationY_248 = g_SysWork.playerWork.player.rotation.vy;
+        save->playerHealth_240    = g_SysWork.playerWork.player.health;
     }
 
     void func_8003A16C() // 0x8003A16C
     {
-        if (!(g_SysWork.flags_22A4 & SysFlag2_1))
+        if (!(g_SysWork.flags_22A4 & UnkSysFlag_1))
         {
-            // Update `savegame_30C` with player info.
+            // Update `savegame` with player info.
             SysWork_SavegameUpdatePlayer();
 
-            g_GameWork.autosave_90 = g_GameWork.savegame_30C;
+            g_GameWork.autosave = g_GameWork.savegame;
         }
     }
 
     void SysWork_SavegameReadPlayer() // 0x8003A1F4
     {
-        g_SysWork.playerWork_4C.player_0.position_18.vx = g_SavegamePtr->playerPositionX_244;
-        g_SysWork.playerWork_4C.player_0.position_18.vz = g_SavegamePtr->playerPositionZ_24C;
-        g_SysWork.playerWork_4C.player_0.rotation_24.vy = g_SavegamePtr->playerRotationY_248;
-        g_SysWork.playerWork_4C.player_0.health_B0      = g_SavegamePtr->playerHealth_240;
+        g_SysWork.playerWork.player.position.vx = g_SavegamePtr->playerPositionX_244;
+        g_SysWork.playerWork.player.position.vz = g_SavegamePtr->playerPositionZ_24C;
+        g_SysWork.playerWork.player.rotation.vy = g_SavegamePtr->playerRotationY_248;
+        g_SysWork.playerWork.player.health      = g_SavegamePtr->playerHealth_240;
     }
 
     void SysState_SaveMenu_Update() // 0x8003A230
@@ -774,7 +778,7 @@ namespace Silent::Game
 
         //func_80033548();
 
-        switch (g_SysWork.sysStateStep_C[0])
+        switch (g_SysWork.sysStateSteps[0])
         {
             case 0:
                 SysWork_SavegameUpdatePlayer();
@@ -805,21 +809,21 @@ namespace Silent::Game
 
                     func_8003943C();
 
-                    gameState = g_GameWork.gameState_594;
+                    gameState = g_GameWork.gameState;
 
-                    g_GameWork.gameState_594 = GameState_SaveScreen;
+                    g_GameWork.gameState = GameState_SaveScreen;
 
                     g_SysWork.counters_1C[0] = 0;
                     g_SysWork.counters_1C[1] = 0;
 
-                    g_GameWork.gameStateStep_598[1] = 0;
-                    g_GameWork.gameStateStep_598[2] = 0;
+                    g_GameWork.gameStateSteps[1] = 0;
+                    g_GameWork.gameStateSteps[2] = 0;
 
                     SysWork_StateSetNext(SysState_Gameplay);
 
-                    g_GameWork.gameStateStep_598[0] = gameState;
-                    g_GameWork.gameStatePrev_590    = (e_GameState)gameState;
-                    g_GameWork.gameStateStep_598[0] = 0;
+                    g_GameWork.gameStateSteps[0] = gameState;
+                    g_GameWork.gameStatePrev    = (e_GameState)gameState;
+                    g_GameWork.gameStateSteps[0] = 0;
                 }
                 break;
         }
@@ -829,7 +833,7 @@ namespace Silent::Game
     {
         if (g_MapEventData->flags_8_13 != EventParamUnkState_None)
         {
-            Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag_2);
+            Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag);
         }
 
         g_DeltaTime = g_DeltaTimeCpy;
@@ -839,8 +843,8 @@ namespace Silent::Game
     void SysState_EventSetFlag_Update() // 0x8003A460
     {
         g_DeltaTime = g_DeltaTimeCpy;
-        Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag_2);
-        g_SysWork.sysState_8 = SysState_Gameplay;
+        Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag);
+        g_SysWork.sysState = SysState_Gameplay;
     }
 
     void SysState_EventPlaySound_Update() // 0x8003A4B4
@@ -849,8 +853,8 @@ namespace Silent::Game
 
         SD_Call(((u16)g_MapEventParam + Sfx_Base) & 0xFFFF);
 
-        Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag_2);
-        g_SysWork.sysState_8 = SysState_Gameplay;
+        Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag);
+        g_SysWork.sysState = SysState_Gameplay;
     }
 
     void SysState_GameOver_Update() // 0x8003A52C
@@ -863,28 +867,28 @@ namespace Silent::Game
         s32       randTipVal;
         u16*      temp_a0;
 
-        switch (g_SysWork.sysStateStep_C[0])
+        switch (g_SysWork.sysStateSteps[0])
         {
             case 0:
                 g_MapOverlayHeader.playerControlFreeze_C8();
                 g_SysWork.field_28 = Q12(0.0f);
 
-                if (g_GameWork.autosave_90.continueCount_27B < 99)
+                if (g_GameWork.autosave.continueCount_27B < 99)
                 {
-                    g_GameWork.autosave_90.continueCount_27B++;
+                    g_GameWork.autosave.continueCount_27B++;
                 }
 
                 MainMenu_SelectedOptionIdxReset();
 
                 // If every game over tip has been seen, reset flag bits.
-                if (g_GameWork.config_0.seenGameOverTips_2E[0] == SHRT_MAX)
+                if (g_GameWork.config.seenGameOverTips_2E[0] == SHRT_MAX)
                 {
-                    g_GameWork.config_0.seenGameOverTips_2E[0] = 0;
+                    g_GameWork.config.seenGameOverTips_2E[0] = 0;
                 }
 
                 randTipVal = 0;
 
-                seenTipIdxs[0] = g_GameWork.config_0.seenGameOverTips_2E[0];
+                seenTipIdxs[0] = g_GameWork.config.seenGameOverTips_2E[0];
                 for (tipIdx = 0; tipIdx < TIP_COUNT; tipIdx++)
                 {
                     if (!Flags16b_IsSet(seenTipIdxs, tipIdx))
@@ -931,7 +935,7 @@ namespace Silent::Game
                     }
                 }
 
-                // Store current shown `tipIdx`, later `sysStateStep_C == 7` will set it inside `seenGameOverTips_2E`.
+                // Store current shown `tipIdx`, later `sysStateSteps == 7` will set it inside `seenGameOverTips_2E`.
                 prevTipIdx = tipIdx;
 
                 Fs_QueueStartReadTim((e_FsFile)((int)FILE_TIM_TIPS_E01_TIM + tipIdx), FS_BUFFER_1, &g_DeathTipImg);
@@ -950,8 +954,8 @@ namespace Silent::Game
                 Gfx_StringDraw("\aGAME_OVER", DEFAULT_MAP_MESSAGE_LENGTH);
                 g_SysWork.field_28++;
 
-                if ((g_Controller0->btnsClicked_10 & (g_GameWorkPtr->config_0.controllerConfig_0.enter_0 |
-                                                    g_GameWorkPtr->config_0.controllerConfig_0.cancel_2)) ||
+                if ((g_Controller0->btnsClicked_10 & (g_GameWorkPtr->config.controllerConfig_0.enter_0 |
+                                                    g_GameWorkPtr->config.controllerConfig_0.cancel_2)) ||
                     g_SysWork.field_28 > Q12(1.0f / 17.0f))
                 {
                     SysWork_StateStepIncrement(0);
@@ -987,8 +991,8 @@ namespace Silent::Game
                 g_SysWork.field_28++;
                 //Screen_BackgroundImgDraw(&g_DeathTipImg);
 
-                if (!(g_Controller0->btnsClicked_10 & (g_GameWorkPtr->config_0.controllerConfig_0.enter_0 |
-                                                    g_GameWorkPtr->config_0.controllerConfig_0.cancel_2)))
+                if (!(g_Controller0->btnsClicked_10 & (g_GameWorkPtr->config.controllerConfig_0.enter_0 |
+                                                    g_GameWorkPtr->config.controllerConfig_0.cancel_2)))
                 {
                     if (g_SysWork.field_28 <= 480)
                     {
@@ -997,7 +1001,7 @@ namespace Silent::Game
                 }
 
                 // TODO: some inline FlagSet func? couldn't get matching ver, but pretty sure temp_a0 can be removed somehow
-                temp_a0 = &g_GameWork.config_0.seenGameOverTips_2E[(prevTipIdx >> 5)];
+                temp_a0 = &g_GameWork.config.seenGameOverTips_2E[(prevTipIdx >> 5)];
                 *temp_a0 |= (1 << 0) << (prevTipIdx & 0x1F);
 
                 SysWork_StateStepIncrement(0);
@@ -1015,24 +1019,24 @@ namespace Silent::Game
                 break;
         }
 
-        if (g_SysWork.sysStateStep_C[0] >= 2 || g_GameWork.gameState_594 != GameState_InGame)
+        if (g_SysWork.sysStateSteps[0] >= 2 || g_GameWork.gameState != GameState_InGame)
         {
-            g_SysWork.sysFlags_22A0 |= SysFlag_Freeze;
+            g_SysWork.bgmStatusFlags |= BgmStatusFlag_Pause;
         }
     }
 
     void GameState_MapEvent_Update() // 0x8003AA4C
     {
-        if (g_GameWork.gameStateStep_598[0] == 0)
+        if (g_GameWork.gameStateSteps[0] == 0)
         {
             g_IntervalVBlanks               = 1;
             ScreenFade_Start(true, true, false);
-            g_GameWork.gameStateStep_598[0] = 1;
+            g_GameWork.gameStateSteps[0] = 1;
         }
 
         D_800A9A0C = ScreenFade_IsFinished() && Fs_QueueDoThingWhenEmpty();
 
-        Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag_2);
+        Savegame_EventFlagSetAlt(g_MapEventData->disabledEventFlag);
 
         g_MapOverlayHeader.mapEventFuncs_20[g_MapEventParam]();
 

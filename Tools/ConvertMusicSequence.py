@@ -85,7 +85,7 @@ def _create_parser():
     """
     Create an argument parser for the script.
 
-    :return: A script argument parser.
+    :return: Script argument parser.
     """
     parser = ArgumentParser()
     parser.add_argument("--vgmstreamExe", "-exe", type=Path, help="Path to the `vgmstream-cli` executable (`VAB` -> `WAV`s tool).")
@@ -148,7 +148,7 @@ def _extract_vab_samples_to_wav(vgmstream_exe: Path, output_folder: Path, vab_fi
     """
     def _patch_wav_rate(wav_path: Path):
         """
-        Overwrite a `WAV`'s header sample rate 44100 to without re-encoding data.
+        Overwrite a `WAV`'s header sample rate to 44100 without re-encoding data.
 
         :param wav_path: Source `WAV` file to patch.
         """

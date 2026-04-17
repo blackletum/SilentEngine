@@ -24,20 +24,20 @@ namespace Silent::Game
     {
         const auto& input = g_App.GetInput();
 
-        switch (g_GameWork.gameStateStep_598[0])
+        switch (g_GameWork.gameStateSteps[0])
         {
             case 0:
                 ScreenFade_Start(true, true, false);
                 GameFs_TitleGfxLoad();
 
-                g_GameWork.gameStateStep_598[0]++;
+                g_GameWork.gameStateSteps[0]++;
                 break;
 
             case 1:
                 if (input.HasUserActionInput() || g_SysWork.counters_1C[0] > 300)
                 {
                     ScreenFade_Start(false, false, false);
-                    g_GameWork.gameStateStep_598[0] = 2;
+                    g_GameWork.gameStateSteps[0] = 2;
                 }
                 break;
 
@@ -53,7 +53,7 @@ namespace Silent::Game
 
     void GameState_MovieIntro_Update() // 0x801E279C
     {
-        const char* videoName = (g_GameWorkConst->config_0.optExtraOptionsEnabled_27 & (1 << 0)) ? "C1_20670.MPG" :
+        const char* videoName = (g_GameWorkConst->config.optExtraOptionsEnabled_27 & (1 << 0)) ? "C1_20670.MPG" :
                                                                                                    "C2_20670.MPG";
         if (!movie_main(std::string(videoName), 0, 0))
         {
@@ -92,7 +92,7 @@ namespace Silent::Game
     void open_main(s32 file_idx, s16 num_frames) // 0x801E2AA4
     {
         //Fs_QueueWaitForEmpty();
-        //movie_main(nullptr, num_frames, g_FileTable[file_idx].startSector_0_0);
+        //movie_main(nullptr, num_frames, g_FileTable[file_idx].startSector);
     }
 
     bool movie_main(const std::string& file_name, s32 f_size, s32 sector) // 0x801E2B9C

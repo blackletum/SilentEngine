@@ -20,7 +20,7 @@ namespace Silent::Game
     /** @brief Initial demo game state data, stored inside `MISC/DEMO****.DAT` files. */
     struct s_DemoWork
     {
-        s_SaveUserConfig config_0;
+        s_SaveUserConfig config;
         u8               unk_38[200];
         s_Savegame       savegame_100;
         u8               unk_37C[1148];
@@ -32,7 +32,7 @@ namespace Silent::Game
     struct s_DemoFrameData
     {
         s_AnalogController analogController_0;
-        s8                 gameStateExpected_8; /** Expected value of `g_GameWork.gameState_594` before `analogController_0` is processed, if it doesn't match `Demo_Update` will display `STEP ERROR` and stop reading demo. */
+        s8                 gameStateExpected_8; /** Expected value of `g_GameWork.gameState` before `analogController_0` is processed, if it doesn't match `Demo_Update` will display `STEP ERROR` and stop reading demo. */
         u8                 videoPresentInterval_9;
         s8                 unk_A[2];
         u32                randSeed_C;
@@ -141,37 +141,37 @@ namespace Silent::Game
 
     void Demo_DemoFileSavegameUpdate() // 0x8008F13C
     {
-        g_GameWork.savegame_30C = g_DemoWork.savegame_100;
+        g_GameWork.savegame = g_DemoWork.savegame_100;
     }
 
     void Demo_GameGlobalsUpdate() // 0x8008F1A0
     {
         // Backup current user config.
-        g_Demo_UserConfigBackup = g_GameWork.config_0;
+        g_Demo_UserConfigBackup = g_GameWork.config;
 
         // Update `Demo_RandSeed`.
         g_Demo_RandSeed = g_DemoWork.randSeed_7FC;
 
         // Replace user config with config from demo file.
-        g_GameWork.config_0 = g_DemoWork.config_0;
+        g_GameWork.config = g_DemoWork.config;
 
         // Restore user system settings over demo values.
-        g_GameWork.config_0.optScreenPosX_1C       = g_Demo_UserConfigBackup.optScreenPosX_1C;
-        g_GameWork.config_0.optScreenPosY_1D       = g_Demo_UserConfigBackup.optScreenPosY_1D;
-        g_GameWork.config_0.optSoundType_1E        = g_Demo_UserConfigBackup.optSoundType_1E;
-        g_GameWork.config_0.optVolumeBgm_1F        = OPT_SOUND_VOLUME_MIN;                     // Disable BGM during demo.
-        g_GameWork.config_0.optVolumeSe_20         = g_Demo_UserConfigBackup.optVolumeSe_20;
-        g_GameWork.config_0.optVibrationEnabled_21 = OPT_VIBRATION_DISABLED;                   // Disable vibration during demo.
-        g_GameWork.config_0.optBrightness_22       = g_Demo_UserConfigBackup.optBrightness_22;
+        g_GameWork.config.optScreenPosX_1C       = g_Demo_UserConfigBackup.optScreenPosX_1C;
+        g_GameWork.config.optScreenPosY_1D       = g_Demo_UserConfigBackup.optScreenPosY_1D;
+        g_GameWork.config.optSoundType_1E        = g_Demo_UserConfigBackup.optSoundType_1E;
+        g_GameWork.config.optVolumeBgm_1F        = OPT_SOUND_VOLUME_MIN;                     // Disable BGM during demo.
+        g_GameWork.config.optVolumeSe_20         = g_Demo_UserConfigBackup.optVolumeSe_20;
+        g_GameWork.config.optVibrationEnabled_21 = OPT_VIBRATION_DISABLED;                   // Disable vibration during demo.
+        g_GameWork.config.optBrightness_22       = g_Demo_UserConfigBackup.optBrightness_22;
 
-        //Sd_SetVolume(OPT_SOUND_VOLUME_MIN, OPT_SOUND_VOLUME_MIN, g_GameWork.config_0.optVolumeSe_20);
+        //Sd_SetVolume(OPT_SOUND_VOLUME_MIN, OPT_SOUND_VOLUME_MIN, g_GameWork.config.optVolumeSe_20);
     }
 
     void Demo_GameGlobalsRestore() // 0x8008F2BC
     {
-        g_GameWork.config_0 = g_Demo_UserConfigBackup;
+        g_GameWork.config = g_Demo_UserConfigBackup;
 
-        //Sd_SetVolume(OPT_SOUND_VOLUME_MAX, g_GameWork.config_0.optVolumeBgm_1F, g_GameWork.config_0.optVolumeSe_20);
+        //Sd_SetVolume(OPT_SOUND_VOLUME_MAX, g_GameWork.config.optVolumeBgm_1F, g_GameWork.config.optVolumeSe_20);
     }
 
     void Demo_GameRandSeedUpdate() // 0x8008F33C
@@ -190,7 +190,7 @@ namespace Silent::Game
     void Demo_Start() // 0x8008F398
     {
         g_Demo_Play = true;
-        g_SysWork.flags_22A4 |= SysFlag2_1;
+        g_SysWork.flags_22A4 |= UnkSysFlag_1;
 
         Demo_GameGlobalsUpdate();
         Demo_GameRandSeedUpdate();
@@ -202,7 +202,7 @@ namespace Silent::Game
     void Demo_Stop() // 0x8008f3f0
     {
         g_Demo_Play = false;
-        g_SysWork.flags_22A4 &= ~SysFlag2_1;
+        g_SysWork.flags_22A4 &= ~UnkSysFlag_1;
 
         Demo_GameGlobalsRestore();
         Demo_GameRandSeedRestore();
@@ -235,11 +235,11 @@ namespace Silent::Game
         switch (gameState)
         {
             case GameState_InGame:
-                if (g_SysWork.sysState_8 == SysState_GameOver)
+                if (g_SysWork.sysState == SysState_GameOver)
                 {
                     return DemoState_Exit;
                 }
-                else if (g_GameWork.gameStatePrev_590 == GameState_SaveScreen)
+                else if (g_GameWork.gameStatePrev == GameState_SaveScreen)
                 {
                     return DemoState_Exit;
                 }
@@ -262,7 +262,7 @@ namespace Silent::Game
         g_Demo_FrameCount     = 999 * TICKS_PER_SECOND;
         g_Demo_CurFrameData   = nullptr;
         g_Demo_DemoStep       = 0;
-        g_SysWork.flags_22A4 |= SysFlag2_8;
+        g_SysWork.flags_22A4 |= UnkSysFlag_8;
     }
 
     bool func_8008F520() // 0x8008F520
@@ -272,7 +272,7 @@ namespace Silent::Game
 
     void Demo_DemoRandSeedBackup() // 0x8008F528
     {
-        if (g_SysWork.flags_22A4 & SysFlag2_1)
+        if (g_SysWork.flags_22A4 & UnkSysFlag_1)
         {
             g_Demo_RandSeedBackup = Rng_GetSeed();
         }
@@ -280,7 +280,7 @@ namespace Silent::Game
 
     void Demo_DemoRandSeedRestore() // 0x8008F560
     {
-        if (g_SysWork.flags_22A4 & SysFlag2_1)
+        if (g_SysWork.flags_22A4 & UnkSysFlag_1)
         {
             Rng_SetSeed(g_Demo_RandSeedBackup);
         }
@@ -290,7 +290,7 @@ namespace Silent::Game
     {
         #define SEED_OFFSET 0x3C6EF35F
 
-        if (g_SysWork.flags_22A4 & SysFlag2_1)
+        if (g_SysWork.flags_22A4 & UnkSysFlag_1)
         {
             Rng_SetSeed(g_Demo_RandSeedBackup + SEED_OFFSET);
         }
@@ -310,7 +310,7 @@ namespace Silent::Game
         D_800C489C        = false;
         prevScreenFade    = g_Screen_FadeStatus;
 
-        if (!(g_SysWork.flags_22A4 & SysFlag2_1))
+        if (!(g_SysWork.flags_22A4 & UnkSysFlag_1))
         {
             g_Demo_CurFrameData = nullptr;
             g_Demo_DemoStep     = 0;
@@ -340,18 +340,18 @@ namespace Silent::Game
         gameWork = &g_GameWork;
 
         // Handle demo state.
-        switch (Demo_StateGet(gameWork->gameState_594))
+        switch (Demo_StateGet(gameWork->gameState))
         {
             case DemoState_Step:
                 g_Demo_CurFrameData = &g_Demo_PlayFileBufferPtr[g_Demo_DemoStep];
 
-                if (g_Demo_CurFrameData->gameStateExpected_8 != gameWork->gameState_594)
+                if (g_Demo_CurFrameData->gameStateExpected_8 != gameWork->gameState)
                 {
                     //Text_Debug_PositionSet(8, 80);
                     //Text_Debug_Draw("STEP ERROR:[H:");
                     //Text_Debug_Draw(Text_Debug_IntToString(2, g_Demo_CurFrameData->gameStateExpected_8));
                     //Text_Debug_Draw("]/[M:");
-                    //Text_Debug_Draw(Text_Debug_IntToString(2, gameWork->gameState_594));
+                    //Text_Debug_Draw(Text_Debug_IntToString(2, gameWork->gameState));
                     //Text_Debug_Draw("]");
 
                     g_Demo_CurFrameData = nullptr;
@@ -378,7 +378,7 @@ namespace Silent::Game
     {
         u32 btns;
 
-        if (!(g_SysWork.flags_22A4 & SysFlag2_1))
+        if (!(g_SysWork.flags_22A4 & UnkSysFlag_1))
         {
             return false;
         }
@@ -422,7 +422,7 @@ namespace Silent::Game
 
     bool Demo_GameRandSeedSet() // 0x8008F8A8
     {
-        if (!(g_SysWork.flags_22A4 & SysFlag2_1))
+        if (!(g_SysWork.flags_22A4 & UnkSysFlag_1))
         {
             return true;
         }
@@ -440,7 +440,7 @@ namespace Silent::Game
 
     bool func_8008F914(q19_12 posX, q19_12 posZ)
     {
-        if (g_SysWork.flags_22A4 & SysFlag2_1)
+        if (g_SysWork.flags_22A4 & UnkSysFlag_1)
         {
             //return func_8004393C(posX, posZ);
         }

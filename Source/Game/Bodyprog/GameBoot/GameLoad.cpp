@@ -5,6 +5,7 @@
 #include "Game/Bodyprog/Bodyprog.h"
 
 #include "Game/Bodyprog/Demo.h"
+#include "Game/Bodyprog/Events/GameSysStates.h"
 #include "Game/Bodyprog/Events/Radio.h"
 #include "Game/Bodyprog/GameBoot/GameBoot.h"
 //#include "Game/Bodyprog/item_screens.h"
@@ -31,11 +32,11 @@ namespace Silent::Game
     /** @brief Initalizes drawing of a loading screen. */
     static void GameBoot_LoadingScreen(void) // 0x80034E58
     {
-        if (g_SysWork.loadingScreenIdx_2281 != LoadingScreenId_None && g_GameWork.gameStateStep_598[0] < 10)
+        if (g_SysWork.loadingScreenIdx != LoadingScreenId_None && g_GameWork.gameStateSteps[0] < 10)
         {
             ScreenFade_Start(false, true, false);
             g_ScreenFadeTimestep = Q12(0.8f);
-            g_MapOverlayHeader.loadingScreenFuncs_18[g_SysWork.loadingScreenIdx_2281]();
+            g_MapOverlayHeader.loadingScreenFuncs_18[g_SysWork.loadingScreenIdx]();
         }
 
         Screen_BackgroundMotionBlur(SyncMode_Wait2);
@@ -46,13 +47,13 @@ namespace Silent::Game
         GameBoot_LoadingScreen();
         GameBoot_GameStartup();
 
-        if (g_SysWork.flags_22A4 & SysFlag2_10)
+        if (g_SysWork.flags_22A4 & UnkSysFlag_10)
         {
             D_800BCDD4++;
 
             if (D_800BCDD4 >= 21)
             {
-                g_SysWork.flags_22A4 &= ~SysFlag2_10;
+                g_SysWork.flags_22A4 &= ~UnkSysFlag_10;
 
                 SD_Call(Sfx_Unk1502);
                 SD_Call(Sfx_Unk1501);
@@ -62,12 +63,12 @@ namespace Silent::Game
 
     static inline void Game_StateStepIncrement(void) // TODO: Move to header?
     {
-        s32 gameStateStep0 = g_GameWork.gameStateStep_598[0];
+        s32 gameStateStep0 = g_GameWork.gameStateSteps[0];
 
         g_SysWork.counters_1C[1]        = 0;
-        g_GameWork.gameStateStep_598[1] = 0;
-        g_GameWork.gameStateStep_598[2] = 0;
-        g_GameWork.gameStateStep_598[0] = gameStateStep0 + 1;
+        g_GameWork.gameStateSteps[1] = 0;
+        g_GameWork.gameStateSteps[2] = 0;
+        g_GameWork.gameStateSteps[0] = gameStateStep0 + 1;
     }
 
     void GameBoot_GameStartup(void) // 0x80034964
@@ -77,28 +78,28 @@ namespace Silent::Game
         // should be triggered.
         static s32 demoLoadAttempCount;
 
-        switch (g_GameWork.gameStateStep_598[0])
+        switch (g_GameWork.gameStateSteps[0])
         {
             case 0:
                 g_IntervalVBlanks                  = 1;
-                g_GameWork.background2dColor_58C.r = 0;
-                g_GameWork.background2dColor_58C.g = 0;
-                g_GameWork.background2dColor_58C.b = 0;
+                g_GameWork.background2dColor.r = 0;
+                g_GameWork.background2dColor.g = 0;
+                g_GameWork.background2dColor.b = 0;
 
-                if (g_SysWork.processFlags_2298 == SysWorkProcessFlag_RoomTransition)
+                if (g_SysWork.processFlags == ProcessFlag_RoomTransition)
                 {
                     //AreaLoad_UpdatePlayerPosition();
-                    g_GameWork.gameStateStep_598[0] = 7;
+                    g_GameWork.gameStateSteps[0] = 7;
                 }
-                else if (g_SysWork.processFlags_2298 == SysWorkProcessFlag_BootDemo)
+                else if (g_SysWork.processFlags == ProcessFlag_BootDemo)
                 {
                     demoLoadAttempCount             = 0;
-                    g_GameWork.gameStateStep_598[0] = 1;
+                    g_GameWork.gameStateSteps[0] = 1;
                     g_SysWork.counters_1C[1]        = 1;
                 }
                 else
                 {
-                    g_GameWork.gameStateStep_598[0] = 3;
+                    g_GameWork.gameStateSteps[0] = 3;
                 }
 
                 SD_Call(19);
@@ -114,10 +115,10 @@ namespace Silent::Game
                     {
                         GameBoot_MapLoad(g_SavegamePtr->mapOverlayId_A4);
 
-                        g_GameWork.gameStateStep_598[0] = 2;
+                        g_GameWork.gameStateSteps[0] = 2;
                         g_SysWork.counters_1C[1]        = 0;
-                        g_GameWork.gameStateStep_598[1] = 0;
-                        g_GameWork.gameStateStep_598[2] = 0;
+                        g_GameWork.gameStateSteps[1] = 0;
+                        g_GameWork.gameStateSteps[2] = 0;
                         break;
                     }
 
@@ -139,32 +140,32 @@ namespace Silent::Game
                 {
                     Demo_PlayDataRead();
 
-                    g_GameWork.gameStateStep_598[0] = 3;
+                    g_GameWork.gameStateSteps[0] = 3;
                     g_SysWork.counters_1C[1]              = 0;
-                    g_GameWork.gameStateStep_598[1] = 0;
-                    g_GameWork.gameStateStep_598[2] = 0;
+                    g_GameWork.gameStateSteps[1] = 0;
+                    g_GameWork.gameStateSteps[2] = 0;
                 }
                 break;
 
             case 3:
                 if (Fs_QueueGetLength() == 0)
                 {
-                    g_GameWork.gameStateStep_598[0] = 4;
+                    g_GameWork.gameStateSteps[0] = 4;
                 }
                 break;
 
             case 4:
-                if (g_SysWork.processFlags_2298 == SysWorkProcessFlag_OverlayTransition)
+                if (g_SysWork.processFlags == ProcessFlag_OverlayTransition)
                 {
                     //AreaLoad_UpdatePlayerPosition();
                 }
-                else if (g_SysWork.processFlags_2298 == SysWorkProcessFlag_LoadSave ||
-                        g_SysWork.processFlags_2298 == SysWorkProcessFlag_Continue)
+                else if (g_SysWork.processFlags == ProcessFlag_LoadSave ||
+                        g_SysWork.processFlags == ProcessFlag_Continue)
                 {
-                    g_SysWork.loadingScreenIdx_2281 = LoadingScreenId_PlayerRun;
+                    g_SysWork.loadingScreenIdx = LoadingScreenId_PlayerRun;
                 }
 
-                g_GameWork.gameStateStep_598[0]++;
+                g_GameWork.gameStateSteps[0]++;
                 break;
 
             case 5:
@@ -173,12 +174,12 @@ namespace Silent::Game
                 //Fs_CharaAnimDataAlloc(3, g_MapOverlayHeader.charaGroupIds_248[2], nullptr, 0);
                 //WorldGfx_MapInitCharaLoad(&g_MapOverlayHeader);
 
-                g_GameWork.gameStateStep_598[0]++;
+                g_GameWork.gameStateSteps[0]++;
 
             case 6:
                 if (Fs_QueueGetLength() == 0)
                 {
-                    g_GameWork.gameStateStep_598[0]++;
+                    g_GameWork.gameStateSteps[0]++;
                 }
                 break;
 
@@ -188,13 +189,13 @@ namespace Silent::Game
                     //Map_WorldClear();
                 }
 
-                //Ipd_PlayerChunkInit(&g_MapOverlayHeader, g_SysWork.playerWork_4C.player_0.position_18.vx, g_SysWork.playerWork_4C.player_0.position_18.vz);
-                if (g_SysWork.processFlags_2298 == SysWorkProcessFlag_OverlayTransition)
+                //Ipd_PlayerChunkInit(&g_MapOverlayHeader, g_SysWork.playerWork.player.position.vx, g_SysWork.playerWork.player.position.vz);
+                if (g_SysWork.processFlags == ProcessFlag_OverlayTransition)
                 {
                     Game_RadioSoundStop();
                 }
 
-                g_GameWork.gameStateStep_598[0]++;
+                g_GameWork.gameStateSteps[0]++;
 
             case 8:
                 //if (Ipd_ChunkInitCheck() != false)
@@ -206,16 +207,16 @@ namespace Silent::Game
             case 9:
                 //if (Bgm_Init() == 0)
                 {
-                    g_GameWork.gameState_594 = GameState_MainLoadScreen;
+                    g_GameWork.gameState = GameState_MainLoadScreen;
                     Game_StateStepIncrement();
                 }
                 break;
 
             case 10:
-                if (g_SysWork.processFlags_2298 == SysWorkProcessFlag_BootDemo && !(g_SysWork.flags_22A4 & SysFlag2_1))
+                if (g_SysWork.processFlags == ProcessFlag_BootDemo && !(g_SysWork.flags_22A4 & UnkSysFlag_1))
                 {
                     Demo_Start();
-                    g_SysWork.flags_22A4 |= SysFlag2_1;
+                    g_SysWork.flags_22A4 |= UnkSysFlag_1;
                 }
 
                 //if (func_80039F90() & EventParamUnkState_2 || Sd_AmbientSfxInit() == 0)
@@ -227,7 +228,7 @@ namespace Silent::Game
             case 11:
                 if (g_SysWork.counters_1C[0] >= 60)
                 {
-                    if (g_SysWork.processFlags_2298 == SysWorkProcessFlag_RoomTransition)
+                    if (g_SysWork.processFlags == ProcessFlag_RoomTransition)
                     {
                         //GameBoot_NpcInit();
                     }
@@ -236,13 +237,13 @@ namespace Silent::Game
                         //GameBoot_InGameInit();
                     }
 
-                    if (g_SysWork.processFlags_2298 <= (u32)SysWorkProcessFlag_OverlayTransition)
+                    if (g_SysWork.processFlags <= (u32)ProcessFlag_OverlayTransition)
                     {
                         //AreaLoad_TransitionSound();
                     }
 
                     //MemCard_Disable();
-                    g_GameWork.gameStateStep_598[0]++;
+                    g_GameWork.gameStateSteps[0]++;
                 }
                 break;
 
@@ -253,7 +254,7 @@ namespace Silent::Game
 
                     //if (func_80039F90() & EventParamUnkState_1)
                     {
-                        g_GameWork.gameStateStep_598[0] = 1;
+                        g_GameWork.gameStateSteps[0] = 1;
                         g_Screen_FadeStatus             = SCREEN_FADE_STATUS(ScreenFadeState_ResetTimestep, IS_SCREEN_FADE_WHITE(g_Screen_FadeStatus));
                     }
                 }

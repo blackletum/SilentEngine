@@ -28,6 +28,8 @@ namespace Silent::Renderer::SdlGpu
     {
         static constexpr char NAME[] = "SDL_gpu";
 
+        auto& assets = g_App.GetAssets();
+
         // @todo Make function for common init stuff to call at the start of every backend-specific init function.
 
         _type   = RendererType::SdlGpu;
@@ -127,37 +129,15 @@ namespace Silent::Renderer::SdlGpu
         auto* copyPass        = SDL_BeginGPUCopyPass(uploadCmdBuffer);
 
         // @temp
-        auto bufferVertsTest = std::vector<BufferVertex3d>
-        {
-            // Front Face (Z = 5.0)
-            { Vector3(-1.0f, -1.0f,  1.0f) * 5.0f, Vector3( 0,  0,  1), Vector2(0, 1), Color::White }, // 0
-            { Vector3( 1.0f, -1.0f,  1.0f) * 5.0f, Vector3( 0,  0,  1), Vector2(1, 1), Color::White }, // 1
-            { Vector3( 1.0f,  1.0f,  1.0f) * 5.0f, Vector3( 0,  0,  1), Vector2(1, 0), Color::White }, // 2
-            { Vector3(-1.0f,  1.0f,  1.0f) * 5.0f, Vector3( 0,  0,  1), Vector2(0, 0), Color::White }, // 3
-            // Back Face (Z = -5.0)
-            { Vector3(-1.0f, -1.0f, -1.0f) * 5.0f, Vector3( 0,  0, -1), Vector2(1, 1), Color::White }, // 4
-            { Vector3( 1.0f, -1.0f, -1.0f) * 5.0f, Vector3( 0,  0, -1), Vector2(0, 1), Color::White }, // 5
-            { Vector3( 1.0f,  1.0f, -1.0f) * 5.0f, Vector3( 0,  0, -1), Vector2(0, 0), Color::White }, // 6
-            { Vector3(-1.0f,  1.0f, -1.0f) * 5.0f, Vector3( 0,  0, -1), Vector2(1, 0), Color::White }  // 7
-        };
-        auto bufferIdxsTest = std::vector<uint16>
-        {
-            0, 1, 2, 2, 3, 0, // Front
-            1, 5, 6, 6, 2, 1, // Right
-            5, 4, 7, 7, 6, 5, // Back
-            4, 0, 3, 3, 7, 4, // Left
-            3, 2, 6, 6, 7, 3, // Top
-            4, 5, 1, 1, 0, 4  // Bottom
-        };
         //GetMeshes().Upload(*copyPass, "CHARA/DOC.ILM");
         //GetMeshes().Upload(*copyPass, "ITEM/UNQE1.TMD");
-        GetMeshes().Upload(*copyPass, bufferVertsTest, bufferIdxsTest, "TestCube");
 
         // Load temp. textures.
         //GetTextures().Upload(*copyPass, "TIM/HERO_PIC.TIM");
         //GetTextures().Upload(*copyPass, "1ST/2ZANKO_E.TIM");
-        GetTextures().Upload(*copyPass, "TIM/BG_ETC.TIM");
-
+        assets.Load("TIM/BG_ETC.TIM");
+        
+        GetTextures().Upload(*copyPass, ToSpan(DEFAULT_TEXTURE_PIXELS), DEFAULT_TEXTURE_RES, "");
         // @todo If atlas textures aren't updated and the texture is missing, for some reason
         // the app hangs instead of crashing like it's supposed to. Why isn't such an error
         // handled as written?
@@ -359,6 +339,8 @@ namespace Silent::Renderer::SdlGpu
         // Process copy pass.
         auto* copyPass = SDL_BeginGPUCopyPass(_commandBuffer);
 
+        CopyImmediatePrimitives3d(*copyPass);
+
         SDL_EndGPUCopyPass(copyPass);
 
         // Process render pass.
@@ -378,8 +360,10 @@ namespace Silent::Renderer::SdlGpu
         };
         auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, &depthTargetInfo);
 
-        _gpuBuffers.Vertices3d.Bind(renderPass, 0, 0);
-        _pipelines.Bind(renderPass, RenderStage::Model, BlendMode::Opaque);
+        //GetMeshes().Bind(renderPass);
+        //_pipelines.Bind(renderPass, RenderStage::Model, BlendMode::Opaque);
+
+        _view.Move();
 
         // @temp
         //---------------------------
@@ -387,10 +371,10 @@ namespace Silent::Renderer::SdlGpu
         //auto* tex = GetTextures()[g_App.GetVideo().GetName()];
         //if (tex == nullptr)
         //{
-            auto* tex = GetTextures()["TIM/BG_ETC.TIM"];
+        //    auto* tex = GetTextures()["TIM/BG_ETC.TIM"];
         //}
 
-        if (tex != nullptr)
+        /*if (tex != nullptr)
         {
             tex->Bind(renderPass, GetActiveSampler());
             
@@ -416,17 +400,50 @@ namespace Silent::Renderer::SdlGpu
             PushFragmentUniform(uni, 0);
 
             // Draw.
-            //const auto* mesh = GetMeshes()["CHARA/DOC.ILM_0"];
-            //const auto* mesh = GetMeshes()["ITEM/UNQE1.TMD_1"];
-            const auto* mesh = GetMeshes()["TestCube"];
-            if (mesh != nullptr && mesh->IsValid())
-            {
-                SDL_DrawGPUIndexedPrimitives(&renderPass, mesh->IdxCount, 1, mesh->IdxOffset, mesh->VertexOffset, 0);
-                _doubleBuffer.Active.DrawCallCount++;
-            }
-        }
+            //const auto* mesh = GetMeshes()["TestCube"];
+            //if (mesh != nullptr && mesh->IsValid())
+            //{
+            //    SDL_DrawGPUIndexedPrimitives(&renderPass, mesh->IdxCount, 1, mesh->IdxOffset, mesh->VertexOffset, 0);
+            //    _doubleBuffer.Active.DrawCallCount++;
+            //}
+        }*/
 
         //---------------------------
+
+        _gpuBuffers.ImmediateVertices3d.Bind(renderPass, 0, 0);
+        //auto* tex = GetTextures()["TIM/BG_ETC.TIM"];
+        
+        // Draw 3D primitives.
+        for (const auto& batch : _drawBatches.Primitives3d)
+        {
+            // Bind pipeline.
+            _pipelines.Bind(renderPass, batch.RenderStg, batch.BlendMd);
+            PushFragmentUniform(batch.Uniform, 0);
+
+            auto model = Matrix::Identity;
+            model.Rotate(DEG_TO_RAD(45.0f), Vector3::UnitX);
+
+            auto viewProj = _view.GetMatrix(glm::radians(45.0f), GetViewportAspectRatio(), 0.1f, 100.0f);
+
+            auto uni0 = UniformView{};
+            memcpy(&uni0.ViewProjMat, &viewProj[0][0], 64);
+            PushVertexUniform(uni0, 0);
+
+            auto uni1 = UniformPrimitive3d{};
+            memcpy(&uni1.ModelMat, &model[0][0], 64);
+            PushVertexUniform(uni1, 1);
+
+            // Bind texture.
+            auto* tex = GetTextures()[batch.TextureName];
+            if (tex != nullptr)
+            {
+                tex->Bind(renderPass, GetActiveSampler());
+            }
+
+            // Draw.
+            SDL_DrawGPUIndexedPrimitives(&renderPass, batch.VertexCount, 1, batch.IdxOffset, batch.VertexOffset, 0);
+            _doubleBuffer.Active.DrawCallCount++;
+        }
 
         SDL_EndGPURenderPass(&renderPass);
     }
@@ -455,6 +472,7 @@ namespace Silent::Renderer::SdlGpu
         // Dither.
         if (options->EnableDithering)
         {
+            // Bind pipeline.
             _pipelines.Bind(renderPass, RenderStage::Dither, BlendMode::Opaque);
 
             // Bind render texture.
@@ -478,7 +496,7 @@ namespace Silent::Renderer::SdlGpu
         // Process copy pass.
         auto* copyPass = SDL_BeginGPUCopyPass(_commandBuffer);
 
-        CopyGpuPrimitives2d(*copyPass);
+        CopyImmediatePrimitives2d(*copyPass);
 
         SDL_EndGPUCopyPass(copyPass);
 
@@ -499,12 +517,11 @@ namespace Silent::Renderer::SdlGpu
         auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, &depthTargetInfo);
 
         // Draw 2D primitives.
-        _gpuBuffers.Vertices2d.Bind(renderPass, 0, 0);
+        _gpuBuffers.ImmediateVertices2d.Bind(renderPass, 0, 0);
         for (const auto& batch : _drawBatches.Primitives2d)
         {
+            // Bind pipeline.
             _pipelines.Bind(renderPass, batch.RenderStg, batch.BlendMd);
-
-            // Push uniform.
             PushFragmentUniform(batch.Uniform, 0);
 
             // Bind texture.
@@ -546,7 +563,7 @@ namespace Silent::Renderer::SdlGpu
 
             auto* renderPass = SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, nullptr);
 
-            _gpuBuffers.ViewportVertices2d.Bind(*renderPass, 0, 0);
+            _gpuBuffers.ViewportVertices.Bind(*renderPass, 0, 0);
             _pipelines.Bind(*renderPass, renderStage, BlendMode::Opaque);
 
             pushUniforms();
@@ -623,7 +640,7 @@ namespace Silent::Renderer::SdlGpu
         auto& renderPass = *SDL_BeginGPURenderPass(_commandBuffer, &colorTargetInfo, 1, nullptr);
 
         // Bind viewport quad.
-        _gpuBuffers.ViewportVertices2d.Bind(renderPass, 0, 0);
+        _gpuBuffers.ViewportVertices.Bind(renderPass, 0, 0);
 
         _pipelines.Bind(renderPass, RenderStage::Blit, BlendMode::Opaque);
 
@@ -696,6 +713,8 @@ namespace Silent::Renderer::SdlGpu
         constexpr int SHAPE_2D_IDX_COUNT_MAX   = SHAPE_2D_VERT_COUNT_MAX;
         constexpr int GLYPH_2D_VERT_COUNT_MAX  = GLYPH_2D_COUNT_MAX * QUAD_VERTEX_COUNT;
         constexpr int GLYPH_2D_IDX_COUNT_MAX   = GLYPH_2D_COUNT_MAX * QUAD_IDX_COUNT;
+        constexpr int TRI_3D_VERT_COUNT_MAX    = TRI_3D_COUNT_MAX * TRI_VERTEX_COUNT;
+        constexpr int TRI_3D_IDX_COUNT_MAX     = TRI_3D_COUNT_MAX * TRI_IDX_COUNT;
 
         constexpr int VERT_2D_COUNT_MAX       = SPRITE_2D_VERT_COUNT_MAX +
                                                 SHAPE_2D_VERT_COUNT_MAX +
@@ -706,18 +725,15 @@ namespace Silent::Renderer::SdlGpu
         constexpr int PRIM_2D_BATCH_COUNT_MAX = SPRITE_2D_COUNT_MAX +
                                                 SHAPE_2D_COUNT_MAX +
                                                 GLYPH_2D_COUNT_MAX;
-
-        constexpr int VERT_3D_COUNT_MAX       = SHRT_MAX - 1;
+        constexpr int VERT_3D_COUNT_MAX       = TRI_3D_VERT_COUNT_MAX;
         constexpr int VERT_3D_IDX_COUNT_MAX   = VERT_3D_COUNT_MAX;
-        constexpr int PRIM_3D_BATCH_COUNT_MAX = VERT_3D_IDX_COUNT_MAX / 3;
+        constexpr int PRIM_3D_BATCH_COUNT_MAX = (VERT_3D_IDX_COUNT_MAX / TRI_VERTEX_COUNT) * 2; // @todo Check, because immediate + models.
 
         // Initialize GPU buffers.
-        _gpuBuffers.ViewportVertices2d.Initialize(*_device, QUAD_VERTEX_COUNT, QUAD_IDX_COUNT, "2D viewport vertices");
-        _gpuBuffers.Vertices2d.Initialize(*_device, VERT_2D_COUNT_MAX, VERT_2D_IDX_COUNT_MAX, "2D vertices");
-        _gpuBuffers.Vertices3d.Initialize(*_device, VERT_3D_COUNT_MAX, VERT_3D_IDX_COUNT_MAX, "3D vertices");
-
-        // Reserve mesh cache.
-        _meshes = std::make_unique<MeshCache>(_gpuBuffers.Vertices3d);
+        _gpuBuffers.ViewportVertices.Initialize(*_device, QUAD_VERTEX_COUNT, QUAD_IDX_COUNT, "2D viewport vertices");
+        _gpuBuffers.ImmediateVertices2d.Initialize(*_device, VERT_2D_COUNT_MAX, VERT_2D_IDX_COUNT_MAX, "Immediate 2D vertices");
+        _gpuBuffers.ImmediateVertices3d.Initialize(*_device, VERT_3D_COUNT_MAX, VERT_3D_IDX_COUNT_MAX, "Immediate 3D vertices");
+        _meshes = std::make_unique<MeshCache>(*_device, VERT_3D_COUNT_MAX, VERT_3D_IDX_COUNT_MAX, "3D meshes vertices");
 
         // Reserve draw batches.
         _drawBatches.Primitives2d.reserve(PRIM_2D_BATCH_COUNT_MAX);
@@ -804,27 +820,31 @@ namespace Silent::Renderer::SdlGpu
         }
     }
 
-    void Renderer::CopyGpuPrimitives2d(SDL_GPUCopyPass& copyPass)
+    void Renderer::CopyImmediatePrimitives2d(SDL_GPUCopyPass& copyPass)
     {
         auto bufferVerts = std::vector<BufferVertex2d>{};
         auto bufferIdxs  = std::vector<uint16>{};
 
         // Reserve memory.
-        bufferVerts.reserve(_doubleBuffer.Render.Primitives2d.size() * QUAD_VERTEX_COUNT);
-        bufferIdxs.reserve(_doubleBuffer.Render.Primitives2d.size() * QUAD_IDX_COUNT);
+        bufferVerts.reserve(_doubleBuffer.Render.ImmediatePrimitives2d.size() * QUAD_VERTEX_COUNT);
+        bufferIdxs.reserve(_doubleBuffer.Render.ImmediatePrimitives2d.size() * QUAD_IDX_COUNT);
 
         // Create batched GPU buffer data.
         int vertOffset = 0;
         int idxOffset  = 0;
-        for (const auto& prim : _doubleBuffer.Render.Primitives2d)
+        for (const auto& prim : _doubleBuffer.Render.ImmediatePrimitives2d)
         {
             // Add vertices.
             for (int i = 0; i < prim.Vertices.size(); i++)
             {
-                // @todo Need depth texture.
                 float depthZ = std::clamp((float)prim.Depth / (float)DEPTH_MAX, 0.0f, 1.0f);
                 auto  pos    = Vector3(prim.Vertices[i].Position.x, prim.Vertices[i].Position.y, depthZ);
-                bufferVerts.push_back(BufferVertex2d{ pos, prim.Vertices[i].Uv, prim.Vertices[i].Col });
+                bufferVerts.push_back(BufferVertex2d
+                {
+                    .Position = pos,
+                    .Uv       = prim.Vertices[i].Uv,
+                    .Col      = prim.Vertices[i].Col
+                });
             }
 
             int curVertCount = 0;
@@ -839,6 +859,7 @@ namespace Silent::Renderer::SdlGpu
                     bufferIdxs.push_back(i);
                 }
 
+                // Set buffer region.
                 curVertCount = TRI_VERTEX_COUNT;
                 curIdxCount  = TRI_IDX_COUNT;
             }
@@ -851,6 +872,7 @@ namespace Silent::Renderer::SdlGpu
                     bufferIdxs.push_back(i);
                 }
 
+                // Set buffer region.
                 curVertCount = QUAD_VERTEX_COUNT;
                 curIdxCount  = QUAD_IDX_COUNT;
             }
@@ -874,8 +896,106 @@ namespace Silent::Renderer::SdlGpu
         }
 
         // Update GPU buffer.
-        _gpuBuffers.Vertices2d.UpdateVertices(copyPass, ToSpan(bufferVerts), 0);
-        _gpuBuffers.Vertices2d.UpdateIdxs(copyPass, ToSpan(bufferIdxs), 0);
+        if (!bufferVerts.empty() && !bufferIdxs.empty())
+        {
+            _gpuBuffers.ImmediateVertices2d.UpdateVertices(copyPass, ToSpan(bufferVerts), 0);
+            _gpuBuffers.ImmediateVertices2d.UpdateIdxs(copyPass, ToSpan(bufferIdxs), 0);
+        }
+    }
+
+    void Renderer::CopyImmediatePrimitives3d(SDL_GPUCopyPass& copyPass)
+    {
+        auto bufferVerts = std::vector<BufferVertex3d>{};
+        auto bufferIdxs  = std::vector<uint16>{};
+
+        // Reserve memory.
+        bufferVerts.reserve(_doubleBuffer.Render.ImmediatePrimitives3d.size() * TRI_VERTEX_COUNT);
+        bufferIdxs.reserve(_doubleBuffer.Render.ImmediatePrimitives3d.size() * TRI_IDX_COUNT);
+
+        // Create batched GPU buffer data.
+        int vertOffset = 0;
+        int idxOffset  = 0;
+        for (const auto& prim : _doubleBuffer.Render.ImmediatePrimitives3d)
+        {
+            // Add vertices.
+            for (int i = 0; i < prim.Vertices.size(); i++)
+            {
+                bufferVerts.push_back(BufferVertex3d
+                {
+                    .Position = prim.Vertices[i].Position,
+                    .Normal   = prim.Vertices[i].Normal,
+                    .Uv       = prim.Vertices[i].Uv,
+                    .Col      = prim.Vertices[i].Col
+                });
+            }
+
+            int curVertCount = 0;
+            int curIdxCount  = 0;
+
+            // @todo
+            // Line.
+            /*if (prim.Vertices.size() == LINE_VERTEX_COUNT)
+            {
+                // Add indices.
+                for (int i = 0; i < LINE_IDX_COUNT; i++)
+                {
+                    bufferIdxs.push_back(i);
+                }
+
+                // Set buffer region.
+                curVertCount = LINE_VERTEX_COUNT;
+                curIdxCount  = LINE_IDX_COUNT;
+            }
+            else */if (prim.Vertices.size() == TRI_VERTEX_COUNT)
+            {
+                // Add indices.
+                for (int i = 0; i < TRI_IDX_COUNT; i++)
+                {
+                    bufferIdxs.push_back(i);
+                }
+
+                // Set buffer region.
+                curVertCount = TRI_VERTEX_COUNT;
+                curIdxCount  = TRI_IDX_COUNT;
+            }
+            // Quad.
+            else if (prim.Vertices.size() == QUAD_VERTEX_COUNT)
+            {
+                // Add indices.
+                for (int i : QUAD_TRI_IDXS)
+                {
+                    bufferIdxs.push_back(i);
+                }
+
+                // Set buffer region.
+                curVertCount = QUAD_VERTEX_COUNT;
+                curIdxCount  = QUAD_IDX_COUNT;
+            }
+
+            // Add batch.
+            // @todo Smarter way that strings together primitives with the same render stage, blend mode, and texture.
+            // What to do with uniforms? For now, collect each as its own batch of 2 triangles.
+            _drawBatches.Primitives3d.push_back(DrawBatch
+            {
+                .TextureName  = prim.TextureName,
+                .RenderStg    = prim.RenderStg,
+                .BlendMd      = prim.BlendMd,
+                .Uniform      = prim.Uniform,
+                .VertexCount  = curIdxCount,
+                .VertexOffset = vertOffset,
+                .IdxOffset    = idxOffset
+            });
+
+            vertOffset += curVertCount;
+            idxOffset  += curIdxCount;
+        }
+
+        // Update GPU buffer.
+        if (!bufferVerts.empty() && !bufferIdxs.empty())
+        {
+            _gpuBuffers.ImmediateVertices3d.UpdateVertices(copyPass, ToSpan(bufferVerts), 0);
+            _gpuBuffers.ImmediateVertices3d.UpdateIdxs(copyPass, ToSpan(bufferIdxs), 0);
+        }
     }
 
     void Renderer::CopyGpuViewportQuad(SDL_GPUCopyPass& copyPass)
@@ -908,8 +1028,8 @@ namespace Silent::Renderer::SdlGpu
         };
 
         // Update GPU buffer.
-        _gpuBuffers.ViewportVertices2d.UpdateVertices(copyPass, ToSpan(bufferVerts), 0);
-        _gpuBuffers.ViewportVertices2d.UpdateIdxs(copyPass, ToSpan(BUFFER_IDXS), 0);
+        _gpuBuffers.ViewportVertices.UpdateVertices(copyPass, ToSpan(bufferVerts), 0);
+        _gpuBuffers.ViewportVertices.UpdateIdxs(copyPass, ToSpan(BUFFER_IDXS), 0);
     }
 
     void Renderer::PushVertexUniform(const UniformType& uni, int slotIdx)

@@ -45,11 +45,11 @@ namespace Silent::Game
 
             /*g_ActiveBufferIdx = GsGetActiveBuff();
 
-            if (g_GameWork.gameState_594 >= GameState_MainLoadScreen && g_GameWork.gameState_594 < GameState_MapEvent)
+            if (g_GameWork.gameState >= GameState_MainLoadScreen && g_GameWork.gameState < GameState_MapEvent)
             {
                 GsOUT_PACKET_P = (PACKET*)(TEMP_MEMORY_ADDR + (g_ActiveBufferIdx << 17));
             }
-            else if (g_GameWork.gameState_594 == GameState_InventoryScreen)
+            else if (g_GameWork.gameState == GameState_InventoryScreen)
             {
                 GsOUT_PACKET_P = (PACKET*)(TEMP_MEMORY_ADDR + (g_ActiveBufferIdx * 40000));
             }
@@ -61,12 +61,12 @@ namespace Silent::Game
             GsClearOt(0, 0, &g_ObjectTable0[g_ActiveBufferIdx]);
             GsClearOt(0, 0, &g_ObjectTable1[g_ActiveBufferIdx]);*/
 
-            g_SysWork.sysFlags_22A0 = SysFlag_None;
+            g_SysWork.bgmStatusFlags = BgmStatusFlag_None;
 
             // Call update function for current GameState.
-            if (g_GameStateUpdateFuncs[g_GameWork.gameState_594])
+            if (g_GameStateUpdateFuncs[g_GameWork.gameState])
             {
-                g_GameStateUpdateFuncs[g_GameWork.gameState_594]();
+                g_GameStateUpdateFuncs[g_GameWork.gameState]();
             }
 
             /*Demo_Update();
@@ -91,7 +91,7 @@ namespace Silent::Game
             //DrawSync(0);
 
             // Handle V sync.
-            /*if (g_SysWork.flags_22A4 & SysFlag2_1)
+            /*if (g_SysWork.flags_22A4 & UnkSysFlag_1)
             {
                 vBlanks   = VSync(-1);
                 g_VBlanks = vBlanks - g_PrevVBlanks;
@@ -123,7 +123,7 @@ namespace Silent::Game
             }
             else
             {
-                if (g_SysWork.sysState_8 != SysState_Gameplay)
+                if (g_SysWork.sysState != SysState_Gameplay)
                 {
                     g_VBlanks     = VSync(-1) - g_PrevVBlanks;
                     g_PrevVBlanks = VSync(-1);
@@ -162,9 +162,9 @@ namespace Silent::Game
             g_GravitySpeed = Q12_MULT(DELTA_TIME_30_FPS, GRAVITY_SPEED_PER_SEC);
             
             // Set clear color.
-            renderer.SetClearColor(Color::From8Bit(g_GameWork.background2dColor_58C.r,
-                                                   g_GameWork.background2dColor_58C.g,
-                                                   g_GameWork.background2dColor_58C.b));
+            renderer.SetClearColor(Color::From8Bit(g_GameWork.background2dColor.r,
+                                                   g_GameWork.background2dColor.g,
+                                                   g_GameWork.background2dColor.b));
         }
         // Initialize engine.
         else

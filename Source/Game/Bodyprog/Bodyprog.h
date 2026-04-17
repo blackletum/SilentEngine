@@ -32,6 +32,15 @@ namespace Silent::Game
         (((u_Filename*)(a))->u32[0] != ((u_Filename*)(b))->u32[0] || \
         ((u_Filename*)(a))->u32[1] != ((u_Filename*)(b))->u32[1])
 
+    // Used by `func_8006E490` and `func_8006E150`.
+    typedef enum _OrientationFlags
+    {
+        OrientationFlags_None    = 0,
+        OrientationFlags_InvertX = 1 << 0,
+        OrientationFlags_InvertZ = 1 << 1,
+        OrientationFlags_SwapXz  = 1 << 2
+    } e_OrientationFlags;
+
     /** @brief Animation playback states. Returned by `Chara_AnimPlaybackStateGet`. */
     typedef enum _AnimPlaybackState
     {
@@ -44,17 +53,57 @@ namespace Silent::Game
     /** @brief Background music flags. */
     typedef enum _BgmFlags
     {
-        BgmFlag_Unk0 = 1 << 0,
-        BgmFlag_Unk1 = 1 << 1,
-        BgmFlag_Unk2 = 1 << 2,
-        BgmFlag_Unk3 = 1 << 3,
-        BgmFlag_Unk4 = 1 << 4,
-        BgmFlag_Unk5 = 1 << 5,
-        BgmFlag_Unk6 = 1 << 6,
-        BgmFlag_Unk7 = 1 << 7,
-        BgmFlag_Unk8 = 1 << 8,
-        BgmFlag_Unk9 = 1 << 9
+        BgmFlag_Layer0    = 1 << 0,
+        BgmFlag_Layer1    = 1 << 1,
+        BgmFlag_Layer2    = 1 << 2,
+        BgmFlag_Layer3    = 1 << 3,
+        BgmFlag_Layer4    = 1 << 4,
+        BgmFlag_Layer5    = 1 << 5,
+        BgmFlag_Layer6    = 1 << 6,
+        BgmFlag_Layer7    = 1 << 7,
+        BgmFlag_KeepAlive = 1 << 8,
+        BgmFlag_MuteAll   = 1 << 9
     } e_BgmFlags;
+
+    /** @brief Background music track indices. */
+    typedef enum _BgmTrackIdx
+    {
+        BgmTrackIdx_0 = 0,
+        BgmTrackIdx_1 = 1,
+        BgmTrackIdx_2 = 2,
+        BgmTrackIdx_3 = 3,
+        BgmTrackIdx_4 = 4,
+        BgmTrackIdx_5 = 5,
+        BgmTrackIdx_6 = 6,
+        BgmTrackIdx_7 = 7,
+        BgmTrackIdx_8 = 8,
+        BgmTrackIdx_9 = 9,
+        BgmTrackIdx_10 = 10,
+        BgmTrackIdx_11 = 11,
+        BgmTrackIdx_12 = 12,
+        BgmTrackIdx_13 = 13,
+        BgmTrackIdx_14 = 14,
+        BgmTrackIdx_15 = 15,
+        BgmTrackIdx_16 = 16,
+        BgmTrackIdx_17 = 17,
+        BgmTrackIdx_18 = 18,
+        BgmTrackIdx_19 = 19,
+        BgmTrackIdx_20 = 20,
+        BgmTrackIdx_21 = 21,
+        BgmTrackIdx_22 = 22,
+        BgmTrackIdx_23 = 23,
+        BgmTrackIdx_24 = 24,
+        BgmTrackIdx_25 = 25,
+        BgmTrackIdx_26 = 26,
+        BgmTrackIdx_27 = 27,
+        BgmTrackIdx_28 = 28,
+        BgmTrackIdx_29 = 29,
+        BgmTrackIdx_30 = 30,
+        BgmTrackIdx_31 = 31,
+        BgmTrackIdx_32 = 32,
+        BgmTrackIdx_33 = 33,
+        BgmTrackIdx_34 = 34
+    } e_BgmTrackIds;
 
     typedef enum _CollisionFlags
     {
@@ -181,11 +230,11 @@ namespace Silent::Game
     } e_StaticModelLoadState;
 
     /** SFX pair used for area loading (e.g. door opening and closing). */
-    typedef struct
+    struct s_AreaLoadSfx
     {
         u16 sfx_0;
         u16 sfx_2;
-    } s_AreaLoadSfx;
+    };
 
     // Exception, as one of the unidentified structs uses this.
     typedef struct _s_8002AC04
@@ -250,10 +299,10 @@ namespace Silent::Game
 
     typedef struct
     {
-        s32               id_0;
+        s32               id;
         s32               flags_4;
-        s32               modelCount_8;
-        //struct TMD_STRUCT models_c[1];
+        s32               modelCount;
+        //struct TMD_STRUCT models[1];
     } s_TmdFile;
 
     typedef struct
@@ -295,12 +344,12 @@ namespace Silent::Game
                 s16 field_2;
             } s_0;
         } field_4;
-        s16 vy_8; // Q7.8
+        s16 vy_8; // Q7.8? Usually Q12, need to reevaluate.
         u8  field_A;
         u8  field_B; // Flags?
         union
         {
-            s32 field_0;
+            s32 field_0; // Timer.
             struct
             {
                 q3_12 field_0; // Angle.
@@ -399,7 +448,7 @@ namespace Silent::Game
     {
         s8      field_0;
         s8      unk_1;
-        DVECTOR field_2; // Q3.12 | XY rotation.
+        DVECTOR field_2; // Q3.12 | Angle constraint. X is min, Y is max. TODO: Don't use `DVECTOR` for this anymore.
     } s_CollisionState_44_0;
 
     typedef struct
@@ -684,15 +733,14 @@ namespace Silent::Game
 
     struct s_LmHeader
     {
-        u8             magic_0;    /** See `LM_HEADER_MAGIC`. */
-        u8             version_1;  /** See `LM_VERSION`. */
-        u8             isLoaded_2; /** `bool` */
-        u8             materialCount_3;
-        s_Material*    materials_4;
-        u8             modelCount_8;
-        u8             unk_9[3];
-        s_ModelHeader* modelHdrs_C;
-        u8*            modelOrder_10;
+        u8             magic;    /** See `LM_HEADER_MAGIC`. */
+        u8             version;  /** See `LM_VERSION`. */
+        u8             isLoaded; /** `bool` */
+        u8             materialCount;
+        s_Material*    materials;
+        u8             modelCount;
+        s_ModelHeader* modelHdrs;
+        u8*            modelOrder;
     };
 
     typedef struct _IpdCollisionData_10
@@ -787,20 +835,19 @@ namespace Silent::Game
 
     typedef struct _IpdModelInfo
     {
-        u8             isGlobalPlm_0; // `false` if loaded from inside `IPD`, `true` if loaded from `*_GLB.PLM`.
-        u8             unk_1[3];
-        u_Filename     modelName_4;
-        s_ModelHeader* modelHdr_C;
+        u8             isGlobalPlm; // `false` if loaded from inside `IPD`, `true` if loaded from `*_GLB.PLM`.
+        u_Filename     modelName;
+        s_ModelHeader* modelHdr;
     } s_IpdModelInfo;
 
     typedef struct _IpdHeader
     {
-        u8                 magic_0;
+        u8                 magic;
         u8                 isLoaded_1; /** `bool` */
         s8                 cellX_2;
         s8                 cellZ_3;
         s_LmHeader*        lmHdr_4;
-        u8                 modelCount_8;
+        u8                 modelCount;
         u8                 modelBufferCount_9;
         u8                 modelOrderCount_A;
         u8                 unk_B[1];
@@ -827,18 +874,17 @@ namespace Silent::Game
 
     struct s_AnmHeader
     {
-        u16           dataOffset_0;
-        u8            rotationBoneCount_2;
-        u8            translationBoneCount_3;
-        u16           keyframeDataSize_4; // Size per keyframe, `(rotationBoneCount_2 * 9) + (translationBoneCount_3 * 3)`?
-        u8            boneCount_6;
-        u8            unk_7;
-        u32           activeBones_8; // Holds bit field of bones to update.
-        u32           fileSize_C;
-        u16           keyframeCount_10;
-        u8            scaleLog2_12;
-        u8            rootYOffset_13;
-        s_AnmBindPose bindPoses_14[0]; // Array size = `boneCount_6`.
+        u16           dataOffset;
+        u8            rotationBoneCount;
+        u8            translationBoneCount;
+        u16           keyframeDataSize; // Size per keyframe, `(rotationBoneCount * 9) + (translationBoneCount * 3)`?
+        u8            boneCount;
+        u32           activeBones; // Holds bit field of bones to update.
+        u32           fileSize;
+        u16           keyframeCount;
+        u8            scaleLog2;
+        u8            rootYOffset;
+        s_AnmBindPose bindPoses[0]; // Array size = `boneCount`.
     };
 
     typedef union
@@ -964,14 +1010,14 @@ namespace Silent::Game
 
     typedef struct _LinkedBone
     {
-        s_Bone              bone_0;
-        struct _LinkedBone* next_14;
+        s_Bone              bone;
+        struct _LinkedBone* next;
     } s_LinkedBone;
 
     typedef struct
     {
-        u8            boneCount_0;
-        u8            boneIdx_1;
+        u8            boneCount;
+        u8            boneIdx;
         u8            field_2;
         s8            field_3;
         s_LinkedBone* bones_4;
@@ -1022,7 +1068,7 @@ namespace Silent::Game
         u8            field_F;  // Keyframe index offset?
         u8            field_10; // State.
         u8            field_11;
-        u8            field_12;
+        u8            field_12; // SFX ID subgroup. Uses values 0-4.
         u8            unk_13;
         u32*          unk_14; // Some pointer. All entries have the same value `D_800AD4C4`.
     } s_800AD4C8;
@@ -1035,13 +1081,13 @@ namespace Silent::Game
         s32         field_18; // Count of points in circle?
     } s_CollisionPoint;
 
-    typedef struct
+    struct s_800BCDA8
     {
         s8 field_0;
         s8 field_1;
         s8 field_2;
         s8 field_3;
-    } s_800BCDA8;
+    };
 
     typedef struct _SpeedZone
     {
@@ -1064,7 +1110,7 @@ namespace Silent::Game
 
     typedef struct
     {
-        u8            charaId_0;  /** `e_CharacterId` */
+        u8            charaId;  /** `e_CharacterId` */
         u8            isLoaded_1; /** `bool` */
         s32           queueIdx_4;
         s_LmHeader*   lmHdr_8;
@@ -1099,7 +1145,7 @@ namespace Silent::Game
     /** @brief Geometry space world object to draw. */
     typedef struct _WorldObject
     {
-        s_WorldObjectModel* model_0;
+        s_WorldObjectModel* model;
         s32                 positionX_4 : 18; /** Q9.8 */
         s32                 positionY_4 : 14; /** Q5.8 */
         s32                 positionZ_8 : 18; /** Q9.8 */
@@ -1143,7 +1189,7 @@ namespace Silent::Game
         VECTOR3           ipdSamplePoint_8; /** Used by IPD logic to sample which chunks to load or unload. */
         u8*               charaLmBuffer_14;
         s_CharaModel*     registeredCharaModels_18[Chara_Count];
-        s_CharaModel      charaModels_CC[GROUP_CHARA_COUNT];
+        s_CharaModel      charaModels_CC[CHARA_GROUP_COUNT];
         s_CharaModel      harryModel_164C;
         s_HeldItem        heldItem_1BAC;             /** The item held by the player. */
         s_TriggerZone*    triggerZone_1BD8;
@@ -1403,7 +1449,7 @@ namespace Silent::Game
         q19_12 positionX_0;
         s8     charaId_4;   /** `e_CharacterId` */
         u8     rotationY_5; /** Degrees in Q7.8, range [0, 256]. */
-        s8     flags_6;     /** Copied to `stateStep_3` in `s_Model`, with `controlState_2 = ModelState_Uninitialized`. */
+        s8     flags_6;     /** Copied to `stateStep` in `s_Model`, with `controlState = ModelState_Uninitialized`. */
         s32    gameDifficultyMin_7_0 : 4;
         q19_12 positionZ_8;
     } s_SpawnInfo;
@@ -1411,9 +1457,9 @@ namespace Silent::Game
     /** Special map-specific Harry anim data. */
     typedef struct
     {
-        s16   status_0; /** Packed anim status. See `s_ModelAnim::status_0`. */
-        s16   status_2; /** Packed anim status. See `s_ModelAnim::status_0`. */
-        q3_12 time_4;   /** Fixed-point anim time. */
+        s16   status; /** Packed anim status. See `s_ModelAnim::status`. */
+        s16   status_2; /** Packed anim status. See `s_ModelAnim::status`. */
+        q3_12 time;   /** Fixed-point anim time. */
         s16   keyframeIdx_6;
     } s_UnkStruct3_Mo; // Probable size: 8 bytes.
 
@@ -1514,7 +1560,7 @@ namespace Silent::Game
         GsCOORDINATE2*         field_28;
         u8*                    loadableItems_2C;
         const char**           mapMessages_30; // Array of strings.
-        s_AnimInfo*            animInfos_34;   // Map-specific anim infos for Harry (for anims 38+).
+        s_AnimInfo*            harryMapAnimInfos_34;   // Map-specific anim infos for Harry (for anims 38+).
         s_UnkStruct3_Mo*       field_38; // Array of 40?
         void                   (*worldObjectsInit_3C)(); // func(?).
         void                   (*worldObjectsUpdate_40)();
@@ -1603,16 +1649,16 @@ namespace Silent::Game
         s32*                   data_18C;
         s32*                   data_190;
         void                   (*charaUpdateFuncs_194[Chara_Count])(s_SubCharacter* chara, s_AnmHeader* anmHdr, GsCOORDINATE2* coords); /** Guessed params. Funcptrs for each `e_CharacterId`, set to 0 for IDs not included in the map overlay. Called by `Game_NpcUpdate`. */
-        s8                     charaGroupIds_248[GROUP_CHARA_COUNT]; /** `e_CharacterId` values where if `s_SpawnInfo::charaId_4 == Chara_None`, `charaGroupIds_248[0]` is used for `charaSpawns_24C[0]` and `charaGroupIds_248[1]` for `charaSpawns_24C[1]`. */
+        s8                     charaGroupIds_248[CHARA_GROUP_COUNT]; /** `e_CharacterId` values where if `s_SpawnInfo::charaId_4 == Chara_None`, `charaGroupIds_248[0]` is used for `charaSpawns_24C[0]` and `charaGroupIds_248[1]` for `charaSpawns_24C[1]`. */
         s_SpawnInfo            charaSpawns_24C[2][16];               /** Array of character type/position/flags. `flags_6 == 0` are unused slots? Read by `Game_NpcRoomInitSpawn`. */
-        VC_ROAD_DATA           roadDataList_3CC[100];
+        VC_ROAD_DATA           cameraPaths_3CC[100];
         s_TriggerZone          triggerZones_D2C[200];
     };
 
     typedef struct
     {
-        s8 maxIdx_0;
-        u8 selectedEntryIdx_1;
+        s8 maxIdx;
+        u8 selectedEntryIdx;
     } s_MapMsgSelect;
 
     typedef struct
@@ -2085,23 +2131,6 @@ namespace Silent::Game
     /** Relative file offset for map texture? */
     extern s8 D_800A99B5;
 
-    extern char* D_800A99E4[8];
-
-    extern s8 g_PaperMapFileIdxs[];
-
-    extern s8 g_PaperMapMarkingFileIdxs[];
-
-    extern s_FsImageDesc D_800A9A04;
-
-    extern s32 D_800A9A0C; // Old IDB name `FS_AllFilesLoaded`, though FS code doesn't set it.
-
-    extern s32 g_MapEventSysState; /** `e_InventoryItemId` */
-
-    extern s32 g_MapEventLastUsedItem; /** `e_InventoryItemId` */
-
-    /** Radio pitch state based on the distance from the player to an enemy. Range: `[0, 3]`. */
-    extern s32 g_RadioPitchState;
-
     extern s32 D_800A9A68;
 
     /** Counts the amount of times that demos has been play in the current game session. */
@@ -2217,19 +2246,6 @@ namespace Silent::Game
 
     extern u8 g_SysState_GameOver_TipIdx;
 
-    extern s_EventData* g_ItemTriggerEvents[];
-
-    extern s_800BCDA8 D_800BCDA8[2];
-
-    extern s_MapPoint2d D_800BCDB0;
-
-    /** Related to special item interactions. */
-    extern s32 g_ItemTriggerItemIds[5];
-
-    extern u8 D_800BCDD4;
-
-    extern s_EventData* g_MapEventData;
-
     /** `e_InventoryItemId` | related to displaying items. */
     extern u8 D_800AE187;
 
@@ -2267,7 +2283,7 @@ namespace Silent::Game
     extern u8 D_800AF220;
 
     /** @brief Last weapon selected. While it is being assigned the value of
-     * `g_SysWork::playerCombat_38::weaponAttack_F` this time it is used to determine
+     * `g_SysWork::playerCombat::weaponAttack` this time it is used to determine
      * the last weapon used in order to load the required animation data.
      */
     extern s32 g_Player_LastWeaponSelected;
@@ -2292,7 +2308,7 @@ namespace Silent::Game
 
     extern u8 D_800AFD05;
 
-    extern const s_AreaLoadSfx SfxPairs[25];
+    extern const s_AreaLoadSfx SFX_PAIRS[25];
 
     extern s32 D_800AFD3C;
 

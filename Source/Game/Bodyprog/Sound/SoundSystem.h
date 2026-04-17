@@ -2,32 +2,34 @@
 
 namespace Silent::Game
 {
-    /** @brief Packs an audio type and program index into a single  value.
+    /** * @brief Packs an audio type (VAB ID) and program index into a single 16-bit value.
      *
-     * The third field from `s_VabInfo` is obfuscated.
-     * The value get pass to `SdVoKeyOn` through the first argument (`vab_pro`) where it is used to give a
-     * value to the variables `prog` (by doing the equivalent of `vab_progIdx_2 & 0x7F`) and `vabid`
-     * (by doing the equivalent of `vab_progIdx_2 >> 8`).
-     * This indicates from the values that are 516 (0x204), `prog` receives the value of
-     * 2 while `vabid` would receive 4. This also fits with other values like 256 (0x100) and 514 (0x202).
+     * This macro replicates the encoding used in the third field of `s_VabInfo`. 
+     * The resulting value is passed to `SdVoKeyOn` via the `vab_pro` argument, 
+     * where the function extracts:
+     * - The Program Index: derived via `(vab_pro & 0x7F)`.
+     * - The VAB ID: derived via `vab_pro >> 8`.
      *
-     * The first argument is related to `e_AudioType` and `g_Sd_AudioType`, used to
-     * access the index of `vab_h`, which apparently allocates VAG data in memory.
+     * For example, a value of 516 (0x0204) results in a program index of 4 and a 
+     * VAB ID of 2. Similarly, 256 (0x0100) and 514 (0x0202) follow this bit-packed 
+     * structure.
      *
-     * The second value is the index for a VAB-specific attribute named `program`.
+     * @param audioType ID used to index `vab_h`, which manages VAG data allocation in SPU memory.
+     * @param progIdx The specific program index within the VAB attribute table.
+     * @return Packed audio type and program index.
      */
     #define TYPE_AND_PROG_SFX(audioType, progIdx) \
-        (audioType << 8) + progIdx
+        ((audioType << 8) + progIdx)
 
     /** @brief Audio modes. */
-    typedef enum _AudioMode
+    enum e_AudioMode
     {
         AudioMode_Mono   = 1,
         AudioMode_Stereo = 2
-    } e_AudioMode;
+    };
 
     /** @brief Audio types. */
-    typedef enum _AudioType
+    enum e_AudioType
     {
         AudioType_MusicKey      = 0,
         AudioType_BaseAudio     = 0,
@@ -35,9 +37,46 @@ namespace Silent::Game
         AudioType_Ambient       = 2,
         AudioType_SpecialScreen = 2,
         AudioType_MusicBank     = 3
-    } e_AudioType;
+    };
 
-    // Used for loading XA files. `field_0` holds commands for `Sd_CdPrimitiveCmdTry`
+    /** @brief VAB audio and KDT sequence load states. */
+    enum e_AudioLoadState
+    {
+        AudioLoadState_Reset     = 0,
+        AudioLoadState_Stop      = 1,
+        AudioLoadState_SetOff    = 2,
+        AudioLoadState_LoadFile  = 3,
+        AudioLoadState_CheckLoad = 4,
+        AudioLoadState_Move      = 5,
+        AudioLoadState_SetNext   = 6,
+        AudioLoadState_MoveNext  = 7,
+        AudioLoadState_MoveLast  = 8,
+        AudioLoadState_Finalize  = 9
+    };
+
+    /** @brief XA load states. */
+    enum e_XaLoadState
+    {
+        XaLoadState_Initialize    = 0,
+        XaLoadState_SetMode       = 1,
+        XaLoadState_PrepareFilter = 2,
+        XaLoadState_SetFilter     = 3,
+        XaLoadState_CalculateLba  = 4,
+        XaLoadState_Seek          = 5,
+        XaLoadState_StartRead     = 6,
+        XaLoadState_EnableAudio   = 7
+    };
+
+    /** @brief XA stop states. */
+    enum e_XaStopState
+    {
+        XaStopState_FadeOut   = 0,
+        XaStopState_Mute      = 1,
+        XaStopState_PauseDisc = 2,
+        XaStopState_Cleanup   = 3
+    };
+
+    // Used for loading XA files. `field_0` holds commands for `Sd_CdPrimitiveCmdTry`.
     typedef struct
     {
         u8 field_0;
@@ -65,8 +104,7 @@ namespace Silent::Game
                                         * that assigns it is executed. Part of a rule for `SD_Call`.
                                         */
         u8  isStereoEnabled_12;         /** `bool` */
-        s8  isXaStopping_13;            /** `bool` | Set to `true` to stop an XA file in memory from playing, otherwise `false`.
-                                        */
+        s8  isXaStopping_13;            /** `bool` | Set to `true` to stop an XA file in memory from playing, otherwise `false`. */
         u8  bgmFadeSpeed_14;            /** Music fade speed. Range: `[0, 2]`, default: 0. */
         u8  isAudioLoading_15;          /** `bool` | If a KDT or VAB file is being loaded. | Loading: `true`, Nothing loading: `false`, default: Nothing loading. */
         u8  isXaNotPlaying_16;          /** `bool` | Playing: `false`, Nothing playing: `true`, default: Nothing playing. */
@@ -77,10 +115,10 @@ namespace Silent::Game
 
     typedef struct
     {
-        u8 audioLoadState_0; /** Load VAB audio and KDT music key notes state. */
-        u8 xaLoadState_1;    /** Load XA audio state. */
-        u8 xaStopState_2;    /** Stop XA audio streaming state. */
-        u8 xaPreLoadState_3; /** Prepare Load XA audio state. Positions the current read point to the one where the XA audio to load resides. */
+        u8 audioLoadState_0; /** `e_AudioLoadState` */
+        u8 xaLoadState_1;    /** `e_XaLoadState` */
+        u8 xaStopState_2;    /**  `e_XaStopState` */
+        u8 xaPreLoadState_3; /** Prepare Load XA audio state. Positions the current read point to one where the XA audio to load resides. */
     } s_AudioStreamingStates;
 
     // Game audio channels volume configuration struct.

@@ -9,6 +9,7 @@
 #include "Renderer/Common/Resources/Scene/Shape2d.h"
 #include "Renderer/Common/Resources/Scene/Sprite2d.h"
 #include "Renderer/Common/Resources/Scene/Text2d.h"
+#include "Renderer/Common/Resources/Scene/Triangle3d.h"
 #include "Renderer/Common/Utils.h"
 #include "Renderer/Common/View.h"
 #include "Utils/Parallel.h"
@@ -88,19 +89,20 @@ namespace Silent::Renderer
         //{
         //    TASK(ProcessShapes2d()),
         //    TASK(ProcessSprites2d()),
-        //    TASK(ProcessGlyphs2d())
+        //    TASK(ProcessGlyphs2d()),
+        //    TASK(ProcessTriangles3d())
         //};
         //executor.AddTasks(tasks).wait();
         ProcessShapes2d();
         ProcessSprites2d();
         ProcessGlyphs2d();
+        ProcessTriangles3d();
 
         // Swap double buffer.
         std::swap(_doubleBuffer.Render, _doubleBuffer.Active);
         _doubleBuffer.Active.DrawCallCount = 0;
-        _doubleBuffer.Active.Primitives2d.clear();
-        _doubleBuffer.Active.Primitives3d.clear();
-        _doubleBuffer.Active.DebugPrimitives3d.clear();
+        _doubleBuffer.Active.ImmediatePrimitives2d.clear();
+        _doubleBuffer.Active.ImmediatePrimitives3d.clear();
         _doubleBuffer.Active.DebugGuiDrawCalls.clear();
         _doubleBuffer.Active.TextureUploadQueue.clear();
         _doubleBuffer.Active.TextureReleaseQueue.clear();
@@ -286,8 +288,8 @@ namespace Silent::Renderer
             auto pos         = adjTextPos + (relPos * aspectCorrection);
 
             // Compute scale.
-            auto relScale = Vector2((float)(shapedGlyph.Attribs.AtlasSize.x) / (float)(shapedGlyph.Attribs.AtlasSize.y), 1.0f) *
-                            Vector2((float)(shapedGlyph.Attribs.AtlasSize.y) / (float)font->GetPointSize());
+            auto relScale = Vector2((float)shapedGlyph.Attribs.AtlasSize.x / (float)shapedGlyph.Attribs.AtlasSize.y, 1.0f) *
+                            Vector2((float)shapedGlyph.Attribs.AtlasSize.y / (float)font->GetPointSize());
             auto scale    = relScale * text.Scale;
 
             // Concatenate name for texture atlas containing glyph.
@@ -333,6 +335,19 @@ namespace Silent::Renderer
         return true;
     }
 
+    bool RendererBase::SubmitTriangle3d(const Triangle3d& tri)
+    {
+        if (_triangles3d.size() >= TRI_3D_COUNT_MAX)
+        {
+            Debug::Log("Attempted to submit 3D triangle to full container.",
+                       Debug::LogLevel::Warning, Debug::LogMode::Debug);
+            return false;
+        }
+
+        _triangles3d.push_back(tri);
+        return true;
+    }
+
     void RendererBase::SubmitDebugGui(std::function<void()> drawFunc)
     {
         if (_doubleBuffer.Active.DebugGuiDrawCalls.size() >= DEBUG_GUI_COUNT_MAX)
@@ -349,7 +364,6 @@ namespace Silent::Renderer
         }
 
         _doubleBuffer.Active.DebugGuiDrawCalls.push_back(drawFunc);
-        return;
     }
 
     void RendererBase::SubmitDebugLine(const Vector2& from, const Vector2& to, const Color& color, ScaleMode scaleMode,
@@ -361,7 +375,7 @@ namespace Silent::Renderer
         }
 
         auto line = Shape2d::CreateLine(from, to, color, color, 0, scaleMode, BlendMode::Add);
-        _doubleBuffer.Active.DebugShapes2d.push_back(line);
+        _shapes2d.push_back(line);
     }
 
     void RendererBase::SubmitDebugLine(const Vector3& from, const Vector3& to, const Color& color, Debug::Page page)
@@ -371,8 +385,9 @@ namespace Silent::Renderer
             return;
         }
 
+        // @todo Submit to `_triangles3d`.
         auto line = Primitive3d::CreateDebugLine(from, to, color);
-        _doubleBuffer.Active.DebugPrimitives3d.push_back(line);
+        //_doubleBuffer.Active.Primitives3d.push_back(line);
     }
 
     void RendererBase::SubmitDebugTriangle(const Vector2& vert0, const Vector2& vert1, const Vector2& vert2,
@@ -384,7 +399,7 @@ namespace Silent::Renderer
         }
 
         auto tri = Shape2d::CreateTriangle(vert0, vert1, vert2, color, color, color, 0, scaleMode, BlendMode::Add);
-        _doubleBuffer.Active.DebugShapes2d.push_back(tri);
+        _shapes2d.push_back(tri);
     }
 
     void RendererBase::SubmitDebugTriangle(const Vector3& vert0, const Vector3& vert1, const Vector3& vert2,
@@ -395,17 +410,19 @@ namespace Silent::Renderer
             return;
         }
 
-        auto tri = Primitive3d::CreateDebugTriangle(vert0, vert1, vert2, color);
-        _doubleBuffer.Active.DebugPrimitives3d.push_back(tri);
+        auto tri = Triangle3d::CreateTriangle3d(vert0, vert1, vert2, color, BlendMode::Add);
+        _triangles3d.push_back(tri);
     }
 
     void RendererBase::InitializeDoubleBuffer()
     {
         auto ReserveMemory = [](DoubleBuffer::Data& data)
         {
-            data.Primitives2d.reserve(SHAPE_2D_COUNT_MAX + 
-                                      SPRITE_2D_COUNT_MAX + 
-                                      GLYPH_2D_COUNT_MAX);
+            data.DebugGuiDrawCalls.reserve(DEBUG_GUI_COUNT_MAX);
+            data.ImmediatePrimitives2d.reserve(SHAPE_2D_COUNT_MAX + 
+                                               SPRITE_2D_COUNT_MAX + 
+                                               GLYPH_2D_COUNT_MAX);
+            data.ImmediatePrimitives3d.reserve(TRI_3D_COUNT_MAX);
         };
         ReserveMemory(_doubleBuffer.Active);
         ReserveMemory(_doubleBuffer.Render);
@@ -413,6 +430,7 @@ namespace Silent::Renderer
         _shapes2d.reserve(SHAPE_2D_COUNT_MAX);
         _sprites2d.reserve(SPRITE_2D_COUNT_MAX);
         _glyphs2d.reserve(GLYPH_2D_COUNT_MAX);
+        _triangles3d.reserve(TRI_3D_COUNT_MAX);
     }
 
     void RendererBase::ProcessShapes2d()
@@ -463,7 +481,7 @@ namespace Silent::Renderer
             {
                 auto lock = ParallelLock(_primitives2dMutex);
 
-                _doubleBuffer.Active.Primitives2d.push_back(Primitive2d
+                _doubleBuffer.Active.ImmediatePrimitives2d.push_back(Primitive2d
                 {
                     .Vertices    = std::move(verts),
                     .Depth       = shape.Depth,
@@ -567,7 +585,7 @@ namespace Silent::Renderer
             {
                 auto lock = ParallelLock(_primitives2dMutex);
 
-                _doubleBuffer.Active.Primitives2d.push_back(Primitive2d
+                _doubleBuffer.Active.ImmediatePrimitives2d.push_back(Primitive2d
                 {
                     .Vertices =
                     {
@@ -626,7 +644,7 @@ namespace Silent::Renderer
             {
                 auto lock = ParallelLock(_primitives2dMutex);
 
-                _doubleBuffer.Active.Primitives2d.push_back(Primitive2d
+                _doubleBuffer.Active.ImmediatePrimitives2d.push_back(Primitive2d
                 {
                     .Vertices =
                     {
@@ -653,18 +671,67 @@ namespace Silent::Renderer
         _glyphs2d.clear();
     }
 
+    void RendererBase::ProcessTriangles3d()
+    {
+        for (const auto& tri : _triangles3d)
+        {
+            auto verts = std::vector<Vertex3d>{};
+            verts.reserve(tri.Vertices.size());
+            for (const auto& vert : tri.Vertices)
+            {
+                verts.push_back(Vertex3d
+                {
+                    .Position = vert.Position,
+                    .Normal   = vert.Normal,
+                    .Col      = vert.Col,
+                    .Uv       = vert.Uv
+                });
+            }
+
+            // Add 3D primitive.
+            // @lock Restrict 3D primitives access.
+            {
+                auto lock = ParallelLock(_primitives3dMutex);
+
+                _doubleBuffer.Active.ImmediatePrimitives3d.push_back(Primitive3d
+                {
+                    .Vertices    = std::move(verts),
+                    .TextureName = tri.TextureName,
+                    .RenderStg   = RenderStage::Model,
+                    .BlendMd     = tri.BlendMd,
+                    .Uniform     = UniformModel
+                    {
+                        .IsFastAlpha = tri.BlendMd == BlendMode::FastAlpha
+                    }
+                });
+            }
+        }
+
+        _triangles3d.clear();
+    }
+
     void RendererBase::SortRenderBufferData()
     {
         auto& executor = g_App.GetExecutor();
 
+        // @todo Use sort keys?
         auto sortTasks = ParallelTasks
         {
-            // Sort 2D primitives. @todo Use sort keys?
+            // Sort 2D primitives.
             [&]()
             {
-                Sort(_doubleBuffer.Render.Primitives2d, [](const Primitive2d& prim0, const Primitive2d& prim1)
+                Sort(_doubleBuffer.Render.ImmediatePrimitives2d, [](const Primitive2d& prim0, const Primitive2d& prim1)
                 {
                     return prim0.Depth > prim1.Depth;
+                });
+            },
+
+            // Sort 3D primitives.
+            [&]()
+            {
+                Sort(_doubleBuffer.Render.ImmediatePrimitives3d, [](const Primitive3d& prim0, const Primitive3d& prim1)
+                {
+                    return true;
                 });
             }
         };
