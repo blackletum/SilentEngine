@@ -218,21 +218,21 @@ namespace Silent::Assets
     // Common Map Messages
     // ====================
 
-    constexpr char KEY_MAP_MSG_YES[]                  = "mapMsg_Yes";
-    constexpr char KEY_MAP_MSG_NO[]                   = "mapMsg_No";
-    constexpr char KEY_MAP_MSG_SOMEDAY[]              = "mapMsg_Someday";
-    constexpr char KEY_MAP_MSG_NO_MAP[]               = "mapMsg_NoMap";
-    constexpr char KEY_MAP_MSG_TOO_DARK_FOR_MAP[]     = "mapMsg_TooDarkForMap";
-    constexpr char KEY_MAP_MSG_TAKE_FIRST_AID_KIT[]   = "mapMsg_TakeFirstAidKit";
-    constexpr char KEY_MAP_MSG_TAKE_HEALTH_DRINK[]    = "mapMsg_TakeHealthDrink";
-    constexpr char KEY_MAP_MSG_TAKE_AMPOULE[]         = "mapMsg_TakeAmpoule";
-    constexpr char KEY_MAP_MSG_TAKE_HANDGUN_BULLETS[] = "mapMsg_TakeHandgunBullets";
-    constexpr char KEY_MAP_MSG_TAKE_RIFLE_SHELLS[]    = "mapMsg_TakeRifleShells";
-    constexpr char KEY_MAP_MSG_TAKE_SHOTGUN_SHELLS[]  = "mapMsg_TakeShotgunShells";
-    constexpr char KEY_MAP_MSG_DOOR_JAMMED[]          = "mapMsg_DoorJammed";
-    constexpr char KEY_MAP_MSG_DOOR_LOCKED[]          = "mapMsg_DoorLocked";
-    constexpr char KEY_MAP_MSG_DOOR_UNLOCKED[]        = "mapMsg_DoorUnlocked";
-    constexpr char KEY_MAP_MSG_NOW_MAKING[]           = "mapMsg_NowMaking";
+    constexpr char KEY_COMMON_MSG_YES[]                  = "commonMsg_Yes";
+    constexpr char KEY_COMMON_MSG_NO[]                   = "commonMsg_No";
+    constexpr char KEY_COMMON_MSG_SOMEDAY[]              = "commonMsg_Someday";
+    constexpr char KEY_COMMON_MSG_NO_MAP[]               = "commonMsg_NoMap";
+    constexpr char KEY_COMMON_MSG_TOO_DARK_FOR_MAP[]     = "commonMsg_TooDarkForMap";
+    constexpr char KEY_COMMON_MSG_TAKE_FIRST_AID_KIT[]   = "commonMsg_TakeFirstAidKit";
+    constexpr char KEY_COMMON_MSG_TAKE_HEALTH_DRINK[]    = "commonMsg_TakeHealthDrink";
+    constexpr char KEY_COMMON_MSG_TAKE_AMPOULE[]         = "commonMsg_TakeAmpoule";
+    constexpr char KEY_COMMON_MSG_TAKE_HANDGUN_BULLETS[] = "commonMsg_TakeHandgunBullets";
+    constexpr char KEY_COMMON_MSG_TAKE_RIFLE_SHELLS[]    = "commonMsg_TakeRifleShells";
+    constexpr char KEY_COMMON_MSG_TAKE_SHOTGUN_SHELLS[]  = "commonMsg_TakeShotgunShells";
+    constexpr char KEY_COMMON_MSG_DOOR_JAMMED[]          = "commonMsg_DoorJammed";
+    constexpr char KEY_COMMON_MSG_DOOR_LOCKED[]          = "commonMsg_DoorLocked";
+    constexpr char KEY_COMMON_MSG_DOOR_UNLOCKED[]        = "commonMsg_DoorUnlocked";
+    constexpr char KEY_COMMON_MSG_NOW_MAKING[]           = "commonMsg_NowMaking";
 
     // =========================
     // Map 0, Stage 00 Messages

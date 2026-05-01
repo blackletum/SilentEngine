@@ -55,28 +55,28 @@ namespace Silent::Game
     // TODO: Name might be wrong, but these have something to do with held item meshes.
     // First index is the mesh variant, second is the container of meshes (not bone index in skeleton)?
     // Data addresses are hardcoded.
-    /** @brief Packs a model bone containing ???
+    /** @brief Packs a model bone containing a mesh variant index and ??? in a single value.
      *
-     * @param idx0 ???
+     * @param variantIdx Mesh variant index.
      * @param idx1 ???
-     * @return Packed model bone containing ???
+     * @return Packed model bone containing a mesh variant index and ???
      */
-    #define MODEL_BONE(idx0, idx1) \
-        (s16)((idx0) | ((idx1) << 4))
+    #define MODEL_BONE(variantIdx, idx1) \
+        (s16)((variantIdx) | ((idx1) << 4))
 
-    // TODO
-    /** @brief Retrieves ???
-     *
-     * @param modelBone Packed model bone containing ???
-     * @return Unknown first index.
-     */
-    #define MODEL_BONE_IDX_0_GET(modelBone) \
+    /** @brief Retrieves the bone mesh variant index from a packed model bone.
+
+    *
+    * @param modelBone Packed model bone containing  a mesh variant index and ???
+    * @return Bone mesh variant index.
+    */
+    #define MODEL_BONE_MESH_VARIANT_IDX_GET(modelBone) \
         ((modelBone) & 0xF)
 
-    // TODO
+
     /** @brief Retrieves ???
      *
-     * @param modelBone Packed model bone containing ???
+     * @param modelBone Packed model bone containing a mesh variant index and ???
      * @return Unknown second index.
      */
     #define MODEL_BONE_IDX_1_GET(modelBone) \
@@ -201,10 +201,10 @@ namespace Silent::Game
      * @param fadeIn `true` for fade in, `false` for fade out.
      * @param isWhite `true` for white fade, `false` for black fade.
      */
-    #define ScreenFade_Start(reset, fadeIn, isWhite) \
+    #define ScreenFade_Start(reset, fadeIn, isWhite)                                                                \
         g_Screen_FadeStatus = (((((reset) == true) ? ScreenFadeState_FadeOutStart : ScreenFadeState_FadeOutSteps) + \
-                            (((fadeIn) == true) ? 4 : 0)) | \
-                            (((isWhite) == true) ? (1 << 3) : 0))
+                                (((fadeIn) == true) ? 4 : 0)) |                                                     \
+                               (((isWhite) == true) ? (1 << 3) : 0))
 
     /** @brief Resets the screen fade. */
     #define ScreenFade_Reset() \
@@ -223,27 +223,27 @@ namespace Silent::Game
      * @bug Some maps appear to have a bug where the negative position check will never be true because they check
      * if the chunk index will be a positive number. Seems like they forgot to use `ABS`?
      */
-    #define PLAYER_IN_MAP_CHUNK(comp, x0, x1, x2, x3)                                                        \
-        (__chunkIdx = g_SysWork.playerWork.player.position.comp / Q12(40.0f),                        \
+    #define PLAYER_IN_MAP_CHUNK(comp, x0, x1, x2, x3)                                               \
+        (__chunkIdx = g_SysWork.playerWork.player.position.comp / Q12(40.0f),                       \
         ((g_SysWork.playerWork.player.position.comp >  Q12(0.0f) && (__chunkIdx + (x0)) == (x1)) || \
-        (g_SysWork.playerWork.player.position.comp <= Q12(0.0f) && (__chunkIdx + (x2)) == (x3))))
+        (g_SysWork.playerWork.player.position.comp  <= Q12(0.0f) && (__chunkIdx + (x2)) == (x3))))
 
-    #define PLAYER_NOT_IN_MAP_CHUNK(comp, x0, x1, x2, x3)                                                    \
-        (__chunkIdx = g_SysWork.playerWork.player.position.comp / Q12(40.0f),                        \
+    #define PLAYER_NOT_IN_MAP_CHUNK(comp, x0, x1, x2, x3)                                           \
+        (__chunkIdx = g_SysWork.playerWork.player.position.comp / Q12(40.0f),                       \
         ((g_SysWork.playerWork.player.position.comp >  Q12(0.0f) && (__chunkIdx + (x0)) != (x1)) || \
-        (g_SysWork.playerWork.player.position.comp <= Q12(0.0f) && (__chunkIdx + (x2)) != (x3))))
+        (g_SysWork.playerWork.player.position.comp  <= Q12(0.0f) && (__chunkIdx + (x2)) != (x3))))
 
     #define MAP_CHUNK_CHECK_VARIABLE_DECL_2() \
         s32 __chunkIdx2
 
-    #define PLAYER_IN_MAP_CHUNK_2(comp, x0, x1, x2, x3)                                                      \
-        (__chunkIdx2 = g_SysWork.playerWork.player.position.comp / Q12(40.0f),                       \
+    #define PLAYER_IN_MAP_CHUNK_2(comp, x0, x1, x2, x3)                                             \
+        (__chunkIdx2 = g_SysWork.playerWork.player.position.comp / Q12(40.0f),                      \
         ((g_SysWork.playerWork.player.position.comp >  Q12(0.0f) && (__chunkIdx2 + (x0)) < (x1)) || \
-        (g_SysWork.playerWork.player.position.comp <= Q12(0.0f) && (__chunkIdx2 + (x2)) < (x3))))
+        (g_SysWork.playerWork.player.position.comp  <= Q12(0.0f) && (__chunkIdx2 + (x2)) < (x3))))
 
-    #define PLAYER_NEAR_POS(comp, base, tol)                                                                                                                             \
+    #define PLAYER_NEAR_POS(comp, base, tol)                                                                                                             \
         (((g_SysWork.playerWork.player.position.comp - Q12(base)) >= Q12(0.0f)) ? ((g_SysWork.playerWork.player.position.comp - Q12(base)) < Q12(tol)) : \
-                                                                                          ((Q12(base) - g_SysWork.playerWork.player.position.comp) < Q12(tol)))
+                                                                                  ((Q12(base) - g_SysWork.playerWork.player.position.comp) < Q12(tol)))
 
     #define MIN_OFFSET(x, neg, pos) \
         ((((x) + (-neg)) <= ((x) + (pos))) ? ((x) - (neg)) : ((x) + (pos)))
@@ -311,6 +311,17 @@ namespace Silent::Game
         CharaGroupFlag_0    = 1 << 0,
         CharaGroupFlag_1    = 1 << 1
     } e_CharaGroupFlags;
+
+    /** @brief Character collision states. */
+    typedef enum _CharaCollisionState
+    {
+        CharaCollisionState_Ignore = 0,
+        CharaCollisionState_Player = 1,
+        CharaCollisionState_2      = 2,
+        CharaCollisionState_Npc    = 3,
+        CharaCollisionState_4      = 4,
+        CharaCollisionState_5      = 5
+    } e_CharaCollisionState;
 
     /** @brief Sync modes used by `DrawSync` and `VSync`. */
     enum e_SyncMode
@@ -496,7 +507,7 @@ namespace Silent::Game
     {
         UnkSysFlag_None = 0,
         UnkSysFlag_0    = 1 << 0,
-        UnkSysFlag_1    = 1 << 1,
+        UnkSysFlag_1    = 1 << 1, // Demo in progress?
 
         UnkSysFlag_3    = 1 << 3,
         UnkSysFlag_4    = 1 << 4,
@@ -622,7 +633,7 @@ namespace Silent::Game
         SysState_ReadMessage    = 7,
         SysState_SaveMenu0      = 8,
         SysState_SaveMenu1      = 9,
-        SysState_EventCallFunc  = 10,
+        SysState_EventCallback  = 10,
         SysState_EventSetFlag   = 11,
         SysState_EventPlaySound = 12,
         SysState_GameOver       = 13,
@@ -869,8 +880,8 @@ namespace Silent::Game
         PlayerFlag_Unk31          = 1 << 31
     };
 
-    /** @brief Character IDs. The `CHARA_FILE_INFOS` array associates each character ID with animimation, model, and texture files. */
-    enum e_CharacterId
+    /** @brief Character IDs. The `CHARA_FILE_INFOS` array associates each character ID with asset files. */
+    enum e_CharaId
     {
         Chara_None             = 0,
         Chara_Harry            = 1,
@@ -923,13 +934,7 @@ namespace Silent::Game
         Chara_Hack = NO_VALUE, // @hack Force enum to be treated as `s32`.
     };
 
-    /** @brief Character model states. TODO: Remove. Each character should have its own enum of control states. */
-    enum e_ModelState
-    {
-        ModelState_Uninitialized = 0,
-
-    };
-
+    /** @brief Game difficulties. */
     enum e_GameDifficulty
     {
         GameDifficulty_Easy   = -1,
@@ -937,22 +942,24 @@ namespace Silent::Game
         GameDifficulty_Hard   = 1
     };
 
+    /** @brief Event trigger types. */
     enum e_TriggerType
     {
         TriggerType_EndOfArray     = NO_VALUE,
         TriggerType_None           = 0, /** Skips trigger/activation type checks. Always activates if required event flags are set and skips processing later events until flags deactivate it. */
-        TriggerType_TouchAabb      = 1, /** Checks if the player has entered a rectangular area aligned to world axes. */
-        TriggerType_TouchFacing    = 2, /** Checks if the player is within a small area and facing toward the trigger point. */
-        TriggerType_TouchObbFacing = 3, /** Checks if the player has stepped into a shaped area and is facing toward it. */
-        TriggerType_TouchObb       = 4, /** Checks if the player has stepped into a shaped area. No facing requirement. */
+        TriggerType_TouchAabb      = 1, /* Player has collided with an AABB. */
+        TriggerType_TouchFacing    = 2, /* Player collided with a trigger is facing toward it. */
+        TriggerType_TouchObbFacing = 3, /* Player collided with an OBB and is facing toward it. */
+        TriggerType_TouchObb       = 4, /* Player collided with an OBB. No facing requirement. */
     };
 
+    /** @brief Event triger activation types. */
     enum e_TriggerActivationType
     {
         TriggerActivationType_None      = 0, /** No activation conditions other than event flag/trigger checks. */
-        TriggerActivationType_Exclusive = 1, /** Prevents other events from being triggered while this event is active. */
-        TriggerActivationType_Button    = 2, /** Requires a button press to activate. */
-        TriggerActivationType_Item      = 3, /** Requires an inventory item to activate. */
+        TriggerActivationType_Exclusive = 1, /** Prevents other events from being triggered while the event is active. */
+        TriggerActivationType_Button    = 2, /** Requires a button press. */
+        TriggerActivationType_Item      = 3, /** Requires an inventory item. */
     };
 
     /** Some events indicate specific cutscenes behavior via flags. */
@@ -1008,22 +1015,23 @@ namespace Silent::Game
      */
     struct s_ControllerConfig
     {
-        u16 enter_0;
-        u16 cancel_2;
-        u16 skip_4;
-        u16 action_6;
-        u16 aim_8;
-        u16 light_A;
-        u16 run_C;
-        u16 view_E;
-        u16 stepLeft_10;
-        u16 stepRight_12;
-        u16 pause_14;
-        u16 item_16;
-        u16 map_18;
-        u16 option_1A;
+        u16 enter;
+        u16 cance;
+        u16 skip;
+        u16 action;
+        u16 aim;
+        u16 light;
+        u16 run;
+        u16 view;
+        u16 stepLeft;
+        u16 stepRight;
+        u16 pause;
+        u16 item;
+        u16 map;
+        u16 option;
     };
 
+    /** @brief Inventory item entry. */
     struct s_InventoryItem
     {
         u8 id_0;      /** `InventoryItemId` */
@@ -1032,41 +1040,43 @@ namespace Silent::Game
         u8 field_3;   // Some sort of index?
     };
 
-    typedef enum _ItemToggleFlags
+    /** @brief Special inventory item toggle flags. */
+    enum e_ItemToggleFlags
     {
         ItemToggleFlag_RadioOn       = 1 << 0,
         ItemToggleFlag_FlashlightOff = 1 << 1
-    } e_ItemToggleFlags;
+    };
 
+    /** @brief Savegame data. */
     typedef struct _Savegame
     {
         s_InventoryItem items_0[INVENTORY_ITEM_COUNT_MAX];
         s8              field_A0;
         s8              field_A1[3];
-        s8              mapOverlayId_A4;          /** `e_MapIdx` Index to overlay `.BIN` files. */
-        s8              mapRoomIdx_A5;            /** Index to local map geometry `.IPD` files. */
+        s8              mapOverlayId_A4;            /** `e_MapIdx` Index to overlay `.BIN` files. */
+        s8              mapRoomIdx_A5;              /** Index to local map geometry `.IPD` files. */
         s16             savegameCount_A6;
-        s8              locationId_A8;            /** `e_SaveLocationId` */
-        u8              paperMapIdx_A9;           /** `e_PaperMapIdx` | Index of the paper map displayed when opening the map screen. */
-        u8              equippedWeapon_AA;        /** `e_InventoryItemId` | Affects the visible player weapon model. */
-        u8              inventorySlotCount_AB;    /** Item slots. */
-        u32             itemToggleFlags_AC;       /** `e_ItemToggleFlags` */
-        s32             ovlEnemyStates[45];       /** Flags indicating the enemy states in a given overlay.
-                                                * By default, they are all set to 1. As soon as the player fully kills them,
-                                                * they are set to 0 based on a currently unknown index value.
-                                                */
-        s32             hasMapsFlags_164;         // See Sparagas' `HasMapsFlags` struct for details of every bit.
-        u32             eventFlags_168[27];       // Can be accessed through `Savegame_EventFlagGet` / `Savegame_EventFlagSet`, only tested a few, but seems all are related to events and pick-up flags, grouped by location and not item types.
-        s32             mapMarkingFlags_1D4[25];  // See Sparagas' `MapMarkingsFlags` struct for details of every bit.
-        q19_12          healthSaturation_238;     /** Range: [0, 300]. Ampoules give extra stored health. If the player loses health, it will be slowly restored. */
+        s8              locationId_A8;              /** `e_SaveLocationId` */
+        u8              paperMapIdx_A9;             /** `e_PaperMapIdx` | Index of the paper map displayed when opening the map screen. */
+        u8              equippedWeapon_AA;          /** `e_InventoryItemId` | Affects the visible player weapon model. */
+        u8              inventorySlotCount_AB;      /** Item slots. */
+        u32             itemToggleFlags_AC;         /** `e_ItemToggleFlags` */
+        s32             ovlEnemyStates[Chara_Count]; /** Flags indicating the enemy states in a given overlay.
+                                                     * By default, they are all set to 1. As soon as the player fully kills them,
+                                                     * they are set to 0 based on a currently unknown index value.
+                                                     */
+        s32             hasMapsFlags_164;           // See Sparagas' `HasMapsFlags` struct for details of every bit.
+        u32             eventFlags_168[27];         // Can be accessed through `Savegame_EventFlagGet` / `Savegame_EventFlagSet`, only tested a few, but seems all are related to events and pick-up flags, grouped by location and not item types.
+        s32             mapMarkingFlags_1D4[25];    // See Sparagas' `MapMarkingsFlags` struct for details of every bit.
+        q19_12          healthSaturation_238;       /** Range: [0, 300]. Ampoules give extra stored health. If the player loses health, it will be slowly restored. */
         s16             pickedUpItemCount_23C;
         s8              field_23E;
         u8              field_23F;
-        q19_12          playerHealth_240;         /** Default: `Q12(100.0f)` */
+        q19_12          playerHealth_240;           /** Default: `Q12(100.0f)` */
         q19_12          playerPositionX_244;
-        q3_12           playerRotationY_248;      /** Range [0, 0.999755859375], positive Z: 0, clockwise rotation. It can be multiplied by 360 to get degrees. */
-        u8              clearGameCount_24A;       /** Range [0, 99] */
-        u8              clearGameEndings_24B;     /** `e_GameEndingFlags` */
+        q3_12           playerRotationY_248;        /** Range [0, 0.999755859375], positive Z: 0, clockwise rotation. It can be multiplied by 360 to get degrees. */
+        u8              clearGameCount_24A;         /** Range [0, 99] */
+        u8              clearGameEndings_24B;       /** `e_GameEndingFlags` */
         q19_12          playerPositionZ_24C;
         q20_12          gameplayTimer_250;
         q20_12          runDistance_254;
@@ -1181,7 +1191,7 @@ namespace Silent::Game
      */
     struct s_AnimInfo
     {
-        void (*playbackFunc)(struct _Model* model, struct _AnmHeader* anmHdr, GsCOORDINATE2* coords, struct _AnimInfo* animInfo);
+        void (*playbackFunc)(struct _Model* model, struct _AnmHeader* anmHdr, GsCOORDINATE2* boneCoords, struct _AnimInfo* animInfo);
         u8   status;                      /** Packed anim status. Init base? See `s_ModelAnimData::status`. */
         bool hasVariableDuration;         /** Use `duration.variableFunc`: `true`, Use `duration.constant`: `false`. */
         u8   linkStatus;                  /** Packed anim status link target. See `s_ModelAnim::status`. */
@@ -1210,7 +1220,7 @@ namespace Silent::Game
     /** @brief Character model. */
     struct s_Model
     {
-        s8          charaId;      /** `e_CharacterId` */
+        s8          charaId;      /** `e_CharaId` */
         u8          paletteIdx;   /** Changes the texture palette index for this model. */
         u8          controlState; /** Active character control state. */
         u8          stateStep;    // Step number or temp data for the current `controlState`? In `s_PlayerExtra` always 1, set to 0 for 1 tick when anim state appears to change.
@@ -1236,21 +1246,22 @@ namespace Silent::Game
         s8          unk_30[4];
     } s_800D5710;
 
+    // Collision-related.
     typedef struct
     {
-        VECTOR3 position_0;
+        VECTOR3 position;
         s16     field_C;
         s16     field_E;
         s16     field_10;
-        s8      field_12;
+        s8      collisionState; /** `e_CharaCollisionState` */
         u8      field_13;
     } s_func_8006CF18;
 
-    typedef struct _CharaDamage
+    struct s_CharaDamage
     {
-        VECTOR3 position_0;
-        q19_12  amount_C;
-    } s_CharaDamage;
+        VECTOR3 position;
+        q19_12  amount;
+    };
 
     typedef union
     {
@@ -1260,14 +1271,14 @@ namespace Silent::Game
     } u_Property;
 
     /** @brief Temporary struct. */
-    typedef struct _SubCharPropertiesDummy
+    typedef struct _PropsDummy
     {
         u_Property properties_E8[16];
-    } s_PropertiesDummy;
+    } s_PropsDummy;
 
-    // TODO: Re-offset `s_PropertiesPlayer` / `s_PropertiesNpc`.
+    // TODO: Re-offset `s_PropsPlayer` / `s_PropsNpc`.
     // Probably easier to do that after it's merged with rest of code.
-    typedef struct _PropertiesPlayer
+    typedef struct _PropsPlayer
     {
         q19_12        afkTimer_E8; // Increments every tick for 10 seconds before AFK anim starts.
         q19_12        positionY_EC;
@@ -1288,10 +1299,10 @@ namespace Silent::Game
         q3_12         field_122; // Some sort of X angle for the player. Specially used when aiming an enemy.
         q3_12         headingAngle_124;
         q3_12         moveDistance_126; // Used to indicate how much the player should move foward. Seems to be squared.
-    } s_PropertiesPlayer;
+    } s_PropsPlayer;
 
     // TODO: This may be a puppet doctor/nurse specific struct, need to compare with other NPCs.
-    typedef struct _PropertiesNpc
+    typedef struct _PropsNpc
     {
         VECTOR3     position_E8; /** Q19.12 */
         s32         field_F4;
@@ -1310,15 +1321,15 @@ namespace Silent::Game
         s16         field_120;
         s16         field_122;
         s_800D5710* field_124;
-    } s_PropertiesNpc;
+    } s_PropsNpc;
 
     /** @brief Air Screamer or Night Flutter character properties. */
-    typedef struct _PropertiesAirScreamer
+    typedef struct _PropsAirScreamer
     {
         u32     field_E8_0 : 4;
         bool    field_E8_4;
         u32     field_E8_8 : 4;
-        u32     unk_E8_C   : 20;
+        u32     __pad_E8_C : 20;
         s32     field_EC;
         s16     field_F0; // } Maybe 2D offset like in Creeper properties? Must check.
         s16     field_F2; // }
@@ -1326,13 +1337,13 @@ namespace Silent::Game
         VECTOR3 targetPosition_F8; /** Q19.12 */
         VECTOR3 position_104;      /** Q19.12 | Set to either Air Screamer position with slight offset toward player or player position. */
         VECTOR3 position_110;
-        s32     flags_11C; /** `e_AirScreamerFlags` */
+        s32     flags; /** `e_AirScreamerFlags` */
         q19_12  timer_120;
         q19_12  groundHeight_124;
-    } s_PropertiesAirScreamer;
+    } s_PropsAirScreamer;
 
-    /** @brief Alessa character properties. TODO: Copy of `s_PropertiesDahlia`. Fields not marked "correct" are filler. */
-    typedef struct _PropertiesAlessa
+    /** @brief Alessa character properties. TODO: Copy of `s_PropsDahlia`. Fields not marked "correct" are filler. */
+    typedef struct _PropsAlessa
     {
         s32        stateIdx0;
         u_Property properties_EC;
@@ -1349,10 +1360,10 @@ namespace Silent::Game
         u_Property properties_120;
         s16        field_124;
         q3_12      moveSpeed_126; // Correct
-    } s_PropertiesAlessa;
+    } s_PropsAlessa;
 
     /** @brief Bloodsucker character properties. */
-    typedef struct _PropertiesBloodsucker
+    typedef struct _PropsBloodsucker
     {
         q19_12 timer_E8;
         q19_12 timer_EC;
@@ -1360,10 +1371,31 @@ namespace Silent::Game
         q19_12 timer_F4;
         s8     unused_F8[36]; /** @unused */
         s32    flags_118;     /** `e_BloodsuckerFlags` */
-    } s_PropertiesBloodsucker;
+    } s_PropsBloodsucker;
+
+    /** @brief Cheryl character properties. */
+    // TODO: Needs revision. Copy of Dahlia properties.
+    typedef struct _PropsCheryl
+    {
+        s32        controlState; /** `e_CherylControl` */
+        u_Property properties_EC;
+        u_Property properties_F0;
+        u_Property properties_F4;
+        s32        resetStateIdx0_F8;
+        s32        field_FC;
+        s32        field_100;
+        u_Property properties_104;
+        u_Property properties_108;
+        u_Property properties_10C;
+        VECTOR3    field_110;
+        s32        flags; /** `e_CherylFlags` */
+        u_Property properties_120;
+        q3_12      moveDistance_124;
+        q3_12      moveDistance_126;
+    } s_PropsCheryl;
 
     /** @brief Creeper character properties. */
-    typedef struct _PropertiesCreeper
+    typedef struct _PropsCreeper
     {
         u16    flags; /** `e_CreeperFlags` */
         s8     __pad_EA[2];
@@ -1378,10 +1410,10 @@ namespace Silent::Game
         q3_12  angleToTarget;
         s16    animStatus_10A; // TODO: Purpose unclear.
         q4_12  moveSpeed;
-    } s_PropertiesCreeper;
+    } s_PropsCreeper;
 
     /** @brief Dahlia character properties. */
-    typedef struct _SubCharPropertiesDahlia
+    typedef struct _PropsDahlia
     {
         s32        stateIdx0;
         u_Property properties_EC;
@@ -1398,10 +1430,10 @@ namespace Silent::Game
         u_Property properties_120;
         s16        field_124;
         q3_12      moveDistance_126;
-    } s_PropertiesDahlia;
+    } s_PropsDahlia;
 
     /** @brief Floatstinger character properties. */
-    typedef struct _PropertiesFloatstinger
+    typedef struct _PropsFloatstinger
     {
         s16        flags_E8;
         s8         unk_EA[2];
@@ -1422,10 +1454,10 @@ namespace Silent::Game
         s16        field_10C;
         q3_12      field_10E;
         u_Property properties_110[6];
-    } s_PropertiesFloatstinger;
+    } s_PropsFloatstinger;
 
     /** @brief Groaner character properties. */
-    typedef struct _PropertiesGroaner
+    typedef struct _PropsGroaner
     {
         u_Property flags_E8; /** `e_GroanerFlags` TODO: One weird exception where it's accessed as `s32`. */
         q3_12      angle_EC; // Target heading angle?
@@ -1434,23 +1466,23 @@ namespace Silent::Game
         q3_12      field_F2;
         q19_12     targetPositionX_F4;
         q19_12     targetPositionZ_F8;
-        q3_12      angle_FC;
+        q3_12      angleToTarget;
         q3_12      field_FE;
         u16        relKeyframeIdx_100;
         s8         unk_102[2];
         q19_12     timer_104;
         u32        field_108;
-        q3_12      timer_10C;
-        u8         field_10E;
-        u8         field_10F;
-        u8         field_110;
-        u8         field_111;
-        s8         unk_112[2];
-        s16        field_114;
-    } e_PropertiesGroaner;
+        q3_12      timer_10C; // SFX timer?
+        u8         field_10E; // } Sound states?
+        u8         field_10F; // }
+        u8         field_110; /** `bool` | Play SFX. */
+        u8         field_111; /** `bool` | Play SFX. */
+        s8         __pad_112[2];
+        q3_12      field_114; // Move speed coefficient?
+    } e_PropsGroaner;
 
     /** @brief Hanged Scratcher character properties. */
-    typedef struct _PropertiesHangedScratcher
+    typedef struct _PropsHangedScratcher
     {
         s16    flags_E8; /** `e_HangedScratcherFlags` */
         q4_12  timer_EA;
@@ -1471,20 +1503,40 @@ namespace Silent::Game
         s8     unk_10A[2];
         q4_12  radiusMax_10C; // } Used as `Chara_MoveSpeedUpdate` limit param, TODO: rename?
         q4_12  radiusMin_10E; // }
-    } s_PropertiesHangedScratcher;
+    } s_PropsHangedScratcher;
 
     /** @brief Incubus or Incubator character properties. TODO: Check which one. */
-    typedef struct _PropertiesIncubus
+    typedef struct _PropsIncubus
     {
         q19_12 timer_E8;
         s32    field_EC;
         s32    someState_F0;
         q19_12 bossFightTimer_F4;
         s8     unk_F8[48];
-    } s_PropertiesIncubus;
+    } s_PropsIncubus;
+
+    /** @brief Kaufmann character properties. TODO: Largely a copy of Dahlia's for now. */
+    typedef struct _PropsKaufmann
+    {
+        /* 0x0   */ s32        controlState; /** `e_KaufmannControl` */
+        /* 0xEC  */ u_Property properties_EC;
+        /* 0xF0  */ u_Property properties_F0;
+        /* 0xF4  */ u_Property properties_F4;
+        /* 0xF8  */ s32        resetStateIdx0_F8;
+        /* 0xFC  */ s32        field_FC;
+        /* 0x100 */ s32        field_100;
+        /* 0x104 */ u_Property properties_104;
+        /* 0x108 */ u_Property properties_108;
+        /* 0x10C */ u_Property properties_10C;
+        /* 0x110 */ VECTOR3    field_110;
+        /* 0x11C */ s32        flags_11C;
+        /* 0x120 */ s32        field_120;
+        /* 0x124 */ s16        field_124;
+        /* 0x126 */ q3_12      moveSpeed;
+    } s_PropsKaufmann;
 
     /** @brief Larval Stalker character properties. */
-    typedef struct _PropertiesLarvalStalker
+    typedef struct _PropsLarvalStalker
     {
         u16        flags_E8; /** `e_LarvalStalkerFlags` */
         u8         field_EA;
@@ -1506,10 +1558,10 @@ namespace Silent::Game
         u_Property field_120;
         s16        field_124;
         q3_12      moveDistance_126;
-    } s_PropertiesLarvalStalker;
+    } s_PropsLarvalStalker;
 
     /** @brief Monster Cybil character properties. */
-    typedef struct _PropertiesMonsterCybil
+    typedef struct _PropsMonsterCybil
     {
         s32    field_E8;
         s16    field_EC;
@@ -1537,39 +1589,39 @@ namespace Silent::Game
         s16    field_122;
         s8     unk_124[2];
         s16    field_126;
-    } s_PropertiesMonsterCybil;
+    } s_PropsMonsterCybil;
 
     /** @brief Puppet Nurse or Puppet Doctor character properties. */
-    typedef struct _PropertiesPuppetNurse
+    typedef struct _PropsPuppetNurse
     {
-        VECTOR3          position_E8; /** Q19.12 */
-        s_CharaDamage    damage_F4;
-        q19_12           field_104;
-        s32              field_108;
-        s32              field_10C;
-        q19_12           moveSpeed_110;
-        s32              field_114;
-        u8               field_118;
-        u8               modelVariation_119;
-        u16              field_11A;
-        q3_12            field_11C; // Angle.
-        s16              field_11E;
-        s16              field_120;
-        u16              flags_122; /** `e_PuppetNurseFlags` */
-        s_800D5710*      field_124;
-    } s_PropertiesPuppetNurse;
+        VECTOR3       position_E8; /** Q19.12 */
+        s_CharaDamage damage_F4;
+        q19_12        field_104;
+        s32           field_108;
+        s32           field_10C;
+        q19_12        moveSpeed_110;
+        s32           field_114;
+        u8            field_118;
+        u8            modelVariation_119;
+        u16           field_11A;
+        q3_12         field_11C; // Angle.
+        s16           field_11E;
+        s16           field_120;
+        u16           flags_122; /** `e_PuppetNurseFlags` */
+        s_800D5710*   field_124;
+    } s_PropsPuppetNurse;
 
     /** @brief Romper character properties. */
-    typedef struct _PropertiesRomper
+    typedef struct _PropsRomper
     {
-        s32    flags_E8; /** `e_RomperFlags` */
+        s32    flags; /** `e_RomperFlags` */
         q3_12  angle_EC; // Target heading angle?
         s16    field_EE;
         q3_12  field_F0; // Move speed accumulation for this tick.
         q3_12  rotationY_F2;
         q19_12 field_F4; // Relative anim time?
-        q3_12  offsetX_F8; // } Move offset?
-        q3_12  offsetZ_FA; // }
+        q3_12  movementOffsetX; // } Move offset?
+        q3_12  movementOffsetZ; // }
         q19_12 targetPositionX_FC;
         q19_12 targetPositionZ_100;
         s32    field_104;
@@ -1586,12 +1638,12 @@ namespace Silent::Game
         s8     unk_11B;
         q3_12  timer_11C;
         s8     unk_11E[2];
-        q19_12 distance_120; // Distance?
+        q19_12 distance_120;
         q19_12 field_124; // Move speed step?
-    } s_PropertiesRomper;
+    } s_PropsRomper;
 
     /** @brief Split Head character properties. */
-    typedef struct _PropertiesSplitHead
+    typedef struct _PropsSplitHead
     {
         u16     flags_E8; /** `e_SplitHeadFlags` */
         u8      field_EA;
@@ -1613,20 +1665,20 @@ namespace Silent::Game
         s8      unk_120[4];
         s16     field_124;
         q3_12   moveDistance_126;
-    } s_PropertiesSplitHead;
+    } s_PropsSplitHead;
 
     /** @brief Stalker character properties. */
-    typedef struct _PropertiesStalker
+    typedef struct _PropsStalker
     {
-        s16    flags_E8; /** `e_StalkerFlags` */
+        s16    flags; /** `e_StalkerFlags` */
         q3_12  offset_EC;
         q3_12  offset_EE;
-        q19_12 targetPositionX_F0;
-        q19_12 targetPositionZ_F4;
+        q19_12 targetPositionX;
+        q19_12 targetPositionZ;
         q19_12 timer_F8;
         s16    keyframeIdx_FC;    // Or anim status?? Seems to be used as both.
         s16    relKeyframeIdx_FE; // Unsure.
-        q3_12  targetHeadingAngle_100;
+        q3_12  targetHeadingAngle;
         s16    sfxId_102;
         q19_12 relAnimTime_104;
         q4_12  timer_108;
@@ -1635,35 +1687,29 @@ namespace Silent::Game
         q19_12 health_110;
         q3_12  angle_114;
         q4_12  timer_116;
-    } s_PropertiesStalker;
+    } s_PropsStalker;
 
     /** @brief Twinfeeler character properties. */
-    typedef struct _PropertiesTwinfeeler
+    typedef struct _PropsTwinfeeler
     {
+        // TODO: Weird `field_E8` access.
         u_Property    field_E8;
-        s_CharaDamage field_EC;
-        q19_12        field_FC; // Timer?
-        s32           field_100;
-        s32           field_104;
-        s32           field_108;
-        s32           field_10C;
-        s16           field_110;
-        s8            unk_112[2];
-        u32           field_114; // Flags.
-        u16           field_118;
-        s8            unk_11C[2];
-        s32           field_120;
-        u_Property    properties_124[2];
-    } s_PropertiesTwinfeeler;
-
-    /** Offsets for translation? */
-    typedef struct
-    {
-        q3_12 offsetX_0;
-        q3_12 offsetZ_2;
-        q3_12 offsetX_4;
-        q3_12 offsetZ_6;
-    } s_SubCharacter_D8;
+        //q3_12         sfxTimer_E8;
+        //q4_12         field_EA;
+        s_CharaDamage damage;
+        q19_12        digTimer;
+        q19_12        spawnPositionX; /** @unused */
+        q19_12        spawnPositionZ; /** @unused */
+        q19_12        prevMoveSpeed;
+        q19_12        accumulatedDamage;
+        s16           field_110; /** @unused */
+        s8            __pad_112[2];
+        u32           flags;     /** `e_TwinfeelerFlags` */
+        u16           field_118; /** `bool` */
+        s8            __pad_11C[2]; // TODO: Should be `s32 prevHealth`.
+        s32           field_120; /** @unused */
+        s8            __pad_124[8];
+    } s_PropsTwinfeeler;
 
     typedef struct
     {
@@ -1685,84 +1731,98 @@ namespace Silent::Game
         VECTOR3 field_48[3];
     } s_SubCharacter_44;
 
-    // Maybe AABB, or some basic parameters.
+    /** @brief Character collision box. */
     typedef struct _SubCharacter_C8
     {
-        q3_12 field_0; // Top abs height? Set to player head position in `sharedFunc_800D0828_3_s03`.
-        q3_12 field_2; // Bottom abs height? Computed as Y offsets in `sharedFunc_800D0828_3_s03`.
-        q3_12 field_4; // Height from top to bottom?
-        q3_12 field_6; // Some kind of Y offset.
-        s16   field_8; // Q3.12? Maybe weapon range?
-        s16   field_A;
-    } s_SubCharacter_C8;
+        q3_12 bottom;
+        q3_12 top;
+        q3_12 height;
+        q3_12 offsetY;
+        q3_12 field_8; // X extent?? Always negative, but why?
+        q3_12 field_A; // Z extent??
+    } s_CharaBox;
 
-    typedef struct _SubCharacter_D4
+    /** @brief Character collision cylinder. */
+    typedef struct s_CharaCylinder
     {
         q3_12 radius_0;
-        q3_12 field_2;
-    } s_SubCharacter_D4;
+        q3_12 field_2; // Height?
+    } ss_CharaCylinder;
 
+    /** @brief Character collision info for the active animation frame. */
+    typedef struct _CharaShapeOffsets
+    {
+        DVECTOR_XZ box;
+        DVECTOR_XZ cylinder;
+    } s_CharaShapeOffsets;
+
+    /** @brief Character collision info. */
+    typedef struct _CharaCollision
+    {
+        s_CharaBox          box;
+        s_CharaCylinder     cylinder;
+        s_CharaShapeOffsets shapeOffsets;   // Translation data?
+        u8                  field_E0;       // Related to collision. If the player collides with the only enemy in memory and the enemy is knocked down, this is set to 1.
+        s8                  state      : 4; /** `e_CharaCollisionState` */
+        u8                  field_E1_4 : 4; // Index for array of `s_func_8006CF18`.
+        s_func_8006CF18*    field_E4;
+    } s_CharaCollision;
+
+    /** @brief Character info. */
     struct s_SubCharacter
     {
-        s_Model           model;          // In player: Manage the half lower part of Harry's body animations (legs and feet).
-        VECTOR3           position;       /** Q19.12 */
-        SVECTOR3          rotation;       /** Q3.12 */
-        q3_12             field_2A;       // Angle related to `rotation`, unknown purpose.
-        SVECTOR3          rotationSpeed;  /** Q3.12 | Range: `[Q12_ANGLE(-157.5f), Q12_ANGLE(157.5f)]`. */
-        q3_12             field_32;       // Related to `rotationSpeed`, unknown purpose.
+        s_Model           model;    // In player: Manage the half lower part of Harry's body animations (legs and feet).
+        VECTOR3           position; /** Q19.12 */
+        SVECTOR3          rotation; /** Q3.12 */
+        q3_12             angleToTarget;
+        SVECTOR3          rotationSpeed;              /** Q3.12 | Rotation speed for `rotation`. */
+        q3_12             angleToTargetRotationSpeed; /** Rotation speed for `angleToTarget`. */
         q19_12            fallSpeed;
         q19_12            moveSpeed;
         q3_12             headingAngle;
         s16               flags;          /** `e_CharaFlags` */
         s8                field_40;       // In player: Index of the NPC attacking the player.
-                                          // In NPCs: Unknown.
-                                          // Possibly `Game_NpcRoomInitSpawn` may have the answer, indicating
-                                          // it's used to indicate the NPC index in `s_Savegame::ovlEnemyStates`.
+                                          // In NPCs: Unknown. `Game_NpcRoomInitSpawn` sugests it indicates the NPC index in `s_Savegame::ovlEnemyStates`.
         s8                attackReceived; // Packed weapon attack indicating what attack has been performed to the character. See `WEAPON_ATTACK`.
         s_SubCharacter_44 field_44;
         q19_12            health;
         s_CharaDamage     damage;
         u16               deathTimer;     // Part of `shBattleInfo` struct in SH2, may use something similar here.
         q3_12             timer_C6;       // Some sort of timer. Written to by `Ai_LarvalStalker_Update`.
-
-        // Fields seen used inside maps (eg. `map0_s00` `func_800D923C`)
-        s_SubCharacter_C8 field_C8;
-        s_SubCharacter_D4 field_D4;       // Contains collision radius and something else.
-        s_SubCharacter_D8 field_D8;       // Translation data?
-        u8                field_E0;       // Related to collision. If the player collides with the only enemy in memory and the enemy is knocked down, this is set to 1.
-        s8                field_E1_0 : 4; // State.
-        u8                field_E1_4 : 4; // Index for array of `s_func_8006CF18`.
-        s_func_8006CF18*  field_E4;
+        s_CharaCollision  collision;
 
         s_SubCharacter() { memset(this, 0, sizeof(*this)); }
 
         union _u
         {
-            s_PropertiesDummy           dummy;
-            s_PropertiesPlayer          player;
-            s_PropertiesNpc             npc;
+            s_PropsDummy           dummy;
+            s_PropsPlayer          player;
+            s_PropsNpc             npc;
 
-            s_PropertiesAirScreamer     airScreamer;
-            s_PropertiesAlessa          alessa;
-            s_PropertiesBloodsucker     bloodsucker;
-            s_PropertiesCreeper         creeper;
-            s_PropertiesDahlia          dahlia;
-            s_PropertiesFloatstinger    floatstinger;
-            e_PropertiesGroaner         groaner;
-            s_PropertiesHangedScratcher hangedScratcher;
-            s_PropertiesIncubus         incubus;
-            s_PropertiesLarvalStalker   larvalStalker;
-            s_PropertiesMonsterCybil    monsterCybil;
-            s_PropertiesPuppetNurse     puppetNurse;
-            s_PropertiesRomper          romper;
-            s_PropertiesSplitHead       splitHead;
-            s_PropertiesStalker         stalker;
-            s_PropertiesTwinfeeler      twinfeeler;
+            s_PropsAirScreamer     airScreamer;
+            s_PropsAlessa          alessa;
+            s_PropsBloodsucker     bloodsucker;
+            s_PropsCheryl          cheryl;
+            s_PropsCreeper         creeper;
+            s_PropsDahlia          dahlia;
+            s_PropsFloatstinger    floatstinger;
+            e_PropsGroaner         groaner;
+            s_PropsHangedScratcher hangedScratcher;
+            s_PropsIncubus         incubus;
+            s_PropsKaufmann        kaufmann;
+            s_PropsLarvalStalker   larvalStalker;
+            s_PropsMonsterCybil    monsterCybil;
+            s_PropsPuppetNurse     puppetNurse;
+            s_PropsRomper          romper;
+            s_PropsSplitHead       splitHead;
+            s_PropsStalker         stalker;
+            s_PropsTwinfeeler      twinfeeler;
 
             _u() {}
         } properties;
     };
 
+    /** @brief Extra player character info. */
     struct s_PlayerExtra
     {
         s_Model           model;             /** Manages upper half body's animations (torso, arms, head). */
@@ -1807,6 +1867,7 @@ namespace Silent::Game
         } s_field_0;
     } u_Unk0;
 
+    /** @brief Map effects info. */
     struct s_MapEffectsInfo
     {
         u_Unk0  field_0;
@@ -1844,7 +1905,7 @@ namespace Silent::Game
         u8              field_14;
         bool            isFlashlightOn_15;
         bool            isFlashlightUnavailable_16;
-        q3_12           flashlightIntensity_18;     // Alpha.
+        q3_12           flashlightIntensity_18;
         u16             field_1A;
         s_StructUnk3    field_1C[2];
         s_StructUnk3    field_84[2];
@@ -1868,9 +1929,9 @@ namespace Silent::Game
         s_PlayerWork   playerWork;
         s_SubCharacter npcs[NPC_COUNT_MAX];
         GsCOORDINATE2  playerBoneCoords[HarryBone_Count];
-        GsCOORDINATE2  unkCoords_E30[5];              // Might be part of previous array for 5 extra coords which go unused.
-        GsCOORDINATE2  npcCoords[NPC_BONE_COUNT_MAX]; // Dynamic coord buffer? 10 coords per NPC (given max of 6 NPCs).
-        s8             npcFlagsId;                    // NPC ID for `npcFlags`. Not an index, starts at 1.
+        GsCOORDINATE2  unkCoords_E30[5];                  // Might be part of previous array for 5 extra coords which go unused.
+        GsCOORDINATE2  npcBoneCoords[NPC_BONE_COUNT_MAX]; // Dynamic coord buffer? 10 coords per NPC (given max of 6 NPCs).
+        s8             npcFlagsId;                        // 1-based NPC ID for `npcFlags`.
         s8             loadingScreenIdx;
         s8             field_2282;                         /** `e_EventDataUnkState` */
         s8             sfxPairIdx_2283;                    /** `e_SfxPairIdx` | Index into `SFX_PAIRS`. */
@@ -2292,7 +2353,7 @@ namespace Silent::Game
      *
      * @param chara Character to update.
      */
-    #define Chara_PropertiesClear(chara)                           \
+    #define Chara_PropsClear(chara)                           \
         for (i = 0; i < 16; i++)                                   \
         {                                                          \
             chara->properties.dummy.properties_E8[i].val32 = 0; \
@@ -2303,10 +2364,10 @@ namespace Silent::Game
      * @param chara Character to update.
      */
     #define Chara_DamageClear(chara)                  \
-        (chara)->damage.amount_C      = Q12(0.0f); \
-        (chara)->damage.position_0.vz = Q12(0.0f); \
-        (chara)->damage.position_0.vy = Q12(0.0f); \
-        (chara)->damage.position_0.vx = Q12(0.0f)
+        (chara)->damage.amount      = Q12(0.0f); \
+        (chara)->damage.position.vz = Q12(0.0f); \
+        (chara)->damage.position.vy = Q12(0.0f); \
+        (chara)->damage.position.vx = Q12(0.0f)
 
     /** @brief Sets a character's received attack type.
      *

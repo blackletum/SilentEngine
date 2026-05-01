@@ -62,7 +62,7 @@ namespace Silent::Game
     static s_DemoFrameData g_Demo_PlayFileBuffer    = {};
     s_DemoFrameData*       g_Demo_PlayFileBufferPtr = &g_Demo_PlayFileBuffer;//(s_DemoFrameData*)0x800F5E00;
 
-    bool Demo_SequenceAdvance(s32 incrementAmt) // 0x8008EF20
+    bool Demo_SequenceAdvance(s32 incrementAmount) // 0x8008EF20
     {
         constexpr int DEMO_FILE_COUNT_MAX = 5;
 
@@ -75,7 +75,7 @@ namespace Silent::Game
             //s_DemoFileInfo{ .demoFileId_0 = FILE_MISC_DEMO0005_DAT, .playFileId_2 = FILE_MISC_PLAY0005_DAT, .canPlayDemo_4 = nullptr }
         };
 
-        g_Demo_DemoId += incrementAmt;
+        g_Demo_DemoId += incrementAmount;
 
         while (true)
         {
@@ -99,8 +99,8 @@ namespace Silent::Game
             }
 
             // If funcptr is set and returned false, skip to next demo.
-            // Direction to skip depends on sign of `incrementAmt` (forward or backward).
-            if (incrementAmt >= 0)
+            // Direction to skip depends on sign of `incrementAmount` (forward or backward).
+            if (incrementAmount >= 0)
             {
                 g_Demo_DemoId++;
             }
@@ -159,9 +159,9 @@ namespace Silent::Game
         g_GameWork.config.optScreenPosX_1C       = g_Demo_UserConfigBackup.optScreenPosX_1C;
         g_GameWork.config.optScreenPosY_1D       = g_Demo_UserConfigBackup.optScreenPosY_1D;
         g_GameWork.config.optSoundType_1E        = g_Demo_UserConfigBackup.optSoundType_1E;
-        g_GameWork.config.optVolumeBgm_1F        = OPT_SOUND_VOLUME_MIN;                     // Disable BGM during demo.
+        g_GameWork.config.optVolumeBgm_1F        = OPT_SOUND_VOLUME_MIN; // Disable BGM during demo.
         g_GameWork.config.optVolumeSe_20         = g_Demo_UserConfigBackup.optVolumeSe_20;
-        g_GameWork.config.optVibrationEnabled_21 = OPT_VIBRATION_DISABLED;                   // Disable vibration during demo.
+        g_GameWork.config.optVibrationEnabled_21 = OPT_VIBRATION_DISABLED; // Disable vibration during demo.
         g_GameWork.config.optBrightness_22       = g_Demo_UserConfigBackup.optBrightness_22;
 
         //Sd_SetVolume(OPT_SOUND_VOLUME_MIN, OPT_SOUND_VOLUME_MIN, g_GameWork.config.optVolumeSe_20);

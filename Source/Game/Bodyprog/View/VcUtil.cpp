@@ -11,16 +11,16 @@ namespace Silent::Game
 {
     constexpr int V_BLANKS_MULT = 11;
 
-    void vcInitCamera(s_MapOverlayHeader* map_overlay_ptr, const VECTOR3* chr_pos) // 0x8004004C
+    void vcInitCamera(s_MapOverlayHeader* mapoverlay_ptr, const VECTOR3* chr_pos) // 0x8004004C
     {
-        g_WorldGfxWork.vcCameraInternalInfo_1BDC.mv_smooth   = VC_MV_CHASE;
-        g_WorldGfxWork.vcCameraInternalInfo_1BDC.ev_cam_rate = Q12(0.0f);
-        g_WorldGfxWork.vcCameraInternalInfo_1BDC.mode        = 0;
+        g_WorldGfxWork.debugCameraInfo.mv_smooth   = VC_MV_CHASE;
+        g_WorldGfxWork.debugCameraInfo.ev_cam_rate = Q12(0.0f);
+        g_WorldGfxWork.debugCameraInfo.mode        = 0;
 
         vcSetCameraUseWarp(chr_pos, g_SysWork.cameraAngleY);
         //SetGeomScreen(g_GameWork.gsScreenHeightx);
         vwInitViewInfo();
-        vcInitVCSystem(map_overlay_ptr->cameraPaths_3CC);
+        vcInitVCSystem(mapoverlay_ptr->cameraPaths_3CC);
         vcStartCameraSystem();
 
         g_SysWork.cameraAngleZ   = Q12_ANGLE(0.0f);
@@ -52,24 +52,24 @@ namespace Silent::Game
 
     s32 vcRetCamMvSmoothF() // 0x80040190
     {
-        return g_WorldGfxWork.vcCameraInternalInfo_1BDC.mv_smooth;
+        return g_WorldGfxWork.debugCameraInfo.mv_smooth;
     }
 
     void Vc_CameraElevationRateLockSet(bool isUnlocked) // 0x800401A0
     {
         if (isUnlocked)
         {
-            g_WorldGfxWork.vcCameraInternalInfo_1BDC.ev_cam_rate = Q12(1.0f);
+            g_WorldGfxWork.debugCameraInfo.ev_cam_rate = Q12(1.0f);
         }
         else
         {
-            g_WorldGfxWork.vcCameraInternalInfo_1BDC.ev_cam_rate = Q12(0.0f);
+            g_WorldGfxWork.debugCameraInfo.ev_cam_rate = Q12(0.0f);
         }
     }
 
     void vcSetEvCamRate(q3_12 ev_cam_rate) // 0x800401C0
     {
-        g_WorldGfxWork.vcCameraInternalInfo_1BDC.ev_cam_rate = ev_cam_rate;
+        g_WorldGfxWork.debugCameraInfo.ev_cam_rate = ev_cam_rate;
     }
 
     void Vc_UpdateLookAtPointSetAlt() // 0x800401CC
@@ -91,14 +91,14 @@ namespace Silent::Game
         // Step to next debug mode.
         if (change_debug_mode)
         {
-            g_WorldGfxWork.vcCameraInternalInfo_1BDC.mode++;
+            g_WorldGfxWork.debugCameraInfo.mode++;
         }
 
         // Handle debug mode.
-        switch (g_WorldGfxWork.vcCameraInternalInfo_1BDC.mode)
+        switch (g_WorldGfxWork.debugCameraInfo.mode)
         {
             default: // `DebugCameraMode_Init`
-                g_WorldGfxWork.vcCameraInternalInfo_1BDC.mode = 0;
+                g_WorldGfxWork.debugCameraInfo.mode = 0;
 
                 first_cam_pos.vy = Q12(-2.2f);
                 first_cam_pos.vx = g_SysWork.playerWork.player.position.vx + Q12(7.0f);
@@ -126,9 +126,9 @@ namespace Silent::Game
                 }
 
                 hero_top_y    = hr_p->position.vy + Q12(-1.7f);
-                hero_bottom_y = hr_p->position.vy + Q12_MULT(g_WorldGfxWork.vcCameraInternalInfo_1BDC.ev_cam_rate, Q12(-0.5f));
+                hero_bottom_y = hr_p->position.vy + Q12_MULT(g_WorldGfxWork.debugCameraInfo.ev_cam_rate, Q12(-0.5f));
 
-                if (g_WorldGfxWork.vcCameraInternalInfo_1BDC.ev_cam_rate > Q12(0.0f))
+                if (g_WorldGfxWork.debugCameraInfo.ev_cam_rate > Q12(0.0f))
                 {
                     vcWorkSetFlags(VC_INHIBIT_FAR_WATCH_F, VC_NOFLAG);
                 }
@@ -142,7 +142,7 @@ namespace Silent::Game
                                hr_p->moveSpeed, hr_p->headingAngle, hr_p->rotationSpeed.vy,
                                hr_p->rotation.vy, Q12_ANGLE(120.0f), Q12(11.0f));
 
-                g_WorldGfxWork.vcCameraInternalInfo_1BDC.mv_smooth = vcExecCamera();
+                g_WorldGfxWork.debugCameraInfo.mv_smooth = vcExecCamera();
                 break;
 
             case DebugCameraMode_SetReference:
@@ -346,5 +346,34 @@ namespace Silent::Game
             sys_p->cameraY        = Q8_TO_Q12(-refOffset.vy);
             sys_p->cameraRadiusXz = Q8_TO_Q12(SquareRoot0(SQUARE(refOffset.vx) + SQUARE(refOffset.vz)));
         }
+    }
+
+    s8 Vc_StereoBalanceGet(const VECTOR3* soundPos) // 0x80040A64
+    {
+        VECTOR3 camPos; // Q19.12
+        VECTOR  offset; // Q25.6
+        VECTOR  dir;    // Q19.12
+        MATRIX  viewMat;
+        s32     dot;
+        s32     balance;
+
+        // If monoural sound type, default to balance of 0.
+        if (g_GameWork.config.optSoundType_1E)
+        {
+            return 0;
+        }
+
+        // Compute direction from camera to sound.
+        vwGetViewPosition(&camPos);
+        offset.vx = Q12_TO_Q6(soundPos->vx - camPos.vx);
+        offset.vy = Q12_TO_Q6(soundPos->vy - camPos.vy);
+        offset.vz = Q12_TO_Q6(soundPos->vz - camPos.vz);
+        VectorNormal(&offset, &dir);
+
+        // Compute stereo balance.
+        Vw_CoordHierarchyMatrixCompute(vwGetViewCoord(), &viewMat);
+        dot     = Math_MultiplyMatrix(viewMat, dir);
+        balance = CLAMP(dot, -127, 127);
+        return balance;
     }
 }

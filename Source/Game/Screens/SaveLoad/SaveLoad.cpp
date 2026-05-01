@@ -1378,8 +1378,8 @@ namespace Silent::Game
             //setRGB0(borderLine, coloredLine->r_8, coloredLine->g_A, coloredLine->b_C);
 
             //setXY2(borderLine,
-            //    borderLines->lines_0[i].vertex0.x + (slotIdx * SLOT_COLUMN_OFFSET), borderLines->lines_0[i].vertex0.y,
-            //    borderLines->lines_0[i].vertex1.x + (slotIdx * SLOT_COLUMN_OFFSET), borderLines->lines_0[i].vertex1.y);
+            //    borderLines->lines[i].vertex0.x + (slotIdx * SLOT_COLUMN_OFFSET), borderLines->lines[i].vertex0.y,
+            //    borderLines->lines[i].vertex1.x + (slotIdx * SLOT_COLUMN_OFFSET), borderLines->lines[i].vertex1.y);
 
             //addPrim((u8*)ot->org + LAYER_28, borderLine);
             //GsOUT_PACKET_P = (u8*)borderLine + sizeof(LINE_F2);
@@ -1397,11 +1397,11 @@ namespace Silent::Game
             //setRGB2(glowPoly, coloredLine->r_8 / 2, coloredLine->g_A / 2, coloredLine->b_C / 2);
             //setRGB3(glowPoly, 0, 0, 0);
 
-            //glowLine = (s_Line2d*)&borderGlowQuads->quads_0[i].vertex2_8;
+            //glowLine = (s_Line2d*)&borderGlowQuads->quads[i].vertex2_8;
             //setXY4(glowPoly,
-            //    borderGlowQuads->quads_0[i].vertex0.x + (slotIdx * SLOT_COLUMN_OFFSET), borderGlowQuads->quads_0[i].vertex0.y,
-            //    borderGlowQuads->quads_0[i].vertex1.x + (slotIdx * SLOT_COLUMN_OFFSET), borderGlowQuads->quads_0[i].vertex1.y,
-            //    borderGlowQuads->quads_0[i].vertex2_8.x + (slotIdx * SLOT_COLUMN_OFFSET), glowLine->vertex0.y,
+            //    borderGlowQuads->quads[i].vertex0.x + (slotIdx * SLOT_COLUMN_OFFSET), borderGlowQuads->quads[i].vertex0.y,
+            //    borderGlowQuads->quads[i].vertex1.x + (slotIdx * SLOT_COLUMN_OFFSET), borderGlowQuads->quads[i].vertex1.y,
+            //    borderGlowQuads->quads[i].vertex2_8.x + (slotIdx * SLOT_COLUMN_OFFSET), glowLine->vertex0.y,
             //    glowLine->vertex1.x + (slotIdx * SLOT_COLUMN_OFFSET), glowLine->vertex1.y);
 
             //addPrim((u8*)ot->org + LAYER_32, glowPoly);
@@ -1803,7 +1803,7 @@ namespace Silent::Game
                     }
 
                     // Overwrite or format savegame entry.
-                    if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.enter_0)
+                    if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.enter)
                     {
                         if (g_SaveScreen_IsFormatting | g_SaveScreen_IsNewSaveSelected)
                         {
@@ -1824,7 +1824,7 @@ namespace Silent::Game
                 }
 
                 // Exit save screen.
-                if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.cancel_2)
+                if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.cance)
                 {
                     ScreenFade_Start(false, false, false);
                     g_GameWork.gameStateSteps[1] = 2;
@@ -1861,7 +1861,7 @@ namespace Silent::Game
                     SD_Call(Sfx_MenuMove);
                 }
 
-                if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.enter_0)
+                if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.enter)
                 {
                     if (!isSaveWriteOptionSelected)
                     {
@@ -1882,7 +1882,7 @@ namespace Silent::Game
                 }
 
                 // Cancel overwrite.
-                if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.cancel_2)
+                if (g_Controller0->btnsClicked_10 & g_GameWorkPtr->config.controllerConfig_0.cance)
                 {
                     g_GameWork.gameStateSteps[1] = 0;
                     g_GameWork.gameStateSteps[2] = 0;

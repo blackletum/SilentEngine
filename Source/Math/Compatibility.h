@@ -44,12 +44,30 @@ namespace Silent::Math
         Vector3 ToVector3(float qScale) const;
     };
 
+    /** @brief World position and rotation. */
+    struct s_Pose
+    {
+        VECTOR3  position; /** Q19.12 */
+        SVECTOR3 rotation; /** Q19.12 */
+    };
+
+    /** @brief Polygon normal. */
+    typedef struct _Normal
+    {
+        s8 nx;
+        s8 ny;
+        s8 nz;
+        u8 count;
+    } s_Normal;
+
+    /** @brief 2D screen-space line. */
     struct s_Line2d
     {
         Vector2i vertex0;
         Vector2i vertex1;
     };
 
+    /** @brief 2D screen-space triangle. */
     struct s_Triangle2d
     {
         Vector2i vertex0;
@@ -57,6 +75,7 @@ namespace Silent::Math
         Vector2i vertex2;
     };
 
+    /** @brief 2D screen-space quad. */
     struct s_Quad2d
     {
         Vector2i vertex0;
@@ -65,6 +84,7 @@ namespace Silent::Math
         Vector2i vertex3;
     };
 
+    /** @brief Colored 2D screen-space line. */
     struct s_ColoredLine2d
     {
         s_Line2d line;
@@ -73,16 +93,19 @@ namespace Silent::Math
         ushort   b;
     };
 
+    /** @brief 2D screen-space line border. */
     struct s_LineBorder
     {
-        s_Line2d lines_0[RECT_VERTEX_COUNT];
+        s_Line2d lines[RECT_VERTEX_COUNT];
     };
 
+    /** @brief 2D screen-space quad border. */
     struct s_QuadBorder
     {
-        s_Quad2d quads_0[RECT_VERTEX_COUNT];
+        s_Quad2d quads[RECT_VERTEX_COUNT];
     };
 
+    /** @brief Primitive color. */
     struct s_PrimColor
     {
         uchar r;

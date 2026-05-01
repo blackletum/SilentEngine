@@ -66,11 +66,11 @@ namespace Silent::Game
         {
             case ControllerMenuState_Exit:
                 //ScreenFade_Start(false, true, false);
-                selectedEntries.preset_0 = ControllerMenuState_Exit;
+                selectedEntries.preset = ControllerMenuState_Exit;
 
                 // Leave menu.
-                if (g_Controller0.btnsClicked_10 & (g_GameWork.config.controllerConfig_0.enter_0 |
-                                                    g_GameWork.config.controllerConfig_0.cancel_2))
+                if (g_Controller0.btnsClicked_10 & (g_GameWork.config.controllerConfig_0.enter |
+                                                    g_GameWork.config.controllerConfig_0.cance))
                 {
                     //Sd_EngineCmd(Sfx_Cancel);
 
@@ -102,16 +102,16 @@ namespace Silent::Game
             case ControllerMenuState_Type1:
             case ControllerMenuState_Type2:
             case ControllerMenuState_Type3:
-                selectedEntries.preset_0 = g_GameWork.gameStateSteps[1];
+                selectedEntries.preset = g_GameWork.gameStateSteps[1];
 
                 // Set binding preset.
-                if (g_Controller0.btnsClicked_10 & g_GameWork.config.controllerConfig_0.enter_0)
+                if (g_Controller0.btnsClicked_10 & g_GameWork.config.controllerConfig_0.enter)
                 {
                     //Sd_EngineCmd(Sfx_Confirm);
                     //Settings_RestoreControlDefaults(g_GameWork.gameStateSteps[1] - 1);
                 }
                 // Reset selection cursor.
-                else if (g_Controller0.btnsClicked_10 & g_GameWork.config.controllerConfig_0.cancel_2)
+                else if (g_Controller0.btnsClicked_10 & g_GameWork.config.controllerConfig_0.cance)
                 {
                     //Sd_EngineCmd(Sfx_Cancel);
                     g_GameWork.gameStateSteps[1] = ControllerMenuState_Exit;
@@ -141,36 +141,36 @@ namespace Silent::Game
                 break;
 
             case ControllerMenuState_Actions:
-                actionIdx = selectedEntries.action_4;
+                actionIdx = selectedEntries.action;
 
                 // Move selection cursor up/down.
                 if (g_Controller0.btnsPulsedGui_1C & ControllerFlag_LStickUp)
                 {
                     if (actionIdx != InputAction_Enter)
                     {
-                        selectedEntries.action_4 = actionIdx - 1;
+                        selectedEntries.action = actionIdx - 1;
                     }
                     else
                     {
-                        selectedEntries.action_4 = InputAction_Option;
+                        selectedEntries.action = InputAction_Option;
                     }
                 }
                 else if (g_Controller0.btnsPulsedGui_1C & ControllerFlag_LStickDown)
                 {
                     if (actionIdx != InputAction_Option)
                     {
-                        selectedEntries.action_4 = actionIdx + 1;
+                        selectedEntries.action = actionIdx + 1;
                     }
                     else
                     {
-                        selectedEntries.action_4 = InputAction_Enter;
+                        selectedEntries.action = InputAction_Enter;
                     }
                 }
                 // Move selection cursor left/right.
                 else if (g_Controller0.btnsPulsedGui_1C & (ControllerFlag_LStickLeft | ControllerFlag_LStickRight))
                 {
                     g_GameWork.gameStateSteps[2] = 0;
-                    g_GameWork.gameStateSteps[1] = selectedEntries.preset_0;
+                    g_GameWork.gameStateSteps[1] = selectedEntries.preset;
                 }
                 // Bind button to input action.
                 else
@@ -208,6 +208,6 @@ namespace Silent::Game
         }
 
         // Draw menu graphics.
-        Options_ControllerMenu_EntriesDraw(g_ControllerMenu_IsOnActionsPane, selectedEntries.preset_0, selectedEntries.action_4, boundActionIdx);
+        Options_ControllerMenu_EntriesDraw(g_ControllerMenu_IsOnActionsPane, selectedEntries.preset, selectedEntries.action, boundActionIdx);
     }*/
 }

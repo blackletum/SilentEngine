@@ -7,10 +7,10 @@ namespace Silent::Game
 
     /** @brief Initializes the camera subsystem.
      *
-     * @param map_overlay_ptr Active map overlay header.
+     * @param mapoverlay_ptr Active map overlay header.
      * @param chr_pos Character position.
      */
-    void vcInitCamera(s_MapOverlayHeader* map_overlay_ptr, const VECTOR3* chr_pos);
+    void vcInitCamera(s_MapOverlayHeader* mapoverlay_ptr, const VECTOR3* chr_pos);
 
     /** @brief Warps the camera in relation to a character position.
      *
@@ -93,4 +93,11 @@ namespace Silent::Game
      * @param sys_p System work.
      */
     void vcSetRefPosAndCamPosAngByPad(VECTOR3* ref_pos, s_SysWork* sys_p);
+
+    /** @brief Computes the stereo sound balance based on the relative position to the camera.
+     *
+     * @param soundPos Sound source position.
+     * @return Stereo sound balance in the range [-127, 127], where values affect the left-right channel balance.
+     */
+    s8 Sound_StereoBalanceGet(const VECTOR3* soundPos);
 }
