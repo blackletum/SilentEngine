@@ -50,7 +50,7 @@ namespace Silent::Game
 
     /** @brief Checks if a specified map has been collected. */
     #define HAS_MAP(mapIdx) \
-        ((((u32*)&g_SavegamePtr->hasMapsFlags_164)[(mapIdx) / 32] >> ((mapIdx) % 32)) & (1 << 0))
+        ((((u32*)&g_SavegamePtr->hasMapsFlags)[(mapIdx) / 32] >> ((mapIdx) % 32)) & (1 << 0))
 
     // TODO: Name might be wrong, but these have something to do with held item meshes.
     // First index is the mesh variant, second is the container of meshes (not bone index in skeleton)?
@@ -567,16 +567,16 @@ namespace Silent::Game
     /** @brief Character flags. Used by `s_SubCharacter::flags`. */
     enum e_CharaFlags
     {
-        CharaFlag_None    = 0,
-        CharaFlag_Unk1    = 1 << 0, // Specific to padlock. Maybe used for special handling.
-        CharaFlag_Unk2    = 1 << 1, // Related to being damaged. Maybe to recoil or notify of danger?
-        CharaFlag_Unk3    = 1 << 2,
-        CharaFlag_Unk4    = 1 << 3,
-        CharaFlag_Unk5    = 1 << 4, // Camera-related.
-        CharaFlag_Damaged = 1 << 5,
-        CharaFlag_Dead    = 1 << 6, // Unure.
-        CharaFlag_Unk8    = 1 << 7,
-        CharaFlag_Unk9    = 1 << 8  // Only set for bosses and NPCs in special scenarios.
+        CharaFlag_None          = 0,
+        CharaFlag_PadlockBroken = 1 << 0, /** Only used by Padlock character. */
+        CharaFlag_1             = 1 << 1, // Related to being damaged. Maybe to recoil or notify of danger?
+        CharaFlag_Hit           = 1 << 2, // Associated with recoil-causing hit?
+        CharaFlag_3             = 1 << 3,
+        CharaFlag_4             = 1 << 4, // Camera-related. Only used by Stalker? Maybe only for alley scenario?
+        CharaFlag_Damaged       = 1 << 5,
+        CharaFlag_Dead          = 1 << 6, // Unsure.
+        CharaFlag_7             = 1 << 7,
+        CharaFlag_8             = 1 << 8  // Only set for bosses and NPCs in special scenarios.
     };
 
     /** @brief Character animation flags. */
@@ -1052,61 +1052,62 @@ namespace Silent::Game
     {
         s_InventoryItem items_0[INVENTORY_ITEM_COUNT_MAX];
         s8              field_A0;
-        s8              field_A1[3];
-        s8              mapOverlayId_A4;            /** `e_MapIdx` Index to overlay `.BIN` files. */
-        s8              mapRoomIdx_A5;              /** Index to local map geometry `.IPD` files. */
-        s16             savegameCount_A6;
-        s8              locationId_A8;              /** `e_SaveLocationId` */
-        u8              paperMapIdx_A9;             /** `e_PaperMapIdx` | Index of the paper map displayed when opening the map screen. */
-        u8              equippedWeapon_AA;          /** `e_InventoryItemId` | Affects the visible player weapon model. */
-        u8              inventorySlotCount_AB;      /** Item slots. */
-        u32             itemToggleFlags_AC;         /** `e_ItemToggleFlags` */
+        s8              unused_A1[3]; /** @unused */
+        s8              mapIdx;       /** `e_MapIdx` Index to overlay `.BIN` files. */
+        s8              mapRoomIdx;   /** Index to local map geometry `.IPD` files. */
+        s16             savegameCount;
+        s8              locationId;                  /** `e_SaveLocationId` */
+        u8              paperMapIdx;                 /** `e_PaperMapIdx` | Index of the paper map displayed when opening the map screen. */
+        u8              equippedWeapon;              /** `e_InventoryItemId` | Affects the visible player weapon model. */
+        u8              inventorySlotCount;                /** Item slots. */
+        u32             itemToggleFlags;             /** `e_ItemToggleFlags` */
         s32             ovlEnemyStates[Chara_Count]; /** Flags indicating the enemy states in a given overlay.
                                                      * By default, they are all set to 1. As soon as the player fully kills them,
                                                      * they are set to 0 based on a currently unknown index value.
                                                      */
-        s32             hasMapsFlags_164;           // See Sparagas' `HasMapsFlags` struct for details of every bit.
-        u32             eventFlags_168[27];         // Can be accessed through `Savegame_EventFlagGet` / `Savegame_EventFlagSet`, only tested a few, but seems all are related to events and pick-up flags, grouped by location and not item types.
-        s32             mapMarkingFlags_1D4[25];    // See Sparagas' `MapMarkingsFlags` struct for details of every bit.
-        q19_12          healthSaturation_238;       /** Range: [0, 300]. Ampoules give extra stored health. If the player loses health, it will be slowly restored. */
-        s16             pickedUpItemCount_23C;
-        s8              field_23E;
-        u8              field_23F;
-        q19_12          playerHealth_240;           /** Default: `Q12(100.0f)` */
-        q19_12          playerPositionX_244;
-        q3_12           playerRotationY_248;        /** Range [0, 0.999755859375], positive Z: 0, clockwise rotation. It can be multiplied by 360 to get degrees. */
-        u8              clearGameCount_24A;         /** Range [0, 99] */
-        u8              clearGameEndings_24B;       /** `e_GameEndingFlags` */
-        q19_12          playerPositionZ_24C;
-        q20_12          gameplayTimer_250;
-        q20_12          runDistance_254;
-        q20_12          walkDistance_258;
-        u8              isNextFearMode_25C             : 1; /** Makes savegame entry text gold. */
-        u8              add290Hours_25C_1              : 2; /** Adds 290 hours per 1 bit, i.e. 290, 580, 870. */
-        u8              pickedUpSpecialItemCount_25C_3 : 5; /** Red/None: 0?, Yellow: 8, Green: 16, @unused Rainbow: 24. */
-                                                            /** Sparagas' investigations indicate this variable should be
-                                                             * two different variables. However, splitting it causes minor
-                                                             * mismatches in some functions.
-                                                             *
-                                                             * The first 3 bits indicate the number of special items the
-                                                             * player has picked up, and the last 2 bits indicate the color of the Hyper
-                                                             * Blaster beam.
-                                                             *
-                                                             * Belek666 suggests that some functions specifically access this field as 5 bits.
-                                                             *
-                                                             * The the odd access results in a bug where the results screen will count more collected
-                                                             * special items than normal by additionally reading one of the two bits
-                                                             * for the Hyper Blaster beam color.
-                                                             */
-        u8              meleeKillCount_25D;
-        u8              meleeKillCountB_25E; // Can't be packed if used as `u16`.
-        u8              rangedKillCount_25F;
+        s32             hasMapsFlags;                // See Sparagas' `HasMapsFlags` struct for details of every bit.
+        u32             eventFlags[27];              // Can be accessed through `Savegame_EventFlagGet` / `Savegame_EventFlagSet`, only tested a few, but seems all are related to events and pick-up flags
+                                                     // grouped by location and not item types.
+        s32             mapMarkingFlags[25];         // See Sparagas' `MapMarkingsFlags` struct for details of every bit.
+        q19_12          healthSaturation;            /** Range: [0, 300]. Ampoules give extra stored health. If the player loses health, it will be slowly restored. */
+        s16             pickedUpItemCount;
+        s8              unused_23E;         /** @unused */
+        u8              inventoryItemFlags; /** `e_InventoryItemFlags` */
+        q19_12          playerHealth;       /** Default: `Q12(100.0f)` */
+        q19_12          playerPositionX;
+        q3_12           playerRotationY;  /** Range [0, 0.999755859375], positive Z: 0, clockwise rotation. It can be multiplied by 360 to get degrees. */
+        u8              clearGameCount;   /** Range [0, 99] */
+        u8              clearGameEndings; /** `e_GameEndingFlags` */
+        q19_12          playerPositionZ;
+        q20_12          gameplayTimer;
+        q20_12          runDistance;
+        q20_12          walkDistance;
+        u8              isNextFearMode           : 1; /** Makes savegame entry text gold. */
+        u8              add290Hours              : 2; /** Adds 290 hours per 1 bit, i.e. 290, 580, 870. */
+        u8              pickedUpSpecialItemCount : 5; /** Red/None: 0?, Yellow: 8, Green: 16, @unused Rainbow: 24. */
+                                                       /** Sparagas' investigations indicate this variable should be
+                                                        * two different variables. However, splitting it causes minor
+                                                        * mismatches in some functions.
+                                                        *
+                                                        * The first 3 bits indicate the number of special items the
+                                                        * player has picked up, and the last 2 bits indicate the color of the Hyper
+                                                        * Blaster beam.
+                                                        *
+                                                        * Belek666 suggests that some functions specifically access this field as 5 bits.
+                                                        *
+                                                        * The the odd access results in a bug where the results screen will count more collected
+                                                        * special items than normal by additionally reading one of the two bits
+                                                        * for the Hyper Blaster beam color.
+                                                        */
+        u8              meleeKillCount;
+        u8              meleeKillCountB; // Can't be packed if used as `u16`.
+        u8              rangedKillCount;
         u32             field_260          : 28;
-        s32             gameDifficulty_260 : 4;  /** `e_GameDifficulty` */
-        u16             firedShotCount_264;      /** Missed shot count = firedShotCount - (closeRangeShotCount + midRangeShotCount + longRangeShotCount). */
-        u16             closeRangeShotCount_266; /** Only hits counted. */
-        u16             midRangeShotCount_268;   /** Only hits counted. */
-        u16             longRangeShotCount_26A;  /** Only hits counted. */
+        s32             gameDifficulty : 4;  /** `e_GameDifficulty` */
+        u16             firedShotCount;      /** Missed shot count = firedShotCount - (closeRangeShotCount + midRangeShotCount + longRangeShotCount). */
+        u16             closeRangeShotCount; /** Only hits counted. */
+        u16             midRangeShotCount;   /** Only hits counted. */
+        u16             longRangeShotCount;  /** Only hits counted. */
         u16             field_26C;
         u16             field_26E; // Related to enemy kills.
         u16             field_270;
@@ -1115,7 +1116,7 @@ namespace Silent::Game
         u16             field_276;
         u16             field_278;
         s8              field_27A; // Flags.
-        u8              continueCount_27B;
+        u8              continueCount;
     } s_Savegame;
 
     /** TODO: Known as `Trigger` in SilentHillMapExaminer: https://github.com/ItEndsWithTens/SilentHillMapExaminer/blob/master/src/SHME.ExternalTool.Guts/Trigger.cs */
@@ -1125,10 +1126,10 @@ namespace Silent::Game
         s16 disabledEventFlag;
         s8  triggerType    : 4;  /** `e_TriggerType` */
         u8  activationType : 4;  /** `e_TriggerActivationType` */
-        u8  pointOfInterestIdx;  /** Index into `g_MapOverlayHeader.mapPointsOfInterest_1C`. */
+        u8  pointOfInterestIdx;  /** Index into `g_MapOverlayHeader.mapPoints`. */
         u8  requiredItemId;      /** `e_InventoryItemId` that player must use from item screen. */
         u32 sysState        : 5; /** `e_SysState` used by the event. */
-        u32 eventParam      : 8; /** Can be an ID of a `MapMsg`, sound effect, index into `mapEventFuncs_20`, or index into `mapPointsOfInterest_1C` for `areaLoad` events. */
+        u32 eventParam      : 8; /** Can be an ID of a `MapMsg`, sound effect, index into `mapEventFuncs`, or index into `mapPoints` for `areaLoad` events. */
         u32 flags_8_13      : 6; /** `e_EventDataUnkState` */
         u32 sfxPairIdx_8_19 : 5;
         u32 field_8_24      : 1;
@@ -1223,7 +1224,8 @@ namespace Silent::Game
         s8          charaId;      /** `e_CharaId` */
         u8          paletteIdx;   /** Changes the texture palette index for this model. */
         u8          controlState; /** Active character control state. */
-        u8          stateStep;    // Step number or temp data for the current `controlState`? In `s_PlayerExtra` always 1, set to 0 for 1 tick when anim state appears to change.
+        u8          stateStep;    /** Step for the current `controlState`. */ 
+                                  // In `s_PlayerExtra` always 1, set to 0 for 1 tick when anim state appears to change.
                                   // Used differently in player's `s_SubCharacter`. 0: anim transitioning(?), bit 1: animated, bit 2: turning.
                                   // Sometimes holds actual anim index?
         s_ModelAnim anim;
@@ -1280,24 +1282,24 @@ namespace Silent::Game
     // Probably easier to do that after it's merged with rest of code.
     typedef struct _PropsPlayer
     {
-        q19_12        afkTimer_E8; // Increments every tick for 10 seconds before AFK anim starts.
+        q19_12        afkTimer; // Increments every tick for 10 seconds before AFK anim starts.
         q19_12        positionY_EC;
         q19_12        field_F0;
         q19_12        field_F4; // Angle related to X axis flex rotation.
         q19_12        runTimer_F8;
-        q19_12        exhaustionTimer_FC;
+        q19_12        exhaustionTimer;
         q19_12        field_100;    // Angle?
         q19_12        field_104;    // Distance?
         q19_12        runTimer_108;
         u8            field_10C;    // Player SFX pitch?
         u8            field_10D;
-        q19_12        timer_110; // Increases when `flags & CharaFlag_Unk4` is set, reset when reaches `D_800C45EC`.
-        q19_12        gasWeaponPowerTimer_114; // Timer for the rock drill and chainsaw power.
+        q19_12        timer_110; // Increases when `flags & CharaFlag_3` is set, reset when reaches `D_800C45EC`.
+        q19_12        gasWeaponPowerTimer; // Timer for the rock drill and chainsaw power.
         s16           field_118;
         e_PlayerFlags flags_11C;
-        q3_12         quickTurnHeadingAngle_120; /** Target quick turn heading angle. */
+        q3_12         quickTurnHeadingAngle; /** Target quick turn heading angle. */
         q3_12         field_122; // Some sort of X angle for the player. Specially used when aiming an enemy.
-        q3_12         headingAngle_124;
+        q3_12         headingAngle;
         q3_12         moveDistance_126; // Used to indicate how much the player should move foward. Seems to be squared.
     } s_PropsPlayer;
 
@@ -1315,7 +1317,7 @@ namespace Silent::Game
         s8          unk_110[4];
         s32         field_114;
         s8          field_118;
-        u8          modelVariation_119;
+        u8          modelVariantIdx;
         s16         field_11A;
         s32         field_11C;
         s16         field_120;
@@ -1326,7 +1328,7 @@ namespace Silent::Game
     /** @brief Air Screamer or Night Flutter character properties. */
     typedef struct _PropsAirScreamer
     {
-        u32     field_E8_0 : 4;
+        u32     field_E8_0 : 4; // `AirScreamerHit_None` step.
         bool    field_E8_4;
         u32     field_E8_8 : 4;
         u32     __pad_E8_C : 20;
@@ -1334,22 +1336,22 @@ namespace Silent::Game
         s16     field_F0; // } Maybe 2D offset like in Creeper properties? Must check.
         s16     field_F2; // }
         s32     field_F4;
-        VECTOR3 targetPosition_F8; /** Q19.12 */
-        VECTOR3 position_104;      /** Q19.12 | Set to either Air Screamer position with slight offset toward player or player position. */
+        VECTOR3 targetPosition; /** Q19.12 */
+        VECTOR3 position_104;   /** Q19.12 | Set to either Air Screamer position with slight offset toward player or player position. */
         VECTOR3 position_110;
         s32     flags; /** `e_AirScreamerFlags` */
         q19_12  timer_120;
-        q19_12  groundHeight_124;
+        q19_12  groundHeight;
     } s_PropsAirScreamer;
 
-    /** @brief Alessa character properties. TODO: Copy of `s_PropsDahlia`. Fields not marked "correct" are filler. */
+    /** @brief Alessa character properties. */
     typedef struct _PropsAlessa
     {
-        s32        stateIdx0;
-        u_Property properties_EC;
-        s32        field_F0; // Correct
-        u_Property properties_F4;
-        s32        resetStateIdx0_F8;
+        s32        controlState; /** `e_AlessaControl` */
+        u_Property properties_EC; // Unused?
+        s32        field_F0;      // `bool`? If `false`, animation gets updated.
+        u_Property properties_F4; // Unused?
+        bool       resetControlState;
         s32        field_FC;
         s32        field_100;
         u_Property properties_104;
@@ -1359,7 +1361,7 @@ namespace Silent::Game
         s32        flags_11C;
         u_Property properties_120;
         s16        field_124;
-        q3_12      moveSpeed_126; // Correct
+        q3_12      moveSpeed_126;
     } s_PropsAlessa;
 
     /** @brief Bloodsucker character properties. */
@@ -1378,10 +1380,10 @@ namespace Silent::Game
     typedef struct _PropsCheryl
     {
         s32        controlState; /** `e_CherylControl` */
-        u_Property properties_EC;
-        u_Property properties_F0;
-        u_Property properties_F4;
-        s32        resetStateIdx0_F8;
+        u_Property properties_EC; // Unused?
+        s32        field_F0;
+        u_Property properties_F4; // Unused?
+        bool       resetControlState;
         s32        field_FC;
         s32        field_100;
         u_Property properties_104;
@@ -1415,11 +1417,11 @@ namespace Silent::Game
     /** @brief Dahlia character properties. */
     typedef struct _PropsDahlia
     {
-        s32        stateIdx0;
+        s32        controlState; /** `e_DahliaControl` */
         u_Property properties_EC;
         u_Property properties_F0;
         u_Property properties_F4;
-        s32        resetStateIdx0_F8;
+        bool       resetControlState;
         s32        field_FC;
         s32        field_100;
         u_Property properties_104;
@@ -1460,8 +1462,8 @@ namespace Silent::Game
     typedef struct _PropsGroaner
     {
         u_Property flags_E8; /** `e_GroanerFlags` TODO: One weird exception where it's accessed as `s32`. */
-        q3_12      angle_EC; // Target heading angle?
-        q3_12      field_EE; // Angle?
+        q3_12      targetHeadingAngle;
+        q3_12      flexAngle;
         q3_12      field_F0;
         q3_12      field_F2;
         q19_12     targetPositionX_F4;
@@ -1475,8 +1477,8 @@ namespace Silent::Game
         q3_12      timer_10C; // SFX timer?
         u8         field_10E; // } Sound states?
         u8         field_10F; // }
-        u8         field_110; /** `bool` | Play SFX. */
-        u8         field_111; /** `bool` | Play SFX. */
+        u8         playLeftFootstepSfx;  /** `bool` */
+        u8         playRightFootstepSfx; /** `bool` */
         s8         __pad_112[2];
         q3_12      field_114; // Move speed coefficient?
     } e_PropsGroaner;
@@ -1522,7 +1524,7 @@ namespace Silent::Game
         /* 0xEC  */ u_Property properties_EC;
         /* 0xF0  */ u_Property properties_F0;
         /* 0xF4  */ u_Property properties_F4;
-        /* 0xF8  */ s32        resetStateIdx0_F8;
+        /* 0xF8  */ bool       resetControlState;
         /* 0xFC  */ s32        field_FC;
         /* 0x100 */ s32        field_100;
         /* 0x104 */ u_Property properties_104;
@@ -1595,14 +1597,14 @@ namespace Silent::Game
     typedef struct _PropsPuppetNurse
     {
         VECTOR3       position_E8; /** Q19.12 */
-        s_CharaDamage damage_F4;
+        s_CharaDamage damage;
         q19_12        field_104;
         s32           field_108;
         s32           field_10C;
-        q19_12        moveSpeed_110;
+        q19_12        moveSpeed;
         s32           field_114;
         u8            field_118;
-        u8            modelVariation_119;
+        u8            modelVariantIdx;
         u16           field_11A;
         q3_12         field_11C; // Angle.
         s16           field_11E;
@@ -1645,7 +1647,7 @@ namespace Silent::Game
     /** @brief Split Head character properties. */
     typedef struct _PropsSplitHead
     {
-        u16     flags_E8; /** `e_SplitHeadFlags` */
+        u16     flags; /** `e_SplitHeadFlags` */
         u8      field_EA;
         s8      unk_EB;
         q3_12   angle_EC;
@@ -1713,7 +1715,7 @@ namespace Silent::Game
 
     typedef struct
     {
-        s16     field_0; // Something dependent on `CharaFlag_Unk8`.
+        s16     field_0; // Something dependent on `CharaFlag_7`.
         u8      field_2; // In player: packed weapon attack. See `WEAPON_ATTACK`.
                          // This is not the same as `attackReceived`, as this value only resets when player is aiming.
                          // In NPCs: Indicates attack performed on player.
@@ -1923,7 +1925,7 @@ namespace Silent::Game
         s32            counters_1C[3];
         q19_12         field_28; // Multi-purpose? Used as alpha to fade between images in `Screen_BackgroundImgTransition`.
         q19_12         timer_2C; // Cutscene message timer?
-        s32            field_30;
+        s32            cutsceneBorderState;
         s8             unused_34[4]; /** @unused */
         s_PlayerCombat playerCombat; // Information related to weapons and attack.
         s_PlayerWork   playerWork;
@@ -2171,7 +2173,7 @@ namespace Silent::Game
      * @return Event flag state (`bool`).
      */
     #define Savegame_EventFlagGet(flagIdx) \
-        (g_SavegamePtr->eventFlags_168[(flagIdx) >> 5] & (1 << ((flagIdx) & 0x1F)))
+        (g_SavegamePtr->eventFlags[(flagIdx) >> 5] & (1 << ((flagIdx) & 0x1F)))
 
     /** @brief Gets an event flag state from the savegame event flags array.
      *
@@ -2182,21 +2184,21 @@ namespace Silent::Game
      * @return Event flag state (`bool`).
      */
     #define Savegame_EventFlagGetAlt(flagIdx) \
-        ((g_SavegamePtr->eventFlags_168[(flagIdx) >> 5] >> ((flagIdx) & 0x1F)) & (1 << 0))
+        ((g_SavegamePtr->eventFlags[(flagIdx) >> 5] >> ((flagIdx) & 0x1F)) & (1 << 0))
 
     /** @brief Clears an event flag state in the savegame event flags array.
      *
      * @param flagIdx Event flag index.
      */
     #define Savegame_EventFlagClear(flagIdx) \
-        (g_SavegamePtr->eventFlags_168[(flagIdx) >> 5] &= ~(1 << ((flagIdx) & 0x1F)))
+        (g_SavegamePtr->eventFlags[(flagIdx) >> 5] &= ~(1 << ((flagIdx) & 0x1F)))
 
     /** @brief Sets an event flag state in the savegame event flags array.
      *
      * @param flagIdx Event flag index.
      */
     #define Savegame_EventFlagSet(flagIdx) \
-        (g_SavegamePtr->eventFlags_168[(flagIdx) >> 5] |= 1 << ((flagIdx) & 0x1F))
+        (g_SavegamePtr->eventFlags[(flagIdx) >> 5] |= 1 << ((flagIdx) & 0x1F))
 
     /** @brief Gets a map marking state from the savegame map marking array.
      *
@@ -2204,21 +2206,21 @@ namespace Silent::Game
      * @return Map marking state (`bool`).
      */
     #define Savegame_MapMarkingGet(flagIdx) \
-        (g_SavegamePtr->mapMarkingFlags_1D4[(flagIdx) >> 5] & (1 << ((flagIdx) & 0x1F)))
+        (g_SavegamePtr->mapMarkingFlags[(flagIdx) >> 5] & (1 << ((flagIdx) & 0x1F)))
 
     /** @brief Clears a map marking state in the savegame map marking array.
      *
      * @param flagIdx Map marking index.
      */
     #define Savegame_MapMarkingClear(flagIdx) \
-        (g_SavegamePtr->mapMarkingFlags_1D4[(flagIdx) >> 5] &= ~(1 << ((flagIdx) & 0x1F)))
+        (g_SavegamePtr->mapMarkingFlags[(flagIdx) >> 5] &= ~(1 << ((flagIdx) & 0x1F)))
 
     /** @brief Sets a map marking in the savegame map marking array.
      *
      * @param flagIdx Map marking index.
      */
     #define Savegame_MapMarkingSet(flagIdx) \
-        (g_SavegamePtr->mapMarkingFlags_1D4[(flagIdx) >> 5] |= 1 << ((flagIdx) & 0x1F))
+        (g_SavegamePtr->mapMarkingFlags[(flagIdx) >> 5] |= 1 << ((flagIdx) & 0x1F))
 
     /** @brief Sets an event flag state in the savegame event flags array.
      *
@@ -2234,7 +2236,7 @@ namespace Silent::Game
         localIdx = flagIdx / 32;
         localBit = flagIdx % 32;
 
-        g_SavegamePtr->eventFlags_168[localIdx] |= 1 << localBit;
+        g_SavegamePtr->eventFlags[localIdx] |= 1 << localBit;
     }
 
     /** @brief Checks a flag state is `true` in the array of 16-bit flags.
@@ -2324,11 +2326,11 @@ namespace Silent::Game
      * @param animInfos Reference anim infos.
      * @param animInfosOffset Anim infos offset.
      */
-    #define Model_AnimStatusKeyframeSet(model, animIdx, isActive, animInfos, animInfosOffset)                                       \
-        if ((model).stateStep == 0)                                                                                               \
-        {                                                                                                                           \
-            (model).anim.status = ANIM_STATUS(animIdx, isActive);                                                               \
-            (model).stateStep++;                                                                                                  \
+    #define Model_AnimStatusKeyframeSet(model, animIdx, isActive, animInfos, animInfosOffset)                                 \
+        if ((model).stateStep == 0)                                                                                           \
+        {                                                                                                                     \
+            (model).anim.status = ANIM_STATUS(animIdx, isActive);                                                             \
+            (model).stateStep++;                                                                                              \
             (model).anim.time        = Q12((animInfos)[ANIM_STATUS(animIdx, isActive) + (animInfosOffset)].startKeyframeIdx); \
             (model).anim.keyframeIdx = (animInfos)[ANIM_STATUS(animIdx, (isActive) + (animInfosOffset))].startKeyframeIdx;    \
         }
@@ -2341,11 +2343,11 @@ namespace Silent::Game
     {
         // TODO: This uses `dahlia` part of union, but is most likely either a `human` part shared with all humanoid characters
         // or humanoids only share a small portion early in the union.
-        if (chara->properties.dahlia.resetStateIdx0_F8)
+        if (chara->properties.dahlia.resetControlState)
         {
-            chara->properties.dahlia.stateIdx0         = 0;
-            chara->model.stateStep                    = 0;
-            chara->properties.dahlia.resetStateIdx0_F8 = 0;
+            chara->properties.dahlia.controlState      = 0;
+            chara->model.stateStep                     = 0;
+            chara->properties.dahlia.resetControlState = 0;
         }
     }
 
@@ -2353,9 +2355,9 @@ namespace Silent::Game
      *
      * @param chara Character to update.
      */
-    #define Chara_PropsClear(chara)                           \
-        for (i = 0; i < 16; i++)                                   \
-        {                                                          \
+    #define Chara_PropsClear(chara)                             \
+        for (i = 0; i < 16; i++)                                \
+        {                                                       \
             chara->properties.dummy.properties_E8[i].val32 = 0; \
         }
 
@@ -2363,7 +2365,7 @@ namespace Silent::Game
      *
      * @param chara Character to update.
      */
-    #define Chara_DamageClear(chara)                  \
+    #define Chara_DamageClear(chara)             \
         (chara)->damage.amount      = Q12(0.0f); \
         (chara)->damage.position.vz = Q12(0.0f); \
         (chara)->damage.position.vy = Q12(0.0f); \

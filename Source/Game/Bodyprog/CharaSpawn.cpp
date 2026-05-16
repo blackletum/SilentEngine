@@ -105,7 +105,7 @@ namespace Silent::Game
 
             g_SysWork.npcs[i].position.vx = posX;
             //Collision_Get(&coll, posX, posZ);
-            g_SysWork.npcs[i].position.vy = coll.groundHeight_0;
+            g_SysWork.npcs[i].position.vy = coll.groundHeight;
             g_SysWork.npcs[i].position.vz = posZ;
             g_SysWork.npcs[i].rotation.vy = rotY;
 
@@ -137,7 +137,7 @@ namespace Silent::Game
     {
         s_SpawnInfo* spawnInfo;
 
-        spawnInfo             = &mapHdr.charaSpawns_24C[g_CharaAnimInfoIdxs[charaId] - 1][spawnIdx];
+        spawnInfo             = &mapHdr.charaSpawns[g_CharaAnimInfoIdxs[charaId] - 1][spawnIdx];
         spawnInfo->spawnFlags = spawnFlags;
     }
 
@@ -146,10 +146,10 @@ namespace Silent::Game
         s_SpawnInfo* spawnInfo0;
         s_SpawnInfo* spawnInfo1;
 
-        spawnInfo0            = &g_MapOverlayHeader.charaSpawns_24C[g_CharaAnimInfoIdxs[charaId] - 1][spawnIdx];
+        spawnInfo0            = &g_MapOverlayHeader.charaSpawns[g_CharaAnimInfoIdxs[charaId] - 1][spawnIdx];
         spawnInfo0->positionX = posX;
 
-        spawnInfo1            = &g_MapOverlayHeader.charaSpawns_24C[g_CharaAnimInfoIdxs[charaId] - 1][spawnIdx];
+        spawnInfo1            = &g_MapOverlayHeader.charaSpawns[g_CharaAnimInfoIdxs[charaId] - 1][spawnIdx];
         spawnInfo1->positionZ = posZ;
     }
 }

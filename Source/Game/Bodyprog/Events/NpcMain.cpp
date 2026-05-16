@@ -18,9 +18,9 @@ namespace Silent::Game
 
     void Savegame_EnemyStateUpdate(s_SubCharacter* chara) // 0x80037DC4
     {
-        if (g_SavegamePtr->gameDifficulty_260 <= GameDifficulty_Normal/* || Rng_RandQ12() >= Q12_ANGLE(108.0f)*/)
+        if (g_SavegamePtr->gameDifficulty <= GameDifficulty_Normal/* || Rng_RandQ12() >= Q12_ANGLE(108.0f)*/)
         {
-            g_SavegamePtr->ovlEnemyStates[g_SavegamePtr->mapOverlayId_A4] &= ~(1 << chara->field_40);
+            g_SavegamePtr->ovlEnemyStates[g_SavegamePtr->mapIdx] &= ~(1 << chara->field_40);
         }
     }
 
@@ -68,21 +68,21 @@ namespace Silent::Game
         VECTOR3*        pos;
 
         npcIdx             = 0;
-        curCharaSpawn      = g_MapOverlayHeader.charaSpawns_24C[0];
-        ovlEnemiesStatePtr = &g_SavegamePtr->ovlEnemyStates[g_SavegamePtr->mapOverlayId_A4];
+        curCharaSpawn      = g_MapOverlayHeader.charaSpawns[0];
+        ovlEnemiesStatePtr = &g_SavegamePtr->ovlEnemyStates[g_SavegamePtr->mapIdx];
 
         if (cond == false)
         {
             //func_80037154();
 
-            if (g_MapOverlayHeader.npcSpawnEvent_48 != NULL)
+            if (g_MapOverlayHeader.npcSpawnEvent != NULL)
             {
-                g_MapOverlayHeader.npcSpawnEvent_48();
+                g_MapOverlayHeader.npcSpawnEvent();
             }
         }
 
-        charaId0 = g_MapOverlayHeader.charaGroupIds_248[0];
-        charaId1 = g_MapOverlayHeader.charaGroupIds_248[1];
+        charaId0 = g_MapOverlayHeader.charaGroupIds[0];
+        charaId1 = g_MapOverlayHeader.charaGroupIds[1];
 
         for (i = 0; i < 32 && g_VBlanks < 4; i++, curCharaSpawn++)
         {
@@ -94,7 +94,7 @@ namespace Silent::Game
             pos = (VECTOR3*)curCharaSpawn;
 
             if (!(g_SysWork.flags_22A4 & UnkSysFlag_4) && HAS_FLAG(ovlEnemiesStatePtr, i) && !HAS_FLAG(g_SysWork.field_228C, i) &&
-                curCharaSpawn->spawnFlags != 0 && g_SavegamePtr->gameDifficulty_260 >= curCharaSpawn->gameDifficultyMin &&
+                curCharaSpawn->spawnFlags != 0 && g_SavegamePtr->gameDifficulty >= curCharaSpawn->gameDifficultyMin &&
                 func_8008F914(curCharaSpawn->positionX, curCharaSpawn->positionZ) &&
                 !Math_Distance2dCheck(&g_SysWork.playerWork.player.position, pos, Q12(22.0f)) &&
                 (!cond || Math_Distance2dCheck(&g_SysWork.playerWork.player.position, pos, Q12(20.0f))))
@@ -123,7 +123,7 @@ namespace Silent::Game
 
                 //Collision_Get(&coll, curCharaSpawn->positionX_0, curCharaSpawn->positionZ_8);
 
-                g_SysWork.npcs[npcIdx].position.vy = coll.groundHeight_0;
+                g_SysWork.npcs[npcIdx].position.vy = coll.groundHeight;
                 g_SysWork.npcs[npcIdx].rotation.vy = curCharaSpawn->rotationY * 16;
 
                 SET_FLAG(&g_SysWork.npcFlags, npcIdx);
@@ -256,7 +256,7 @@ namespace Silent::Game
 
                     for (j = 0; j < 3; j++)
                     {
-                        if (npc->health <= Q12(0.0f) || npc->flags & CharaFlag_Unk9 || temp_t3 >= field_0[j].field_4)
+                        if (npc->health <= Q12(0.0f) || npc->flags & CharaFlag_8 || temp_t3 >= field_0[j].field_4)
                         {
                             continue;
                         }
@@ -329,7 +329,7 @@ namespace Silent::Game
                 Chara_DamagedFlagUpdate(npc);
                 //func_8003BD48(npc);
 
-                g_MapOverlayHeader.charaUpdateFuncs_194[npc->model.charaId](npc, g_CharaTypeAnimInfo[animDataInfoIdx].animFile1_8, coord);
+                g_MapOverlayHeader.charaUpdateFuncs[npc->model.charaId](npc, g_CharaTypeAnimInfo[animDataInfoIdx].animFile1_8, coord);
 
                 //func_8003BE28();
                 func_80037E78(npc);
@@ -352,7 +352,7 @@ namespace Silent::Game
 
         g_RadioPitchState = k + 1;
 
-        if (!(g_SavegamePtr->itemToggleFlags_AC & ItemToggleFlag_RadioOn))
+        if (!(g_SavegamePtr->itemToggleFlags & ItemToggleFlag_RadioOn))
         {
             return;
         }

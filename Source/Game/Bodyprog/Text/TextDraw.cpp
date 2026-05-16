@@ -32,22 +32,10 @@ namespace Silent::Game
         Color::From8Bit(24,  128, 40),
         Color::From8Bit(8,   184, 96),
         Color::From8Bit(128, 0,   0),
+        Color::From8Bit(24,  128, 40),
         Color::From8Bit(100, 100, 100),
-        Color::From8Bit(128, 128, 128)
-    };
-
-    /** @brief Processed message node types. */
-    enum class NodeType
-    {
-        Text,
-        Command
-    };
-
-    /** @brief Processed message node. */
-    struct MsgNode
-    {
-        NodeType    Type  = NodeType::Text;
-        std::string Value = {};
+        Color::From8Bit(255, 255, 255), // @todo Originally `(128, 128, 128)`. Need to adjust the others too?
+        Color::From8Bit(4,   4,   4)
     };
 
     static auto g_StringColorId = StringColorId_White;
@@ -101,7 +89,7 @@ namespace Silent::Game
         g_StringColorId = colorId;
     }
 
-    float Gfx_StringDraw(const std::string& str, int strLength)
+    float Gfx_StringDraw(const std::string& str, int strLength, bool isHalfHeight)
     {
         constexpr float SCALE = RETRO_PIXEL_SCALE.y * 16.0f;
 
@@ -109,11 +97,13 @@ namespace Silent::Game
         auto&       renderer = g_App.GetRenderer();
 
         // Submit text.
-        auto fontName = (options->TextQuality == TextQualityType::Original) ? "RetroSerif" : "SmoothSerif";
-        auto text     = Text2d::CreateText2d(str, fontName,
-                                             ConvertRetroScreenPixelsToPercent(g_StringPosition), 0.0f, SCALE, 1.0f,
-                                             STRING_COLORS[g_StringColorId], TextStyle::Gradient, true,
-                                             6, AlignMode::BottomLeft, ScaleMode::ShortEdge, BlendMode::Alpha);
+        auto fontName   = (options->TextQuality == TextQualityType::Original) ? "RetroSerif" : "SmoothSerif";
+        int  styleFlags = (int)TextStyleFlags::Gradient | (isHalfHeight ? (int)TextStyleFlags::HalfHeight :
+                                                                          (int)TextStyleFlags::None);
+        auto text       = Text2d::CreateText2d(str, fontName,
+                                               ConvertRetroScreenPixelsToPercent(g_StringPosition), 0.0f, SCALE, 1.0f,
+                                               STRING_COLORS[g_StringColorId], styleFlags, true,
+                                               6, AlignMode::BottomLeft, ScaleMode::ShortEdge, BlendMode::Alpha);
         renderer.SubmitText2d(text);
 
         // @todo Need to return width in retro resolution space (320x240).
@@ -134,12 +124,14 @@ namespace Silent::Game
         g_MapMsg_WidthIdx  = 1;
         g_MapMsg_AudioLoadBlock = 0;
 
+        // @todo Needs rewrite.
+
         /*for (i = (FONT_12X16_LINE_COUNT_MAX - 1); i >= 0; i--)
         {
             g_MapMsg_Widths[i] = 0;
         }
 
-        mapMsg = g_MapOverlayHeader.mapMessages_30[mapMsgIdx];
+        mapMsg = g_MapOverlayHeader.mapMessages[mapMsgIdx];
 
         for (j = 0; j < FONT_12X16_LINE_COUNT_MAX; )
         {
@@ -225,7 +217,54 @@ namespace Silent::Game
         }*/
     }
 
-    s32 Gfx_MapMsg_StringDraw(const std::string& mapMsg, s32 strLength) // 0x8004AF18
+    std::vector<MsgNode> ParseMsg(const std::string& mapMsg)
+    {
+        auto nodes  = std::vector<MsgNode>{};
+        auto buffer = std::string();
+        bool inCmd  = false;
+
+        // Parse message into nodes.
+        for (char c : mapMsg)
+        {
+            // Start collecting command.
+            if (c == '{' && !inCmd)
+            {
+                if (!buffer.empty())
+                {
+                    nodes.push_back(MsgNode
+                    {
+                        .Type  = NodeType::Text,
+                        .Value = buffer
+                    });
+
+                    buffer.clear();
+                }
+
+                inCmd = true;
+            }
+            // Finish collecting command.
+            else if (c == '}' && inCmd)
+            {
+                nodes.push_back(MsgNode
+                {
+                    .Type  = NodeType::Command,
+                    .Value = buffer
+                });
+
+                buffer.clear();
+                inCmd = false;
+            }
+            // Collect `char`s.
+            else
+            {
+                buffer += c;
+            }
+        }
+
+        return nodes;
+    }
+
+    s32 Gfx_MapMsg_StringDraw(const std::string& mapMsg, s32 strLength, bool isHalfHeight) // 0x8004AF18
     {
         s32 glyphPosX;
         s32 glyphPosY;
@@ -278,49 +317,8 @@ namespace Silent::Game
         glyphPosX          = g_StringPositionX1;
         glyphPosY          = g_StringPosition.y;
 
-        auto nodes  = std::vector<MsgNode>{};
-        auto buffer = std::string();
-        bool inCmd  = false;
-
-        // Parse message into nodes.
-        for (char c : mapMsg)
-        {
-            // Start collecting command.
-            if (c == '{' && !inCmd)
-            {
-                if (!buffer.empty())
-                {
-                    nodes.push_back(MsgNode
-                    {
-                        .Type  = NodeType::Text,
-                        .Value = buffer
-                    });
-
-                    buffer.clear();
-                }
-
-                inCmd = true;
-            }
-            // Finish collecting command.
-            else if (c == '}' && inCmd)
-            {
-                nodes.push_back(MsgNode
-                {
-                    .Type  = NodeType::Command,
-                    .Value = buffer
-                });
-
-                buffer.clear();
-                inCmd = false;
-            }
-            // Collect `char`s.
-            else
-            {
-                buffer += c;
-            }
-        }
-
         // Process message nodes.
+        auto nodes = ParseMsg(mapMsg);
         for (const auto& node : nodes)
         {
             // Skip invalid node.
@@ -423,6 +421,16 @@ namespace Silent::Game
                         glyphPosX          = -120;
                         break;
                     }
+                    case MAP_MSG_CODE_RIGHT:
+                    {
+                        // @todo
+                        break;
+                    }
+                    case MAP_MSG_CODE_PAGE:
+                    {
+                        // @todo
+                        break;
+                    }
                     default:
                     {
                         continue;
@@ -434,7 +442,7 @@ namespace Silent::Game
                 // Draw text string.
                 int   charCount = GetCodePoints(node.Value).size();
                 auto  text      = node.Value.substr(0, std::min(charCount, strLength - 1));
-                float width     = Gfx_StringDraw(text, 400); // @todo Integrate width.
+                float width     = Gfx_StringDraw(text, 400, isHalfHeight); // @todo Integrate width.
 
                 // Stop drawing if length exceeded.
                 strLength -= charCount;
@@ -452,20 +460,17 @@ namespace Silent::Game
 
     void func_8004B658() // 0x8004B658
     {
-        g_MapMsg_GlyphSprite.attribute = 64;
-        g_MapMsg_GlyphSprite.cx        = 304;
-        g_MapMsg_GlyphSprite.v         = 240;
-        g_MapMsg_GlyphSprite.h         = 16;
+        // @stub
     }
 
     void Gfx_MapMsg_DefaultStringInfoSet() // 0x8004B684
     {
-        g_MapMsg_WidthIdx               = 1;
-        D_800C38B0.field_0                   = 0;
-        D_800C38B0.positionIdx_1             = 1;
-        g_StringPositionX1                   = SCREEN_POSITION_X(-37.5f);
-        g_StringColorId                      = StringColorId_White;
-        //g_SysWork.enableHighResGlyphs = false;
+        g_MapMsg_WidthIdx             = 1;
+        D_800C38B0.field_0            = 0;
+        D_800C38B0.positionIdx_1      = 1;
+        g_StringPositionX1            = SCREEN_POSITION_X(-37.5f);
+        g_StringColorId               = StringColorId_White;
+        g_SysWork.enableHighResGlyphs = false;
     }
 
     void func_8004B6D4(s16 arg0, s16 arg1) // 0x8004B6D4
@@ -578,62 +583,6 @@ namespace Silent::Game
 
     void Gfx_StringDrawInt(s32 widthMin, s32 val) // 0x8004B9F8
     {
-        constexpr int GLYPH_SIZE_X       = 11;
-        constexpr int ATLAS_COLUMN_COUNT = 10;
-
-        s32   quotient;
-        s32   isNegative;
-        s32   i;
-        char* str;
-        char  buffer[47];
-
-        if (widthMin > 0)
-        {
-            for (i = 0; i < (widthMin - 1); i++)
-            {
-                g_MapMsg_GlyphSprite.x += GLYPH_SIZE_X;
-            }
-        }
-
-        str  = buffer;
-        *str = 0;
-
-        if (val < 0)
-        {
-            isNegative = true;
-            val        = -val;
-        }
-        else
-        {
-            isNegative = false;
-        }
-
-        // Wrap atlas row?
-        while (val >= ATLAS_COLUMN_COUNT)
-        {
-            str--;
-            quotient = (val / ATLAS_COLUMN_COUNT) >> 32;
-            *str     = (val - (quotient * ATLAS_COLUMN_COUNT)) + '0';
-
-            if (widthMin > 0)
-            {
-                g_MapMsg_GlyphSprite.x -= GLYPH_SIZE_X;
-            }
-
-            val = quotient;
-        }
-
-        str--;
-        *str = val + '0';
-
-        if (isNegative)
-        {
-            str--;
-            *str          = '-';
-            g_MapMsg_GlyphSprite.x -= GLYPH_SIZE_X;
-        }
-
-        // Draw numeric string.
-        Gfx_StringDraw(str, 5);
+        Gfx_StringDraw(std::to_string(val), 5);
     }
 }

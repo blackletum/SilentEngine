@@ -3,7 +3,6 @@
 
 #include "Application.h"
 #include "Assets/AssetStreamer.h"
-#include "Assets/Locales.h"
 #include "Debug/Debug.h"
 #include "Debug/GameData.h"
 #include "Services/Options.h"
@@ -22,7 +21,6 @@ namespace Silent::Debug
             constexpr const char* TEX_FILTER_ITEMS[]        = { "Nearest", "Linear" };
             constexpr const char* TEXT_QUALITY_ITEMS[]      = { "Original", "Smooth" };
             constexpr const char* LIGHTING_ITEMS[]          = { "Per vertex", "Per pixel" };
-            constexpr const char* LANG_ITEMS[]              = { "English (Revised)", "English (US)", "English (EU)" };
             constexpr const char* SOUND_ITEMS[]             = { "Stereo", "Monaural" };
             constexpr const char* BLOOD_COLOR_ITEMS[]       = { "Normal", "Green", "Violet", "Black" };
             constexpr const char* CONTROL_INVERSION_ITEMS[] = { "Normal", "Reverse" };
@@ -435,12 +433,28 @@ namespace Silent::Debug
                             isOptChanged = true;
                         }
 
-                        // `Language` combo.
-                        int lang = (int)options->Language;
-                        if (ImGui::Combo("Language", &lang, LANG_ITEMS, IM_ARRAYSIZE(LANG_ITEMS)))
+                        const auto& locales = translator.GetLocales();
+                        int         langIdx = 0;
+
+                        // Collect languages.
+                        auto langItems = std::vector<const char*>{};
+                        langItems.reserve(locales.size());
+                        for (int i = 0; i < locales.size(); i++)
                         {
-                            options->Language = (LanguageType)lang;
-                            translator.SetActiveLocale(LOCALE_NAMES[(int)options->Language]);
+                            const auto& locale = locales[i];
+
+                            langItems.push_back(locale.Name.c_str());
+                            if (locale.Name == translator.GetActiveLocaleName())
+                            {
+                                langIdx = i;
+                            }
+                        }
+
+                        // `Language` combo.
+                        if (ImGui::Combo("Language", &langIdx, langItems.data(), (int)langItems.size()))
+                        {
+                            options->Language = locales[langIdx].Name;
+                            translator.SetActiveLocale(options->Language);
 
                             isOptChanged = true;
                         }

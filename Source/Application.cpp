@@ -3,7 +3,6 @@
 
 #include "Assets/AssetStreamer.h"
 #include "Assets/Fonts.h"
-#include "Assets/Locales.h"
 #include "Assets/TranslationKeys.h"
 #include "Audio/Audio.h"
 #include "Game/Entry.h"
@@ -118,15 +117,16 @@ namespace Silent
 
     void ApplicationManager::Initialize()
     {
-        constexpr float WINDOW_ASPECT_RATIO_MIN = 4.0f / 6.0f;
+        constexpr float WINDOW_ASPECT_RATIO_MIN = 3.0f / 4.0f;
         constexpr float WINDOW_ASPECT_RATIO_MAX = 42.0f / 9.0f;
         constexpr float IMGUI_FONT_POINT_SIZE   = 13.0f;
 
         _isPaused = false;
         _quit     = false;
 
-        // Filesystem.
+        // Filesystem and translator.
         _work.Filesystem.Initialize();
+        _work.Translator.Initialize(_work.Filesystem.GetAssetsDirectory() / ASSETS_LOCALES_DIR_NAME);
 
         // Debug.
         Debug::Initialize();
@@ -162,7 +162,6 @@ namespace Silent
 
         // Assets.
         _work.Assets.Initialize(_work.Filesystem.GetAssetsDirectory() / ASSETS_PSX_DIR_NAME);
-        _work.Translator.Initialize(_work.Filesystem.GetAssetsDirectory() / ASSETS_LOCALES_DIR_NAME, LOCALE_NAMES);
         _work.Video.Initialize(_work.Filesystem.GetAssetsDirectory() / ASSETS_VIDEO_DIR_NAME);
 
         // Fonts.
@@ -312,10 +311,10 @@ namespace Silent
         _work.Audio.Update();
 
         // @debug
-        if (_work.Input.GetAction(In::Up).IsClicked())
+        /*if (_work.Input.GetAction(In::Up).IsClicked())
         {
             _work.Toaster.Add("Hello I am a toast.");
-        }
+        }*/
 
         // Update debug and toasts.
         Debug::Update();

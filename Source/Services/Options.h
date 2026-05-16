@@ -59,13 +59,6 @@ namespace Silent::Services
         PerPixel
     };
 
-    enum class LanguageType
-    {
-        EnglishRevised,
-        EnglishUs,
-        EnglishEu
-    };
-
     enum class SoundType
     {
         Stereo,
@@ -144,7 +137,7 @@ namespace Silent::Services
 
         bool           EnableAutoLoad  = false;
         bool           EnableSubtitles = false;
-        LanguageType   Language        = LanguageType::EnglishUs;
+        std::string    Language        = {};
         SoundType      Sound           = SoundType::Stereo;
         int            BgmVolume       = 0;
         int            SeVolume        = 0;

@@ -12,6 +12,8 @@ namespace Silent::Game
     constexpr char MAP_MSG_CODE_NEWLINE       = 'N'; /** Newline. */
     constexpr char MAP_MSG_CODE_SELECT        = 'S'; /** Display dialog prompt with selectable entries. */
     constexpr char MAP_MSG_CODE_TAB           = 'T'; /** Inset line. */
+    constexpr char MAP_MSG_CODE_RIGHT         = 'R'; /** Align right. */
+    constexpr char MAP_MSG_CODE_PAGE          = 'P'; /** Split page. */
 
     constexpr int FONT_12X16_GLYPH_SIZE_Y   = 16;
     constexpr int FONT_12X16_LINE_COUNT_MAX = 9;
@@ -29,9 +31,23 @@ namespace Silent::Game
         StringColorId_GreenUnused = 5, // @unused Same as `StringColorId_Green`.
         StringColorId_LightGrey   = 6,
         StringColorId_White       = 7,
-        //StringColorId_Black   = 8, // @todo Need to add this one for paper maps.
+        StringColorId_Black       = 8,
 
         StringColorId_Count
+    };
+
+    /** @brief Processed message node types. */
+    enum class NodeType
+    {
+        Text,
+        Command
+    };
+
+    /** @brief Processed message node. */
+    struct MsgNode
+    {
+        NodeType    Type  = NodeType::Text;
+        std::string Value = {};
     };
 
     /** Used in string parsing. */
@@ -83,12 +99,12 @@ namespace Silent::Game
      * @param strLength String length for rollout
      * @return Length of the string.
      */
-    float Gfx_StringDraw(const std::string& str, int strLength);
+    float Gfx_StringDraw(const std::string& str, int strLength, bool isHalfHeight = false);
 
     s32 Gfx_MapMsg_CalculateWidths(s32 mapMsgIdx);
 
     /** Draws string and returns map message index. */
-    s32 Gfx_MapMsg_StringDraw(char* mapMsg, s32 strLength);
+    s32 Gfx_MapMsg_StringDraw(char* mapMsg, s32 strLength, bool isHalfHeight = false);
 
     void func_8004B658();
 

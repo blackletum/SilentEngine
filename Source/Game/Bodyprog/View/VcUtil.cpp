@@ -20,7 +20,7 @@ namespace Silent::Game
         vcSetCameraUseWarp(chr_pos, g_SysWork.cameraAngleY);
         //SetGeomScreen(g_GameWork.gsScreenHeightx);
         vwInitViewInfo();
-        vcInitVCSystem(mapoverlay_ptr->cameraPaths_3CC);
+        vcInitVCSystem(mapoverlay_ptr->cameraPaths);
         vcStartCameraSystem();
 
         g_SysWork.cameraAngleZ   = Q12_ANGLE(0.0f);
@@ -120,7 +120,7 @@ namespace Silent::Game
                 else
                 {
                     //Collision_Get(&coll, hr_p->position.vx, hr_p->position.vz);
-                    grnd_y = coll.groundHeight_0;
+                    grnd_y = coll.groundHeight;
 
                     vcMakeHeroHeadPos(&hr_head_pos);
                 }
